@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './DashboardPage.css';
+import './RevenueManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
 
-export default function DashboardPage() {
+export default function RevenueManagementPage() {
   const navigate = useNavigate();
-  const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [activeMenu, setActiveMenu] = useState('revenue');
 
   // Giả lập dữ liệu admin
   const adminInfo = {
@@ -13,25 +13,39 @@ export default function DashboardPage() {
     role: 'Administrator'
   };
 
-  // Dữ liệu thống kê
-  const stats = {
-    customers: 1,
-    employees: 6,
-    services: 2
-  };
+  // Dữ liệu doanh thu (giả lập - có thể fetch từ API)
+  const [revenueData] = useState({
+    daily: {
+      invoices: 0,
+      revenue: 0,
+      cost: 0,
+      profit: 0
+    },
+    monthly: {
+      invoices: 0,
+      revenue: 0,
+      cost: 0,
+      profit: 0
+    },
+    yearly: {
+      invoices: 0,
+      revenue: 0,
+      cost: 0,
+      profit: 0
+    }
+  });
 
   const handleLogout = () => {
-    // Xử lý logout
     alert('Đăng xuất thành công!');
     navigate('/login');
   };
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
-    if (menu === 'accounts') {
+    if (menu === 'dashboard') {
+      navigate('/admin/dashboard');
+    } else if (menu === 'accounts') {
       navigate('/admin/users');
-    } else if (menu === 'revenue') {
-      navigate('/admin/revenue');
     } else if (menu === 'services') {
       navigate('/admin/services');
     } else if (menu === 'parts') {
@@ -97,35 +111,46 @@ export default function DashboardPage() {
 
         {/* Content */}
         <div className="admin-content">
-          <h1 className="page-title">Bảng điều khiển</h1>
+          <h1 className="page-title">Quản lý doanh thu</h1>
 
-          {/* Stats Cards */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-label">Khách hàng</div>
-              <div className="stat-value">{stats.customers}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Nhân viên</div>
-              <div className="stat-value">{stats.employees}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Dịch vụ</div>
-              <div className="stat-value">{stats.services}</div>
-            </div>
-          </div>
-
-          {/* Charts Placeholder */}
-          <div className="charts-grid">
-            <div className="chart-card">
-              <div className="chart-placeholder">Chart 1</div>
-            </div>
-            <div className="chart-card">
-              <div className="chart-placeholder">Chart 2</div>
-            </div>
-            <div className="chart-card">
-              <div className="chart-placeholder">Chart 3</div>
-            </div>
+          {/* Revenue Table */}
+          <div className="revenue-table-container">
+            <table className="revenue-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Theo ngày</th>
+                  <th>Theo tháng</th>
+                  <th>Theo năm</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="row-label">Số Hóa Đơn</td>
+                  <td>{revenueData.daily.invoices}</td>
+                  <td>{revenueData.monthly.invoices}</td>
+                  <td>{revenueData.yearly.invoices}</td>
+                </tr>
+                <tr>
+                  <td className="row-label">Tổng Doanh thu</td>
+                  <td>{revenueData.daily.revenue.toLocaleString('vi-VN')} đ</td>
+                  <td>{revenueData.monthly.revenue.toLocaleString('vi-VN')} đ</td>
+                  <td>{revenueData.yearly.revenue.toLocaleString('vi-VN')} đ</td>
+                </tr>
+                <tr>
+                  <td className="row-label">Tổng Chi phí</td>
+                  <td>{revenueData.daily.cost.toLocaleString('vi-VN')} đ</td>
+                  <td>{revenueData.monthly.cost.toLocaleString('vi-VN')} đ</td>
+                  <td>{revenueData.yearly.cost.toLocaleString('vi-VN')} đ</td>
+                </tr>
+                <tr>
+                  <td className="row-label">Tổng Lợi nhuận</td>
+                  <td>{revenueData.daily.profit.toLocaleString('vi-VN')} đ</td>
+                  <td>{revenueData.monthly.profit.toLocaleString('vi-VN')} đ</td>
+                  <td>{revenueData.yearly.profit.toLocaleString('vi-VN')} đ</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
