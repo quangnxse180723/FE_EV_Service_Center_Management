@@ -1,0 +1,296 @@
+.customer-management {
+  padding: 1rem;
+  padding-right: 3rem; /* Padding phải để không chạm viền */
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h2 {
+  font-size: 2rem;
+  color: #000000;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.search-bar {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 1rem;
+  max-width: 800px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s;
+  color: #000000;
+}
+
+.search-bar input::placeholder {
+  color: #999999;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #0066cc;
+}
+
+.search-btn {
+  padding: 0.875rem 1.5rem;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.search-btn:hover {
+  background-color: #0052a3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+}
+
+.table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Full width */
+}
+
+.customer-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.customer-table thead {
+  background-color: #f8f9fa;
+}
+
+.customer-table thead th {
+  padding: 0.95rem 0.95rem;
+  text-align: left;
+  font-weight: 600;
+  color: #000000;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Phân bố width cho các cột - tối ưu để full width */
+.customer-table thead th:nth-child(1) { /* ID */
+  width: 4%;
+}
+
+.customer-table thead th:nth-child(2) { /* Họ tên */
+  width: 14%;
+}
+
+.customer-table thead th:nth-child(3) { /* Email */
+  width: 18%;
+}
+
+.customer-table thead th:nth-child(4) { /* Số điện thoại */
+  width: 12%;
+}
+
+.customer-table thead th:nth-child(5) { /* Địa chỉ */
+  width: 31%;
+}
+
+.customer-table thead th:nth-child(6) { /* Trạng thái */
+  width: 11%;
+}
+
+.customer-table thead th:nth-child(7) { /* Hành động */
+  width: 14%;
+}
+
+.customer-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.customer-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.customer-table tbody td {
+  padding: 0.875rem 0.75rem;
+  color: #000000;
+  font-size: 0.85rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #000000;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #000000;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+  transform: scale(1.1);
+}
+
+.btn-delete {
+  background-color: #dc3545;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+  transform: scale(1.1);
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem 1rem !important;
+  color: #666666;
+  font-size: 1rem !important;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #000000;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1440px) {
+  .customer-table thead th {
+    font-size: 0.8rem;
+    padding: 0.8rem 0.6rem;
+  }
+
+  .customer-table tbody td {
+    font-size: 0.82rem;
+    padding: 0.8rem 0.6rem;
+  }
+}
+
+@media (max-width: 1366px) {
+  .customer-table thead th {
+    font-size: 0.75rem;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .customer-table tbody td {
+    font-size: 0.8rem;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .customer-management {
+    padding: 1rem;
+  }
+
+  .page-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .customer-table {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-btn {
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    width: 100%;
+  }
+}
