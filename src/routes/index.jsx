@@ -10,8 +10,9 @@ import BookingPage from '../modules/customer/pages/BookingPage';
 import DashboardPage from '../modules/admin/pages/DashboardPage';
 import UserManagementPage from '../modules/admin/pages/UserManagementPage';
 import RevenueManagementPage from '../modules/admin/pages/RevenueManagementPage';
-import ServiceManagementPage from '../modules/admin/pages/ServiceManagementPage';
 import PartsManagementPage from '../modules/admin/pages/PartsManagementPage';
+import VehicleManagementPage from '../modules/admin/pages/VehicleManagementPage';
+import SystemSettingsPage from '../modules/admin/pages/SystemSettingsPage';
 
 const AppRouter = () => {
   return (
@@ -23,8 +24,9 @@ const AppRouter = () => {
       <Route path="/admin/dashboard" element={<DashboardPage />} />
       <Route path="/admin/users" element={<UserManagementPage />} />
       <Route path="/admin/revenue" element={<RevenueManagementPage />} />
-      <Route path="/admin/services" element={<ServiceManagementPage />} />
       <Route path="/admin/parts" element={<PartsManagementPage />} />
+      <Route path="/admin/vehicles" element={<VehicleManagementPage />} />
+      <Route path="/admin/settings" element={<SystemSettingsPage />} />
     </Routes>
   );
 };

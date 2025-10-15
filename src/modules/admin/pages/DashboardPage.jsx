@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
 import logoImage from '/src/assets/img/logo.png';
+import adminAvatar from '/src/assets/img/avtAdmin.jpg';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -32,10 +33,12 @@ export default function DashboardPage() {
       navigate('/admin/users');
     } else if (menu === 'revenue') {
       navigate('/admin/revenue');
-    } else if (menu === 'services') {
-      navigate('/admin/services');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
+    } else if (menu === 'vehicles') {
+      navigate('/admin/vehicles');
+    } else if (menu === 'settings') {
+      navigate('/admin/settings');
     }
   };
 
@@ -66,16 +69,22 @@ export default function DashboardPage() {
             Quản lý doanh thu
           </button>
           <button
-            className={`nav-item ${activeMenu === 'services' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('services')}
-          >
-            Quản lý dịch vụ
-          </button>
-          <button
             className={`nav-item ${activeMenu === 'parts' ? 'active' : ''}`}
             onClick={() => handleMenuClick('parts')}
           >
             Quản lý phụ tùng
+          </button>
+          <button
+            className={`nav-item ${activeMenu === 'vehicles' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('vehicles')}
+          >
+            Quản lý xe
+          </button>
+          <button
+            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('settings')}
+          >
+            Cài đặt hệ thống
           </button>
         </nav>
       </aside>
@@ -86,7 +95,7 @@ export default function DashboardPage() {
         <header className="admin-header">
           <div className="header-user">
             <div className="user-avatar">
-              <div className="avatar-circle"></div>
+              <img src={adminAvatar} alt="Admin Avatar" className="avatar-image" />
             </div>
             <span className="user-name">{adminInfo.name}</span>
           </div>
