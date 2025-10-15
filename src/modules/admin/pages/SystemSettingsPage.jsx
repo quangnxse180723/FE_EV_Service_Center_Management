@@ -32,6 +32,11 @@ const SystemSettingsPage = () => {
     }
   };
 
+  const handleLogout = () => {
+    alert('Đăng xuất thành công!');
+    navigate('/');
+  };
+
   const handleSaveGeneral = () => {
     alert('Đã lưu cài đặt chung!');
   };
@@ -349,7 +354,7 @@ const SystemSettingsPage = () => {
             </div>
             <span className="user-name">Admin</span>
           </div>
-          <button className="btn-logout" onClick={() => alert('Logout')}>
+          <button className="btn-logout" onClick={handleLogout}>
             Logout
           </button>
         </header>

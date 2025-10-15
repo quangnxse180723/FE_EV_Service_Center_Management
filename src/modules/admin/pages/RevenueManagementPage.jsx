@@ -38,7 +38,7 @@ export default function RevenueManagementPage() {
 
   const handleLogout = () => {
     alert('Đăng xuất thành công!');
-    navigate('/login');
+    navigate('/');
   };
 
   const handleMenuClick = (menu) => {
