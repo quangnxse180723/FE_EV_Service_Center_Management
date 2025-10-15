@@ -1,0 +1,272 @@
+/* Booking History Page */
+.booking-history-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+/* Header - Sử dụng header cũ từ HomePage/BookingPage */
+
+/* Main Content */
+.booking-history-main {
+  padding: 2rem 0;
+}
+
+.booking-history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* User Info Section */
+.user-info-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-details h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+}
+
+.user-id {
+  font-size: 1rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+/* Booking Table */
+.booking-table-container {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 2rem;
+}
+
+.booking-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.booking-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.booking-table thead th {
+  padding: 1.5rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  color: white;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.booking-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.booking-table tbody tr:hover {
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  transform: translateX(4px);
+  box-shadow: inset 4px 0 0 #667eea;
+}
+
+.booking-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.booking-table tbody td {
+  padding: 1.5rem 1rem;
+  color: #2d3748;
+  font-size: 0.95rem;
+  vertical-align: top;
+}
+
+.booking-id {
+  font-weight: 700;
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.license-plate {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: #2d3748;
+  background: #f7fafc;
+  padding: 0.5rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.service-info {
+  line-height: 1.6;
+}
+
+.service-info div {
+  margin-bottom: 0.25rem;
+}
+
+.datetime .date {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.datetime .time {
+  font-size: 0.9rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  letter-spacing: 0.3px;
+  border: 2px solid;
+}
+
+.status-pending {
+  background: linear-gradient(135deg, #fef5e7, #fed7aa);
+  color: #c05621;
+  border-color: #fed7aa;
+}
+
+.status-completed {
+  background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+  color: #22543d;
+  border-color: #c6f6d5;
+}
+
+.status-cancelled {
+  background: linear-gradient(135deg, #fed7d7, #fbb6ce);
+  color: #822727;
+  border-color: #fbb6ce;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  color: #2d3748;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .booking-table-container {
+    overflow-x: auto;
+  }
+  
+  .booking-table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-history-container {
+    padding: 0 1rem;
+  }
+  
+  .user-info-section {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+  
+  .booking-table {
+    min-width: 600px;
+  }
+  
+  .booking-table thead th,
+  .booking-table tbody td {
+    padding: 1rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}

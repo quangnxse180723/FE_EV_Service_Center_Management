@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const handleLogout = () => {
     // Xử lý logout
     alert('Đăng xuất thành công!');
-    navigate('/login');
+    navigate('/');
   };
 
   const handleMenuClick = (menu) => {

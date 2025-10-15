@@ -115,8 +115,17 @@ export default function BookingPage() {
       note: customerNote
     };
     console.log('Booking data:', bookingData);
-    alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
-    navigate('/');
+    
+    // Hiển thị modal xác nhận thành công
+    const confirmResult = window.confirm(
+      'Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.\n\nBạn có muốn xem lịch sử đặt lịch không?'
+    );
+    
+    if (confirmResult) {
+      navigate('/booking-history');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -131,7 +140,7 @@ export default function BookingPage() {
             <a className="nav-item" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
             <a className="nav-item active">Đặt lịch</a>
             <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
-            <a className="nav-item" style={{ cursor: 'pointer' }}>Lịch sử</a>
+            <a className="nav-item" onClick={() => navigate('/booking-history')} style={{ cursor: 'pointer' }}>Lịch sử</a>
           </nav>
 
           <div className="hf-actions">

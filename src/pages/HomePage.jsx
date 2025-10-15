@@ -38,7 +38,7 @@ export default function HomePage() {
                     <a className="nav-item active" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
                     <a className="nav-item" onClick={() => navigate('/booking')} style={{ cursor: 'pointer' }}>Đặt lịch</a>
                     <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
-                    <a className="nav-item" style={{ cursor: 'pointer' }}>Lịch sử</a>
+                    <a className="nav-item" onClick={() => navigate('/booking-history')} style={{ cursor: 'pointer' }}>Lịch sử</a>
                   </nav>
 
                   <div className="hf-actions" style={{ position: 'relative' }}>

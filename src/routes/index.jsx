@@ -7,6 +7,7 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../modules/auth/LoginPage';
 import RegisterPage from '../modules/auth/RegisterPage';
 import BookingPage from '../modules/customer/pages/BookingPage';
+import BookingHistoryPage from '../modules/customer/pages/BookingHistoryPage';
 import DashboardPage from '../modules/admin/pages/DashboardPage';
 import UserManagementPage from '../modules/admin/pages/UserManagementPage';
 import RevenueManagementPage from '../modules/admin/pages/RevenueManagementPage';
@@ -16,8 +17,8 @@ import SystemSettingsPage from '../modules/admin/pages/SystemSettingsPage';
 
 import TechnicianLayout from '@/modules/technician/layouts/TechnicianLayout.jsx';
 import TechnicianDashboardPage from '@/modules/technician/pages/DashboardPage.jsx';
-import AssignedJobsPage from '@/modules/technician/pages/AssignedJobsPage.jsx';
-import InspectionPage from '@/modules/technician/pages/InspectionPage.jsx';
+import AssignedJobsPage  from '@/modules/technician/pages/AssignedJobsPage.jsx';
+import InspectionPage    from '@/modules/technician/pages/InspectionPage.jsx';
 
 const AppRouter = () => {
   return (
@@ -26,6 +27,7 @@ const AppRouter = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/booking" element={<BookingPage />} />
+      <Route path="/booking-history" element={<BookingHistoryPage />} />
       <Route path="/admin/dashboard" element={<DashboardPage />} />
       <Route path="/admin/users" element={<UserManagementPage />} />
       <Route path="/admin/revenue" element={<RevenueManagementPage />} />
