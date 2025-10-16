@@ -1,13 +1,27 @@
-import { useEffect, useState } from "react";
-import { getOrCreateChecklist } from "../../technician/services/technicianService";
+import { useCallback, useEffect, useState } from "react";
+import { fetchChecklistTemplate, updateChecklistItem } from "../services/technicianService";
 
-export function useChecklist(recordId){
-  const [header,setHeader]=useState(null); const [items,setItems]=useState([]); const [loading,setLoading]=useState(false);
-  const load = async ()=>{
+export function useChecklist() {
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
     setLoading(true);
-    try{ const data = await getOrCreateChecklist(recordId); setHeader(data.header); setItems(data.items); }
-    finally{ setLoading(false); }
-  };
-  useEffect(()=>{ if(recordId) load(); },[recordId]);
-  return { header, items, setItems, loading, reload: load };
+    setList(await fetchChecklistTemplate());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const setAction = useCallback(async (id, action) => {
+    const updated = await updateChecklistItem(id, { action });
+    setList(updated);
+  }, []);
+
+  const setNote = useCallback(async (id, note) => {
+    const updated = await updateChecklistItem(id, { note });
+    setList(updated);
+  }, []);
+
+  return { list, loading, refresh, setAction, setNote };
 }

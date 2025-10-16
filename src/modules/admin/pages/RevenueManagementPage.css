@@ -1,0 +1,161 @@
+/* Revenue Management Page - inherits from DashboardPage.css */
+
+/* Import base admin styles */
+@import './DashboardPage.css';
+
+/* Revenue Table Container */
+.revenue-table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8eaed;
+  margin-top: 2rem;
+}
+
+/* Revenue Table */
+.revenue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.revenue-table thead {
+  background: linear-gradient(to bottom, #f8f9fb, #f1f3f5);
+}
+
+.revenue-table thead th {
+  padding: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  color: #202124;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dadce0;
+  border-right: 1px solid #e8eaed;
+}
+
+.revenue-table thead th:first-child {
+  background: transparent;
+  border-right: 2px solid #dadce0;
+}
+
+.revenue-table thead th:last-child {
+  border-right: none;
+}
+
+.revenue-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.revenue-table tbody tr:hover {
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+}
+
+.revenue-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.revenue-table tbody td {
+  padding: 1.5rem;
+  text-align: center;
+  color: #3c4043;
+  font-size: 1rem;
+  border-right: 1px solid #f0f0f0;
+}
+
+.revenue-table tbody td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: #202124;
+  background: linear-gradient(to right, #fafbfc, #ffffff);
+  border-right: 2px solid #e8eaed;
+}
+
+.revenue-table tbody td:last-child {
+  border-right: none;
+}
+
+.row-label {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 1rem;
+}
+
+/* Empty state for zero values */
+.revenue-table tbody td:not(.row-label) {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+/* Highlight rows */
+.revenue-table tbody tr:nth-child(2) {
+  background: linear-gradient(to right, rgba(76, 175, 80, 0.03), transparent);
+}
+
+.revenue-table tbody tr:nth-child(2):hover {
+  background: linear-gradient(to right, rgba(76, 175, 80, 0.08), rgba(76, 175, 80, 0.02));
+}
+
+.revenue-table tbody tr:nth-child(3) {
+  background: linear-gradient(to right, rgba(244, 67, 54, 0.03), transparent);
+}
+
+.revenue-table tbody tr:nth-child(3):hover {
+  background: linear-gradient(to right, rgba(244, 67, 54, 0.08), rgba(244, 67, 54, 0.02));
+}
+
+.revenue-table tbody tr:nth-child(4) {
+  background: linear-gradient(to right, rgba(33, 150, 243, 0.03), transparent);
+}
+
+.revenue-table tbody tr:nth-child(4):hover {
+  background: linear-gradient(to right, rgba(33, 150, 243, 0.08), rgba(33, 150, 243, 0.02));
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .revenue-table thead th,
+  .revenue-table tbody td {
+    padding: 1.25rem 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .revenue-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+  }
+
+  .revenue-table {
+    min-width: 700px;
+  }
+
+  .revenue-table thead th,
+  .revenue-table tbody td {
+    padding: 1rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .row-label {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .revenue-table {
+    min-width: 600px;
+  }
+
+  .revenue-table thead th,
+  .revenue-table tbody td {
+    padding: 0.875rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .row-label {
+    font-size: 0.8rem;
+  }
+}

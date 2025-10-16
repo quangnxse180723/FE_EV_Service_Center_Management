@@ -1,0 +1,71 @@
+.grid{
+  display:grid;
+  grid-template-columns: 280px 280px 1fr;
+  gap:20px;
+}
+
+/* 2 ô vuông bên trái */
+.square{
+  position:relative;
+  border-radius:6px;
+  padding:16px;
+  color:#111;
+  min-height:180px;
+  box-shadow:0 0 0 3px #2e86ff inset; /* viền xanh theo ảnh */
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.squareTitle{ font-weight:800; font-size:18px; margin-bottom:10px; }
+.squareValue{ font-size:84px; font-weight:900; line-height:1; }
+.squareIcon{ position:absolute; right:12px; bottom:10px; font-size:28px; opacity:.9; }
+
+.red{ background:#ff1919; color:#000; }     /* nền đỏ giống ảnh */
+.green{ background:#2bff45; color:#000; }   /* nền xanh lá */
+
+.scheduleCard{
+  background:#6b11cc; /* tím */
+  border-radius:6px;
+  padding:16px;
+  color:#fff;
+  min-height:180px;
+}
+.scheduleTitle{
+  text-align:center;
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:14px;
+}
+.scheduleBody{ display:flex; flex-direction:column; gap:12px; }
+.shiftRow{ display:flex; align-items:center; gap:12px; }
+.shiftLabel{
+  background:#fff;
+  color:#111;
+  border-radius:4px;
+  padding:8px 12px;
+  min-width:240px;
+  font-weight:800;
+}
+.progressWrap{
+  flex:1;
+  height:24px;
+  background:#d9d9d9;
+  border-radius:4px;
+  overflow:hidden;
+  position:relative;
+}
+.progressBar{
+  height:100%;
+  background:#4b4bff; /* thanh tiến độ xanh dương như ảnh */
+}
+.checkin{
+  background:#1a55ff;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  padding:8px 10px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+@media (max-width: 1100px){
+  .grid{ grid-template-columns: 1fr; }
+}

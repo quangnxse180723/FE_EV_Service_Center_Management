@@ -1,13 +1,23 @@
-import { useEffect, useState } from "react";
-import { fetchAssignedJobs } from "../../technician/services/technicianService";
+import { useCallback, useEffect, useState } from "react";
+import { fetchAssignedJobs, acceptJob } from "../services/technicianService";
 
-export function useAssignedJobs(technicianId, filter="ALL"){
-  const [jobs,setJobs] = useState([]); const [loading,setLoading]=useState(false);
-  const load = async ()=>{
+export function useAssignedJobs() {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
     setLoading(true);
-    try{ setJobs(await fetchAssignedJobs(technicianId, filter)); }
-    finally{ setLoading(false); }
-  };
-  useEffect(()=>{ load(); },[technicianId, filter]);
-  return { jobs, loading, reload: load };
+    const data = await fetchAssignedJobs();
+    setJobs(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const onAccept = useCallback(async (jobId) => {
+    await acceptJob(jobId);
+    refresh();
+  }, [refresh]);
+
+  return { jobs, loading, refresh, onAccept };
 }
