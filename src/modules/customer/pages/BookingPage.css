@@ -4,15 +4,20 @@
   font-family: 'Inter', Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-/* Import HomePage Header Styles */
+/* Header - Consistent with HomePage */
 .hf-header {
-  background: #b8f0f8;
+  background: #dffbfb;
   border-bottom: 4px solid #07a7d6;
   padding: 12px 0;
   width: 100%;
   box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .hf-header-inner {
@@ -22,7 +27,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 2rem;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .hf-header-inner {
+    padding: 0 2rem;
+  }
 }
 
 .hf-logo .logo-image {
@@ -38,8 +49,20 @@
 
 .hf-nav {
   display: flex;
-  gap: 28px;
+  gap: 1.5rem;
   align-items: center;
+}
+
+@media (max-width: 768px) {
+  .hf-nav {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hf-nav {
+    display: none;
+  }
 }
 
 .hf-nav .nav-item {
@@ -47,6 +70,8 @@
   text-decoration: none;
   font-weight: 600;
   padding: 8px 6px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .hf-nav .nav-item.active {
