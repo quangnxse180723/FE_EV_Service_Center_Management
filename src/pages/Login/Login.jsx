@@ -19,6 +19,8 @@ const Login = () => {
     if (isAuthenticated) {
       if (role === 'STAFF' || role === 'ADMIN') {
         navigate('/staff/customers', { replace: true });
+      } else if (role === 'TECHNICIAN') {
+        navigate('/technician', { replace: true });
       } else {
         navigate('/', { replace: true });
       }
@@ -47,6 +49,13 @@ const Login = () => {
       password: 'customer123',
       role: 'CUSTOMER',
       fullName: 'Khách hàng'
+    },
+    {
+      id: 4,
+      email: 'technician@voltfix.com',
+      password: 'tech123',
+      role: 'TECHNICIAN',
+      fullName: 'Kỹ thuật viên 1'
     }
   ];
 
@@ -72,6 +81,8 @@ const Login = () => {
         // Redirect dựa theo role
         if (user.role === 'STAFF' || user.role === 'ADMIN') {
           navigate('/staff/customers');
+        } else if (user.role === 'TECHNICIAN') {
+          navigate('/technician');
         } else {
           navigate('/');
         }
@@ -173,6 +184,9 @@ const Login = () => {
               </div>
               <div className="demo-account">
                 <strong>Admin:</strong> admin@voltfix.com / admin123
+              </div>
+              <div className="demo-account">
+                <strong>Technician:</strong> technician@voltfix.com / tech123
               </div>
               <div className="demo-account">
                 <strong>Customer:</strong> customer@voltfix.com / customer123
