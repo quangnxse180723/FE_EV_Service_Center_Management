@@ -17,8 +17,15 @@ const Login = () => {
     const role = localStorage.getItem('role');
     
     if (isAuthenticated) {
-      if (role === 'STAFF' || role === 'ADMIN') {
+      // ✅ Chia riêng 4 roles
+      if (role === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (role === 'STAFF') {
         navigate('/staff/customers', { replace: true });
+      } else if (role === 'TECHNICIAN') {
+        navigate('/technician', { replace: true });
+      } else if (role === 'CUSTOMER') {
+        navigate('/', { replace: true });
       } else {
         navigate('/', { replace: true });
       }
@@ -47,6 +54,13 @@ const Login = () => {
       password: 'customer123',
       role: 'CUSTOMER',
       fullName: 'Khách hàng'
+    },
+    {
+      id: 4,
+      email: 'technician@voltfix.com',
+      password: 'tech123',
+      role: 'TECHNICIAN',
+      fullName: 'Kỹ thuật viên 1'
     }
   ];
 
@@ -69,9 +83,15 @@ const Login = () => {
         localStorage.setItem('accountId', user.id);
         localStorage.setItem('role', user.role);
 
-        // Redirect dựa theo role
-        if (user.role === 'STAFF' || user.role === 'ADMIN') {
+        // ✅ Redirect riêng cho 4 roles
+        if (user.role === 'ADMIN') {
+          navigate('/admin/dashboard');
+        } else if (user.role === 'STAFF') {
           navigate('/staff/customers');
+        } else if (user.role === 'TECHNICIAN') {
+          navigate('/technician');
+        } else if (user.role === 'CUSTOMER') {
+          navigate('/');
         } else {
           navigate('/');
         }
@@ -169,10 +189,13 @@ const Login = () => {
             <div className="demo-accounts">
               <p className="demo-title">📧 Tài khoản demo:</p>
               <div className="demo-account">
+                <strong>Admin:</strong> admin@voltfix.com / admin123
+              </div>
+              <div className="demo-account">
                 <strong>Staff:</strong> staff@voltfix.com / 123456
               </div>
               <div className="demo-account">
-                <strong>Admin:</strong> admin@voltfix.com / admin123
+                <strong>Technician:</strong> technician@voltfix.com / tech123
               </div>
               <div className="demo-account">
                 <strong>Customer:</strong> customer@voltfix.com / customer123

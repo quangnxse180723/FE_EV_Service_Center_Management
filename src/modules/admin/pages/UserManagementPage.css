@@ -1,0 +1,306 @@
+/* User Management Page - inherits from DashboardPage.css */
+
+/* Import base admin styles */
+@import './DashboardPage.css';
+
+/* Page Title Enhancement */
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  border-radius: 2px;
+}
+
+/* Tabs */
+.user-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e8eaed;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.tab-item {
+  padding: 1rem 2rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5f6368;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  bottom: -2px;
+  letter-spacing: 0.3px;
+}
+
+.tab-item:hover {
+  color: #1976d2;
+  background: linear-gradient(to bottom, transparent, rgba(25, 118, 210, 0.05));
+}
+
+.tab-item.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+  font-weight: 700;
+  background: linear-gradient(to bottom, transparent, rgba(25, 118, 210, 0.08));
+}
+
+.tab-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+}
+
+/* Table Container */
+.table-container {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 
+              0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+  border: 1px solid #e8eaed;
+  border-top: none;
+}
+
+/* Table */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table thead {
+  background: linear-gradient(to bottom, #f8f9fb, #f1f3f5);
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.user-table th {
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  font-weight: 700;
+  color: #202124;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dadce0;
+}
+
+.user-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.user-table tbody tr:hover {
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  box-shadow: inset 3px 0 0 #1976d2;
+  transform: translateX(2px);
+}
+
+.user-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.user-table td {
+  padding: 1.25rem 1.5rem;
+  color: #3c4043;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.user-table td:first-child {
+  font-weight: 600;
+  color: #202124;
+}
+
+/* Action Buttons */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-action {
+  padding: 0.875rem 2.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-action:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-add {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-add:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-add:active {
+  transform: translateY(0);
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.btn-delete:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+.btn-delete:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #d0d0d0 0%, #a0a0a0 100%);
+  box-shadow: none;
+}
+
+/* Empty State */
+.user-table tbody td[colspan] {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #5f6368;
+  font-style: italic;
+  background: linear-gradient(to bottom, #fafafa, #ffffff);
+}
+
+/* Loading Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .page-title {
+    font-size: 1.75rem;
+  }
+
+  .table-actions {
+    gap: 0.75rem;
+  }
+
+  .btn-action {
+    padding: 0.75rem 2rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .tab-item {
+    white-space: nowrap;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .user-table {
+    min-width: 600px;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 1rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .user-table th {
+    font-size: 0.8rem;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-action {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
