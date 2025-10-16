@@ -139,6 +139,55 @@ export async function updateChecklistItem(id, patch) {
   return clone(__checklist);
 }
 
+//////////////////////////
+// Get or Create Checklist for InspectionPage
+//////////////////////////
+let __inspectionRecords = {};
+
+export async function getOrCreateChecklist(recordId) {
+  await sleep();
+  
+  // Nếu đã có record này rồi thì trả về
+  if (__inspectionRecords[recordId]) {
+    return clone(__inspectionRecords[recordId]);
+  }
+  
+  // Tạo mới checklist cho recordId này
+  const newRecord = {
+    header: {
+      recordId: recordId,
+      vehiclePlate: "30A-123.45",
+      customerName: "Nguyễn Văn A",
+      vehicleModel: "VinFast Feliz S",
+      date: new Date().toLocaleDateString('vi-VN'),
+      status: "Đang kiểm tra"
+    },
+    items: [
+      { id: 1, name: "Phanh trước/sau", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+      { id: 2, name: "Đèn/còi/đồng hồ", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+      { id: 3, name: "Lốp/áp suất", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+      { id: 4, name: "Xích/nhông/đĩa", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+      { id: 5, name: "Vỏ bọc, tay ga", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+      { id: 6, name: "Chân chống", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+      { id: 7, name: "Khóa yên", action: "Kiểm tra", note: "", partCost: 0, laborCost: 0 },
+    ]
+  };
+  
+  __inspectionRecords[recordId] = newRecord;
+  return clone(newRecord);
+}
+
+export async function submitForApproval(recordId) {
+  await sleep();
+  
+  if (__inspectionRecords[recordId]) {
+    __inspectionRecords[recordId].header.status = "Chờ phê duyệt";
+    return { ok: true, message: "Đã gửi khách hàng phê duyệt" };
+  }
+  
+  return { ok: false, message: "Không tìm thấy biên bản" };
+}
+
 export async function createInspectionRecord(payload) {
   await sleep(200);
   // Tại đây khi nối API thật, bạn thay bằng POST lên server

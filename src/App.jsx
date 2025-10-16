@@ -9,10 +9,12 @@ import {
 // Public Pages
 import HomePage from "./pages/HomePage/HomePage";
 import Login from "./pages/Login/Login";
+import RegisterPage from "./modules/auth/RegisterPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 // Customer Pages
 import BookingPage from './modules/customer/pages/BookingPage';
+import BookingHistoryPage from './modules/customer/pages/BookingHistoryPage';
 
 // Layouts
 import StaffLayout from "./modules/staff/layout/StaffLayout";
@@ -35,6 +37,7 @@ import AssignedJobsPage from "./modules/technician/pages/AssignedJobsPage";
 import ServiceTicketsPage from "./modules/technician/pages/ServiceTicketsPage";
 import ServiceTicketDetailPage from "./modules/technician/pages/ServiceTicketDetailPage";
 import InspectionCreatePage from "./modules/technician/pages/InspectionCreatePage";
+import InspectionPage from "./modules/technician/pages/InspectionPage";
 import MaintenanceListPage from "./modules/technician/pages/MaintenanceListPage";
 import CertificateManagementPage from "./modules/technician/pages/CertificateManagementPage";
 
@@ -44,6 +47,8 @@ import UserManagementPage from './modules/admin/pages/UserManagementPage';
 import RevenueManagementPage from './modules/admin/pages/RevenueManagementPage';
 import ServiceManagementPage from './modules/admin/pages/ServiceManagementPage';
 import PartsManagementPage from './modules/admin/pages/PartsManagementPage';
+import VehicleManagementPage from './modules/admin/pages/VehicleManagementPage';
+import SystemSettingsPage from './modules/admin/pages/SystemSettingsPage';
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -61,7 +66,9 @@ function App() {
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/booking" element={<BookingPage />} />
+          <Route path="/booking-history" element={<BookingHistoryPage />} />
 
           {/* ===== Staff Routes (CHỈ STAFF) ===== */}
           <Route
@@ -105,6 +112,8 @@ function App() {
             <Route path="assigned-jobs" element={<AssignedJobsPage />} />
             <Route path="service-orders" element={<ServiceTicketsPage />} />
             <Route path="service-orders/:id" element={<ServiceTicketDetailPage />} />
+            <Route path="inspection" element={<InspectionPage />} />
+            <Route path="inspection/:recordId" element={<InspectionPage />} />
             <Route path="inspection/create" element={<InspectionCreatePage />} />
             <Route path="maintenance" element={<MaintenanceListPage />} />
             <Route path="certificates" element={<CertificateManagementPage />} />
@@ -138,6 +147,18 @@ function App() {
           <Route path="/admin/parts" element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
               <PartsManagementPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/vehicles" element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <VehicleManagementPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/settings" element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <SystemSettingsPage />
             </ProtectedRoute>
           } />
 

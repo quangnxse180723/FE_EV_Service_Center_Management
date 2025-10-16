@@ -18,11 +18,6 @@ export default function BookingPage() {
     email: 'nguyenvana@example.com'
   });
 
-  // State cho dropdown
-  const [showAuthDropdown, setShowAuthDropdown] = useState(false);
-  const avatarRef = useRef(null);
-  const dropdownRef = useRef(null);
-
   // State cho các bước
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -33,23 +28,6 @@ export default function BookingPage() {
   const [bookingTime, setBookingTime] = useState('');
   const [searchCenter, setSearchCenter] = useState('');
   const [customerNote, setCustomerNote] = useState('');
-
-  // Đóng dropdown khi click bên ngoài
-  useEffect(() => {
-    if (!showAuthDropdown) return;
-    function handleClickOutside(e) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target) &&
-        avatarRef.current &&
-        !avatarRef.current.contains(e.target)
-      ) {
-        setShowAuthDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showAuthDropdown]);
 
   // Danh sách slot thời gian với trạng thái
   const morningSlots = [
@@ -137,19 +115,17 @@ export default function BookingPage() {
       note: customerNote
     };
     console.log('Booking data:', bookingData);
-    alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
-    navigate('/');
-  };
-
-  // Xử lý đăng xuất
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('role');
-    localStorage.removeItem('accountId');
-    localStorage.removeItem('token');
-    setShowAuthDropdown(false);
-    navigate('/', { replace: true });
+    
+    // Hiển thị modal xác nhận thành công
+    const confirmResult = window.confirm(
+      'Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.\n\nBạn có muốn xem lịch sử đặt lịch không?'
+    );
+    
+    if (confirmResult) {
+      navigate('/booking-history');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -164,60 +140,17 @@ export default function BookingPage() {
             <a className="nav-item" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
             <a className="nav-item active">Đặt lịch</a>
             <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
-            <a className="nav-item" style={{ cursor: 'pointer' }}>Lịch sử</a>
+            <a className="nav-item" onClick={() => navigate('/booking-history')} style={{ cursor: 'pointer' }}>Lịch sử</a>
           </nav>
 
-          <div className="hf-actions" style={{ position: 'relative' }}>
+          <div className="hf-actions">
             <div className="icon-circle bell" title="Thông báo" />
             {isLoggedIn ? (
-              <div 
-                className="icon-circle avatar logged-in" 
-                title={userInfo.name}
-                ref={avatarRef}
-                onClick={() => setShowAuthDropdown(!showAuthDropdown)}
-                style={{ cursor: 'pointer' }}
-              >
-                <span className="avatar-badge">C</span>
-              </div>
+              <div className="icon-circle avatar" title={userInfo.name} />
             ) : (
               <div className="icon-circle avatar" title="Đăng nhập" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }} />
             )}
             <div className="icon-circle menu" title="Menu" />
-
-            {/* Dropdown */}
-            {showAuthDropdown && isLoggedIn && (
-              <div
-                className="auth-dropdown-root"
-                ref={dropdownRef}
-                style={{ position: 'absolute', top: 56, right: 0, zIndex: 1000 }}
-              >
-                <div className="auth-dropdown-menu">
-                  <div className="auth-dropdown-item user-info">
-                    <strong>{userInfo.name}</strong>
-                    <small>{userInfo.email}</small>
-                    <span className="role-badge">CUSTOMER</span>
-                  </div>
-                  <hr style={{ margin: '8px 0', border: '1px solid #eee' }} />
-                  <a href="/booking" className="auth-dropdown-item">
-                    📅 Đặt lịch
-                  </a>
-                  <a href="/my-vehicles" className="auth-dropdown-item">
-                    🚗 Xe của tôi
-                  </a>
-                  <a href="/history" className="auth-dropdown-item">
-                    📋 Lịch sử
-                  </a>
-                  <hr style={{ margin: '8px 0', border: '1px solid #eee' }} />
-                  <a 
-                    className="auth-dropdown-item logout" 
-                    onClick={handleLogout}
-                    style={{ cursor: 'pointer', color: '#dc3545' }}
-                  >
-                    🚪 Đăng xuất
-                  </a>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
