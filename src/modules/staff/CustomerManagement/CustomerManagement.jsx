@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
-import customerApi from '../../../services/api/customerApi';
+import customerApi from '../../../api/customerApi'; // ✅ Sửa đường dẫn
 import './CustomerManagement.css';
 
 const CustomerManagement = () => {

@@ -3,10 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   MdDashboard, 
   MdPerson, 
-  MdLogin,
+  MdDirectionsCar,
   MdCalendarToday, 
-  MdInventory, 
-  MdReceipt,
+  MdPayment, 
+  MdChat,
   MdLogout
 } from 'react-icons/md';
 import './Sidebar.css';
@@ -18,10 +18,10 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/staff/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
     { path: '/staff/customers', icon: <MdPerson />, label: 'Quản lý khách hàng' },
-    { path: '/staff/checkin', icon: <MdLogin />, label: 'Check-in' },
+    { path: '/staff/vehicles', icon: <MdDirectionsCar />, label: 'Quản lý xe' },
     { path: '/staff/schedules', icon: <MdCalendarToday />, label: 'Quản lý lịch hẹn' },
-    { path: '/staff/inventory', icon: <MdInventory />, label: 'Kho phụ tùng' },
-    { path: '/staff/invoices', icon: <MdReceipt />, label: 'Quản lý hóa đơn' },
+    { path: '/staff/payments', icon: <MdPayment />, label: 'Quản lý thanh toán' },
+    { path: '/staff/chat', icon: <MdChat />, label: 'Chat khách hàng' },
   ];
 
   const handleLogout = () => {

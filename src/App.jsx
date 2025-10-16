@@ -13,9 +13,12 @@ import StaffLayout from './modules/staff/layout/StaffLayout';
 import CustomerManagement from './modules/staff/CustomerManagement/CustomerManagement';
 import DashboardPage from './modules/staff/pages/DashboardPage';
 import CheckinPage from './modules/staff/pages/CheckinPage';
-import ScheduleManagementPage from './modules/staff/pages/ScheduleManagementPage';
+import ScheduleManagementPage from './modules/staff/ScheduleManagement/ScheduleManagementPage';
 import PartInventoryPage from './modules/staff/pages/PartInventoryPage';
 import InvoiceManagementPage from './modules/staff/pages/InvoiceManagemetPage';
+import VehicleManagement from './modules/staff/pages/VehicleManagement';
+import VehicleDetailPage from './modules/staff/pages/VehicleDetailPage';
+import ScheduleDetailPage from './modules/staff/pages/ScheduleDetail/ScheduleDetailPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -46,10 +49,14 @@ function App() {
             <Route index element={<Navigate to="/staff/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="customers" element={<CustomerManagement />} />
-            <Route path="checkin" element={<CheckinPage />} />
+            <Route path="vehicles" element={<VehicleManagement />} />
+            <Route path="vehicles/:id" element={<VehicleDetailPage />} />
             <Route path="schedules" element={<ScheduleManagementPage />} />
+            <Route path="schedules/:id" element={<ScheduleDetailPage />} />
+            <Route path="payments" element={<InvoiceManagementPage />} />
+            <Route path="chat" element={<div style={{padding: '2rem'}}>Chat khách hàng - Coming soon</div>} />
+            <Route path="checkin" element={<CheckinPage />} />
             <Route path="inventory" element={<PartInventoryPage />} />
-            <Route path="invoices" element={<InvoiceManagementPage />} />
           </Route>
 
           {/* 404 Not Found */}
