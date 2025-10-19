@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ServiceManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
+import authApi from '../../../api/authApi';
 
 export default function ServiceManagementPage() {
   const navigate = useNavigate();
@@ -39,8 +40,8 @@ export default function ServiceManagementPage() {
     }
   ]);
 
-  const handleLogout = () => {
-    alert('Đăng xuất thành công!');
+  const handleLogout = async () => {
+    await authApi.logout();
     navigate('/login');
   };
 

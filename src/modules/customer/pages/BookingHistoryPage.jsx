@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BookingHistoryPage.css';
 import logoImage from '/src/assets/img/logo.png';
+import authApi from '../../../api/authApi';
 
 export default function BookingHistoryPage() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function BookingHistoryPage() {
     id: 'id001',
     avatar: '/src/assets/img/avtAdmin.jpg'
   });
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Giả lập dữ liệu lịch sử đặt lịch
   const [bookingHistory] = useState([
@@ -60,6 +62,13 @@ export default function BookingHistoryPage() {
     }
   };
 
+  const handleLogout = async () => {
+    if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      await authApi.logout();
+      navigate('/login');
+    }
+  };
+
   return (
     <div className="booking-history-page">
       <header className="hf-header">
@@ -77,7 +86,54 @@ export default function BookingHistoryPage() {
 
           <div className="hf-actions">
             <div className="icon-circle bell" title="Thông báo" />
-            <div className="icon-circle avatar" title="Tài khoản" />
+            <div style={{ position: 'relative' }}>
+              <div 
+                className="icon-circle avatar" 
+                title="Tài khoản"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                style={{ cursor: 'pointer' }}
+              />
+              {showUserMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: '45px',
+                  right: '0',
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  minWidth: '150px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  zIndex: 1000
+                }}>
+                  <div style={{
+                    padding: '10px',
+                    borderBottom: '1px solid #eee',
+                    marginBottom: '8px'
+                  }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{userInfo.name}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{userInfo.id}</div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: 'none',
+                      backgroundColor: '#ff4444',
+                      color: 'white',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#cc0000'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#ff4444'}
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

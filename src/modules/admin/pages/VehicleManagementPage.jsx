@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './VehicleManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
 import adminAvatar from '/src/assets/img/avtAdmin.jpg';
+import authApi from '../../../api/authApi';
 
 export default function VehicleManagementPage() {
   const navigate = useNavigate();
@@ -76,8 +77,8 @@ export default function VehicleManagementPage() {
     }
   ]);
 
-  const handleLogout = () => {
-    alert('Đăng xuất thành công!');
+  const handleLogout = async () => {
+    await authApi.logout();
     navigate('/');
   };
 

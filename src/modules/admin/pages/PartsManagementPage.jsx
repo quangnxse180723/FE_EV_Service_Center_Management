@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PartsManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
+import authApi from '../../../api/authApi';
 
 export default function PartsManagementPage() {
   const navigate = useNavigate();
@@ -36,8 +37,8 @@ export default function PartsManagementPage() {
     { id: 19, name: 'Động cơ', price: 3000000, quantity: 100 }
   ]);
 
-  const handleLogout = () => {
-    alert('Đăng xuất thành công!');
+  const handleLogout = async () => {
+    await authApi.logout();
     navigate('/login');
   };
 

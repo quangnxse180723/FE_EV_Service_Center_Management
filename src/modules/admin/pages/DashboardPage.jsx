@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
 import logoImage from '/src/assets/img/logo.png';
+import authApi from '../../../api/authApi';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -41,15 +42,8 @@ export default function DashboardPage() {
     services: 2
   };
 
-  const handleLogout = () => {
-    // Xóa toàn bộ thông tin đăng nhập
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('role');
-    localStorage.removeItem('accountId');
-    localStorage.removeItem('token');
-    
-    // Chuyển về trang chủ
+  const handleLogout = async () => {
+    await authApi.logout();
     navigate('/', { replace: true });
   };
 

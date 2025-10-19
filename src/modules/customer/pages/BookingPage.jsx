@@ -6,6 +6,7 @@ import XE02 from '/src/assets/img/XE02.png';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
 import logoImage from '/src/assets/img/logo.png';
+import authApi from '../../../api/authApi';
 
 export default function BookingPage() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function BookingPage() {
     phone: '0901234567',
     email: 'nguyenvana@example.com'
   });
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // State cho các bước
   const [currentStep, setCurrentStep] = useState(1);
@@ -128,6 +130,13 @@ export default function BookingPage() {
     }
   };
 
+  const handleLogout = async () => {
+    if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      await authApi.logout();
+      navigate('/login');
+    }
+  };
+
   return (
     <div className="booking-page">
       <header className="hf-header">
@@ -146,7 +155,54 @@ export default function BookingPage() {
           <div className="hf-actions">
             <div className="icon-circle bell" title="Thông báo" />
             {isLoggedIn ? (
-              <div className="icon-circle avatar" title={userInfo.name} />
+              <div style={{ position: 'relative' }}>
+                <div 
+                  className="icon-circle avatar" 
+                  title={userInfo.name}
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  style={{ cursor: 'pointer' }}
+                />
+                {showUserMenu && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '45px',
+                    right: '0',
+                    backgroundColor: 'white',
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    minWidth: '150px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    zIndex: 1000
+                  }}>
+                    <div style={{
+                      padding: '10px',
+                      borderBottom: '1px solid #eee',
+                      marginBottom: '8px'
+                    }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{userInfo.name}</div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>{userInfo.email}</div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        border: 'none',
+                        backgroundColor: '#ff4444',
+                        color: 'white',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                      onMouseOver={(e) => e.target.style.backgroundColor = '#cc0000'}
+                      onMouseOut={(e) => e.target.style.backgroundColor = '#ff4444'}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="icon-circle avatar" title="Đăng nhập" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }} />
             )}

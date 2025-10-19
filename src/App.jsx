@@ -8,7 +8,7 @@ import {
 
 // Public Pages
 import HomePage from "./pages/HomePage/HomePage";
-import Login from "./pages/Login/Login";
+import LoginPage from "./modules/auth/LoginPage";
 import RegisterPage from "./modules/auth/RegisterPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -18,7 +18,6 @@ import BookingHistoryPage from './modules/customer/pages/BookingHistoryPage';
 
 // Layouts
 import StaffLayout from "./modules/staff/layout/StaffLayout";
-import TechnicianLayout from "./modules/technician/layouts/TechnicianLayout";
 
 // Staff Pages
 import CustomerManagement from "./modules/staff/CustomerManagement/CustomerManagement";
@@ -30,16 +29,6 @@ import InvoiceManagementPage from "./modules/staff/pages/InvoiceManagemetPage";
 import VehicleManagement from "./modules/staff/pages/VehicleManagement";
 import VehicleDetailPage from "./modules/staff/pages/VehicleDetailPage";
 import ScheduleDetailPage from "./modules/staff/pages/ScheduleDetail/ScheduleDetailPage";
-
-// Technician Pages
-import TechnicianDashboardPage from "./modules/technician/pages/TechnicianDashboardPage";
-import AssignedJobsPage from "./modules/technician/pages/AssignedJobsPage";
-import ServiceTicketsPage from "./modules/technician/pages/ServiceTicketsPage";
-import ServiceTicketDetailPage from "./modules/technician/pages/ServiceTicketDetailPage";
-import InspectionCreatePage from "./modules/technician/pages/InspectionCreatePage";
-import InspectionPage from "./modules/technician/pages/InspectionPage";
-import MaintenanceListPage from "./modules/technician/pages/MaintenanceListPage";
-import CertificateManagementPage from "./modules/technician/pages/CertificateManagementPage";
 
 // Admin Pages
 import AdminDashboard from './modules/admin/pages/DashboardPage';
@@ -65,12 +54,12 @@ function App() {
         <Routes>
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/booking" element={<BookingPage />} />
           <Route path="/booking-history" element={<BookingHistoryPage />} />
 
-          {/* ===== Staff Routes (CHỈ STAFF) ===== */}
+          {/* ===== Staff Routes ===== */}
           <Route
             path="/staff"
             element={
@@ -99,27 +88,7 @@ function App() {
             />
           </Route>
 
-          {/* ===== Technician Routes (CHỈ TECHNICIAN) ===== */}
-          <Route
-            path="/technician"
-            element={
-              <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
-                <TechnicianLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<TechnicianDashboardPage />} />
-            <Route path="assigned-jobs" element={<AssignedJobsPage />} />
-            <Route path="service-orders" element={<ServiceTicketsPage />} />
-            <Route path="service-orders/:id" element={<ServiceTicketDetailPage />} />
-            <Route path="inspection" element={<InspectionPage />} />
-            <Route path="inspection/:recordId" element={<InspectionPage />} />
-            <Route path="inspection/create" element={<InspectionCreatePage />} />
-            <Route path="maintenance" element={<MaintenanceListPage />} />
-            <Route path="certificates" element={<CertificateManagementPage />} />
-          </Route>
-
-          {/* ===== Admin Routes (CHỈ ADMIN) - KHÔNG CẦN LAYOUT ===== */}
+          {/* ===== Admin Routes ===== */}
           <Route path="/admin/dashboard" element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
               <AdminDashboard />
@@ -162,7 +131,6 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Redirect /admin to /admin/dashboard */}
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
           {/* ===== 404 Not Found ===== */}

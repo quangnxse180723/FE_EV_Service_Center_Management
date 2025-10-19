@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-import './Login.css';
+import authApi from '../../api/authApi';
+import './LoginPage.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +18,6 @@ const Login = () => {
     const role = localStorage.getItem('role');
     
     if (isAuthenticated) {
-      // ✅ Chia riêng 4 roles
       if (role === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true });
       } else if (role === 'STAFF') {
@@ -32,74 +32,103 @@ const Login = () => {
     }
   }, [navigate]);
 
-  // Dữ liệu cứng - Hard coded data
-  const users = [
-    {
-      id: 1,
-      email: 'staff@voltfix.com',
-      password: '123456',
-      role: 'STAFF',
-      fullName: 'Nhân viên 1'
-    },
-    {
-      id: 2,
-      email: 'admin@voltfix.com',
-      password: 'admin123',
-      role: 'ADMIN',
-      fullName: 'Quản trị viên'
-    },
-    {
-      id: 3,
-      email: 'customer@voltfix.com',
-      password: 'customer123',
-      role: 'CUSTOMER',
-      fullName: 'Khách hàng'
-    },
-    {
-      id: 4,
-      email: 'technician@voltfix.com',
-      password: 'tech123',
-      role: 'TECHNICIAN',
-      fullName: 'Kỹ thuật viên 1'
-    }
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      // Tìm user trong dữ liệu cứng
-      const user = users.find(
-        u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-      );
+    try {
+      console.log('🔐 Đang đăng nhập với:', { email, password });
+      
+      // Gọi API đăng nhập
+      const response = await authApi.login(email, password);
+      
+      console.log('✅ Login response:', response);
 
-      if (user) {
-        // Lưu thông tin user vào localStorage
+      // axiosClient đã return response.data rồi, nên response chính là data
+      // Kiểm tra response
+      if (response && response.token) {
+        const { token, email: userEmail, role, message } = response;
+
+        // Tạo object user để lưu
+        const user = {
+          email: userEmail,
+          role: role,
+          fullName: userEmail.split('@')[0]
+        };
+
+        // Lưu thông tin vào localStorage
+        localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('accountId', user.id);
-        localStorage.setItem('role', user.role);
+        localStorage.setItem('role', role);
+        localStorage.setItem('email', userEmail);
 
-        // ✅ Redirect riêng cho 4 roles
-        if (user.role === 'ADMIN') {
+        console.log('✅ Đã lưu localStorage:', {
+          token: token.substring(0, 20) + '...',
+          role,
+          email: userEmail
+        });
+
+        // Redirect dựa theo role
+        if (role === 'ADMIN') {
+          console.log('🚀 Redirect to /admin/dashboard');
           navigate('/admin/dashboard');
-        } else if (user.role === 'STAFF') {
+        } else if (role === 'STAFF') {
+          console.log('🚀 Redirect to /staff/customers');
           navigate('/staff/customers');
-        } else if (user.role === 'TECHNICIAN') {
+        } else if (role === 'TECHNICIAN') {
+          console.log('🚀 Redirect to /technician');
           navigate('/technician');
-        } else if (user.role === 'CUSTOMER') {
+        } else if (role === 'CUSTOMER') {
+          console.log('🚀 Redirect to /');
           navigate('/');
         } else {
+          console.log('🚀 Redirect to / (default)');
           navigate('/');
         }
       } else {
-        setError('Email hoặc mật khẩu không đúng!');
+        setError('Đăng nhập thất bại. Vui lòng thử lại.');
       }
+    } catch (err) {
+      console.error('❌ Login error:', err);
+      console.error('❌ Error response:', err.response);
+      
+      // Xử lý lỗi từ backend
+      if (err.response) {
+        const status = err.response.status;
+        const errorData = err.response.data;
+
+        console.error('❌ Status:', status);
+        console.error('❌ Error data:', errorData);
+
+        if (status === 401) {
+          // Unauthorized - Sai email/password
+          setError('Email hoặc mật khẩu không đúng!');
+        } else if (status === 403) {
+          // Forbidden - Tài khoản bị khóa
+          setError('Tài khoản bị khóa hoặc không có quyền truy cập!');
+        } else if (status === 404) {
+          // Not Found - Email không tồn tại
+          setError('Email không tồn tại trong hệ thống!');
+        } else if (status === 500) {
+          // Server Error
+          setError('Lỗi server. Vui lòng thử lại sau!');
+        } else {
+          setError(errorData?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+        }
+      } else if (err.request) {
+        // Request được gửi nhưng không nhận được response
+        console.error('❌ No response from server');
+        setError('Không thể kết nối đến server. Vui lòng kiểm tra:\n- Backend có đang chạy không?\n- URL có đúng không?');
+      } else {
+        // Lỗi khác
+        console.error('❌ Error message:', err.message);
+        setError('Đã xảy ra lỗi: ' + err.message);
+      }
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleBackToHome = () => {
@@ -126,7 +155,11 @@ const Login = () => {
             <h2>Đăng nhập</h2>
             <p className="login-subtitle">Vui lòng đăng nhập để tiếp tục</p>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+              <div className="error-message" style={{ whiteSpace: 'pre-line' }}>
+                {error}
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="email">Email</label>
@@ -187,23 +220,22 @@ const Login = () => {
             </button>
 
             <div className="demo-accounts">
-              <p className="demo-title">📧 Tài khoản demo:</p>
-              <div className="demo-account">
-                <strong>Admin:</strong> admin@voltfix.com / admin123
-              </div>
-              <div className="demo-account">
-                <strong>Staff:</strong> staff@voltfix.com / 123456
-              </div>
-              <div className="demo-account">
-                <strong>Technician:</strong> technician@voltfix.com / tech123
-              </div>
-              <div className="demo-account">
-                <strong>Customer:</strong> customer@voltfix.com / customer123
-              </div>
+              <p className="demo-title">💡 Lưu ý:</p>
+              <ul style={{ 
+                fontSize: '13px', 
+                color: '#666', 
+                marginTop: '8px',
+                paddingLeft: '20px',
+                textAlign: 'left'
+              }}>
+                <li>Đảm bảo backend đang chạy tại <code>localhost:8080</code></li>
+                <li>Sử dụng email/password có trong database</li>
+                <li>Kiểm tra Console (F12) để xem lỗi chi tiết</li>
+              </ul>
             </div>
 
             <div className="register-link">
-              Chưa có tài khoản? <a href="#">Đăng ký ngay</a>
+              Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
             </div>
           </form>
         </div>

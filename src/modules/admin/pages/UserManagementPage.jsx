@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
+import authApi from '../../../api/authApi';
 
 export default function UserManagementPage() {
   const navigate = useNavigate();
@@ -47,8 +48,8 @@ export default function UserManagementPage() {
     }
   ]);
 
-  const handleLogout = () => {
-    alert('Đăng xuất thành công!');
+  const handleLogout = async () => {
+    await authApi.logout();
     navigate('/login');
   };
 

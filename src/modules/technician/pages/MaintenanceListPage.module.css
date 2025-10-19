@@ -1,5 +1,0 @@
-.page { display:flex; flex-direction:column; gap:12px; }
-.header { display:flex; align-items:center; justify-content:space-between; }
-.header h2 { margin:0; font-size:20px; font-weight:800; }
-.refresh { background:#eef4ff; color:#0b63e5; border:1px solid #cfe0ff; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer; }
-.loading { color:#667085; }

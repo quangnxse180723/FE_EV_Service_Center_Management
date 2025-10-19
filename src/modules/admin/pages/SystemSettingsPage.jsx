@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './SystemSettingsPage.css';
 import logoImage from '../../../assets/img/logo.png';
 import adminAvatar from '../../../assets/img/avtAdmin.jpg';
+import authApi from '../../../api/authApi';
 
 const SystemSettingsPage = () => {
   const navigate = useNavigate();
@@ -32,8 +33,8 @@ const SystemSettingsPage = () => {
     }
   };
 
-  const handleLogout = () => {
-    alert('Đăng xuất thành công!');
+  const handleLogout = async () => {
+    await authApi.logout();
     navigate('/');
   };
 

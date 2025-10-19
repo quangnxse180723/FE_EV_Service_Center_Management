@@ -10,6 +10,7 @@ import {
   MdLogout
 } from 'react-icons/md';
 import './Sidebar.css';
+import authApi from '../../../../api/authApi';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -24,9 +25,9 @@ const Sidebar = () => {
     { path: '/staff/chat', icon: <MdChat />, label: 'Chat khách hàng' },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-      localStorage.clear();
+      await authApi.logout();
       navigate('/login');
     }
   };
