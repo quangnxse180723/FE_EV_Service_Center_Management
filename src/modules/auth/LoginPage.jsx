@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import "./LoginPage.css";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  
+  // Lấy trang redirect từ state (nếu có)
+  const from = location.state?.from || '/';
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -20,13 +26,25 @@ const LoginPage = () => {
     }
     setError("");
     
-    // Giả lập: nếu username là "admin" thì chuyển đến admin dashboard
+    // Giả lập data user
+    const userData = {
+      id: 1,
+      name: form.username === 'admin' ? 'Admin' : 'Nguyễn Văn A',
+      email: form.username === 'admin' ? 'admin@voltfix.com' : 'user@voltfix.com',
+      role: form.username === 'admin' ? 'admin' : 'customer'
+    };
+    
+    // Giả lập token
+    const token = 'fake-jwt-token-' + Date.now();
+    
+    // Lưu vào AuthContext
+    login(userData, token);
+    
+    // Chuyển hướng
     if (form.username.toLowerCase() === 'admin') {
-      alert("Đăng nhập thành công! Chào mừng Admin.");
       navigate('/admin/dashboard');
     } else {
-      alert("Đăng nhập thành công!");
-      navigate('/');
+      navigate(from); // Chuyển đến trang đã lưu hoặc trang chủ
     }
   };
 

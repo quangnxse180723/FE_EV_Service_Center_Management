@@ -1,22 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './BookingPage.css';
 import XE01 from '/src/assets/img/XE01.png';
 import XE02 from '/src/assets/img/XE02.png';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
 import logoImage from '/src/assets/img/logo.png';
+import avtAdmin from '/src/assets/img/avtAdmin.jpg';
+import scheduleApi from '../../../api/scheduleApi';
 
 export default function BookingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Giả lập user đã đăng nhập
-  const [isLoggedIn] = useState(true);
+  const [isLoggedIn] = useState(true); // Đặt lại thành true để hiển thị menu user
   const [userInfo] = useState({
     name: 'Nguyễn Văn A',
     phone: '0901234567',
-    email: 'nguyenvana@example.com'
+    email: 'nguyenvana@example.com',
+    avatar: avtAdmin
   });
+
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isCustomerInfoModalOpen, setIsCustomerInfoModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   // State cho các bước
   const [currentStep, setCurrentStep] = useState(1);
@@ -106,25 +116,73 @@ export default function BookingPage() {
     }
   };
 
-  const handleSubmit = () => {
-    const bookingData = {
-      customer: userInfo,
-      vehicle: selectedVehicle,
-      center: selectedCenter,
-      timeSlot: selectedTimeSlot,
-      note: customerNote
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false);
+      }
+      if (isMobileMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.mobile-menu-toggle')) {
+        setIsMobileMenuOpen(false);
+      }
     };
-    console.log('Booking data:', bookingData);
-    
-    // Hiển thị modal xác nhận thành công
-    const confirmResult = window.confirm(
-      'Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.\n\nBạn có muốn xem lịch sử đặt lịch không?'
-    );
-    
-    if (confirmResult) {
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen, isMobileMenuOpen]);
+
+  // Handle navigation state from MyVehiclesPage
+  useEffect(() => {
+    if (location.state) {
+      const { selectedVehicle: vehicleFromState, skipToStep } = location.state;
+      
+      if (vehicleFromState) {
+        setSelectedVehicle(vehicleFromState);
+      }
+      
+      if (skipToStep) {
+        setCurrentStep(skipToStep);
+      }
+      
+      // Clear the state to prevent issues on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  const handleSubmit = async () => {
+    try {
+      // Chuẩn bị dữ liệu theo format BookingRequest của Backend
+      const bookingData = {
+        customerId: userInfo.id || 1, // Lấy từ AuthContext hoặc localStorage
+        vehicleId: selectedVehicle?.id,
+        centerId: selectedCenter?.id,
+        serviceIds: selectedService ? [selectedService.id] : [], // Có thể chọn nhiều dịch vụ
+        scheduledDate: bookingDate || new Date().toISOString().split('T')[0],
+        scheduledTime: selectedTimeSlot,
+        notes: customerNote,
+      };
+
+      console.log('Sending booking data:', bookingData);
+
+      // Gọi API
+      const response = await scheduleApi.bookSchedule(bookingData);
+      
+      console.log('Booking response:', response);
+      
+      // Hiển thị thông báo thành công
+      alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
+      
+      // Chuyển hướng đến trang lịch sử đặt lịch
       navigate('/booking-history');
-    } else {
-      navigate('/');
+      
+    } catch (error) {
+      console.error('Booking error:', error);
+      
+      // Hiển thị thông báo lỗi
+      const errorMessage = error.message || 'Đặt lịch thất bại. Vui lòng thử lại!';
+      alert(errorMessage);
     }
   };
 
@@ -144,15 +202,121 @@ export default function BookingPage() {
           </nav>
 
           <div className="hf-actions">
-            <div className="icon-circle bell" title="Thông báo" />
-            {isLoggedIn ? (
-              <div className="icon-circle avatar" title={userInfo.name} />
-            ) : (
-              <div className="icon-circle avatar" title="Đăng nhập" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }} />
-            )}
-            <div className="icon-circle menu" title="Menu" />
+            <div 
+              className="icon-circle bell" 
+              title="Thông báo"
+              onClick={() => setIsNotificationModalOpen(true)}
+            >
+              🔔
+              <span className="notification-badge">3</span>
+            </div>
+            <div className="user-menu-container">
+              <div 
+                className="icon-circle avatar" 
+                title={isLoggedIn ? userInfo.name : "Tài khoản"}
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              />
+              {isUserMenuOpen && (
+                <div className="user-dropdown">
+                  {isLoggedIn ? (
+                    <>
+                    <div className="user-dropdown-header">
+                      <div className="user-avatar-small">
+                        {userInfo.avatar ? (
+                          <img src={userInfo.avatar} alt="User Avatar" onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }} />
+                        ) : null}
+                        <div className="avatar-placeholder" style={{ display: userInfo.avatar ? 'none' : 'flex' }}>👤</div>
+                      </div>
+                      <div className="user-info-dropdown">
+                        <div className="user-name">{userInfo.name}</div>
+                        <div className="user-id-small">{userInfo.phone}</div>
+                      </div>
+                    </div>
+                      <div className="user-dropdown-divider"></div>
+                      <div className="user-dropdown-menu">
+                        <a className="user-dropdown-item" onClick={() => { setIsCustomerInfoModalOpen(true); setIsUserMenuOpen(false); }}>
+                          <span className="dropdown-icon">👤</span>
+                          Thông tin khách hàng
+                        </a>
+                        <a className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                          <span className="dropdown-icon">🔧</span>
+                          Kiểm tra định kỳ
+                        </a>
+                        <a className="user-dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/my-vehicles');
+                        }}>
+                          <span className="dropdown-icon">🚗</span>
+                          Quản lý xe
+                        </a>
+                        <a className="user-dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/payment-history');
+                        }}>
+                          <span className="dropdown-icon">💳</span>
+                          Lịch sử thanh toán
+                        </a>
+                        <div className="user-dropdown-divider"></div>
+                        <a className="user-dropdown-item logout" onClick={() => setIsUserMenuOpen(false)}>
+                          <span className="dropdown-icon">🚪</span>
+                          Đăng xuất
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="auth-dropdown-menu">
+                      <a className="auth-dropdown-item" onClick={() => { navigate('/login'); setIsUserMenuOpen(false); }}>
+                        Đăng nhập
+                      </a>
+                      <a className="auth-dropdown-item" onClick={() => { navigate('/register'); setIsUserMenuOpen(false); }}>
+                        Đăng ký
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div 
+              className="icon-circle menu mobile-menu-toggle" 
+              title="Menu" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="mobile-menu">
+            <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)} />
+            <div className="mobile-menu-content">
+              <a className="mobile-nav-item" onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}>
+                🏠 Trang chủ
+              </a>
+              <a className="mobile-nav-item active">
+                📅 Đặt lịch
+              </a>
+              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+                💰 Bảng giá
+              </a>
+              <a className="mobile-nav-item" onClick={() => { navigate('/booking-history'); setIsMobileMenuOpen(false); }}>
+                📋 Lịch sử
+              </a>
+              <div className="mobile-menu-divider" />
+              <a className="mobile-nav-item" onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsNotificationModalOpen(true);
+              }}>
+                🔔 Thông báo
+              </a>
+              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+                👤 Tài khoản
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="booking-main">
@@ -204,6 +368,29 @@ export default function BookingPage() {
           {/* Step 2: Chọn trung tâm dịch vụ */}
           {currentStep === 2 && (
             <div className="step-content">
+              {/* Selected Vehicle Info */}
+              {selectedVehicle && (
+                <div className="selected-vehicle-info">
+                  <h3>Xe đã chọn:</h3>
+                  <div className="vehicle-summary">
+                    <img src={selectedVehicle.image} alt={selectedVehicle.model} className="vehicle-thumb" />
+                    <div className="vehicle-details">
+                      <div className="vehicle-name">{selectedVehicle.model}</div>
+                      <div className="vehicle-license">{selectedVehicle.licensePlate}</div>
+                      <div className="vehicle-specs">
+                        {selectedVehicle.year} • {selectedVehicle.color} • {selectedVehicle.batteryCapacity}
+                      </div>
+                    </div>
+                    <button 
+                      className="change-vehicle-btn"
+                      onClick={() => setCurrentStep(1)}
+                    >
+                      Đổi xe
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               <div className="center-selection">
                 <div className="map-container">
                   <img src={mapImage} alt="Map" className="map-image" />
@@ -365,6 +552,131 @@ export default function BookingPage() {
           </div>
         </div>
       </main>
+
+      {/* Customer Info Modal */}
+      {isCustomerInfoModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsCustomerInfoModalOpen(false)}>
+          <div className="modal-content customer-info-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Thông tin khách hàng</h2>
+              <button className="modal-close-btn" onClick={() => setIsCustomerInfoModalOpen(false)}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="customer-info-grid">
+                <div className="customer-avatar-section">
+                  <div className="customer-avatar-large">
+                    <img src={userInfo.avatar} alt="Customer Avatar" />
+                  </div>
+                  <div className="customer-status">
+                    <span className="status-badge status-active">Hoạt động</span>
+                  </div>
+                </div>
+                
+                <div className="customer-details-section">
+                  <div className="info-group">
+                    <label>Họ và tên:</label>
+                    <span>{userInfo.name}</span>
+                  </div>
+                  <div className="info-group">
+                    <label>Mã khách hàng:</label>
+                    <span>KH00{userInfo.id || 1}</span>
+                  </div>
+                  <div className="info-group">
+                    <label>Số điện thoại:</label>
+                    <span>{userInfo.phone}</span>
+                  </div>
+                  <div className="info-group">
+                    <label>Email:</label>
+                    <span>{userInfo.email}</span>
+                  </div>
+                  <div className="info-group">
+                    <label>Địa chỉ:</label>
+                    <span>123 Đường ABC, Quận 1, TP.HCM</span>
+                  </div>
+                  <div className="info-group">
+                    <label>Ngày đăng ký:</label>
+                    <span>15/08/2024</span>
+                  </div>
+                  <div className="info-group">
+                    <label>Loại tài khoản:</label>
+                    <span>Khách hàng VIP</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="customer-stats">
+                <div className="stat-item">
+                  <div className="stat-number">12</div>
+                  <div className="stat-label">Lần bảo dưỡng</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">3</div>
+                  <div className="stat-label">Xe đang sở hữu</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">15.5M</div>
+                  <div className="stat-label">Tổng chi tiêu</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">4.8★</div>
+                  <div className="stat-label">Đánh giá TB</div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setIsCustomerInfoModalOpen(false)}>
+                Đóng
+              </button>
+              <button className="btn-primary">
+                Chỉnh sửa thông tin
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Modal */}
+      {isNotificationModalOpen && (
+        <div className="notification-modal-overlay" onClick={() => setIsNotificationModalOpen(false)}>
+          <div className="notification-modal" onClick={e => e.stopPropagation()}>
+            <div className="notification-header">
+              <h2>Thông báo bảo dưỡng</h2>
+              <button onClick={() => setIsNotificationModalOpen(false)} className="close-btn">×</button>
+            </div>
+            
+            <div className="notification-content">
+              <div className="notification-item">
+                <div className="notification-icon">⚠️</div>
+                <div className="notification-body">
+                  <h4>Quá hạn bảo dưỡng</h4>
+                  <p>Xe Yadea Ulike (30B-456.78) đã quá hạn bảo dưỡng từ ngày 10/10/2024. Vui lòng đặt lịch ngay!</p>
+                  <span className="notification-time">2 ngày trước</span>
+                </div>
+              </div>
+              
+              <div className="notification-item">
+                <div className="notification-icon">🔧</div>
+                <div className="notification-body">
+                  <h4>Sắp đến hạn bảo dưỡng</h4>
+                  <p>Xe VinFast Feliz S (29A-123.45) sắp đến hạn bảo dưỡng vào ngày 15/11/2024</p>
+                  <span className="notification-time">1 ngày trước</span>
+                </div>
+              </div>
+              
+              <div className="notification-item">
+                <div className="notification-icon">📅</div>
+                <div className="notification-body">
+                  <h4>Xác nhận lịch hẹn</h4>
+                  <p>Lịch hẹn bảo dưỡng xe Yadea Ulike (30B-456.78) đã được xác nhận vào 20/10/2024 lúc 9:00</p>
+                  <span className="notification-time">5 ngày trước</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

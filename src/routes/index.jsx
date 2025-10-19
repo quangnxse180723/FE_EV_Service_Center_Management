@@ -8,6 +8,8 @@ import LoginPage from '../modules/auth/LoginPage';
 import RegisterPage from '../modules/auth/RegisterPage';
 import BookingPage from '../modules/customer/pages/BookingPage';
 import BookingHistoryPage from '../modules/customer/pages/BookingHistoryPage';
+import MyVehiclesPage from '../modules/customer/pages/MyVehiclesPage';
+import PaymentHistoryPage from '../modules/customer/pages/PaymentHistoryPage';
 import DashboardPage from '../modules/admin/pages/DashboardPage';
 import UserManagementPage from '../modules/admin/pages/UserManagementPage';
 import RevenueManagementPage from '../modules/admin/pages/RevenueManagementPage';
@@ -28,6 +30,8 @@ const AppRouter = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/booking-history" element={<BookingHistoryPage />} />
+      <Route path="/my-vehicles" element={<MyVehiclesPage />} />
+      <Route path="/payment-history" element={<PaymentHistoryPage />} />
       <Route path="/admin/dashboard" element={<DashboardPage />} />
       <Route path="/admin/users" element={<UserManagementPage />} />
       <Route path="/admin/revenue" element={<RevenueManagementPage />} />
