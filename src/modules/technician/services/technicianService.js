@@ -221,17 +221,77 @@ export async function fetchCertificates() {
 }
 
 // ===== Dashboard data for technician =====
+
+/**
+ * Helper function: Kiểm tra xem ca làm việc có thể check-in không
+ * Dựa trên thời gian hiện tại và ngày trong tuần
+ * 
+ * ⚠️ ĐỂ TEST: Uncomment dòng return true; bên dưới để test
+ */
+function canCheckinShift(dayOfWeek, startHour) {
+  // 🧪 TEST MODE: Bỏ comment dòng này để luôn hiện nút check-in sáng
+  return true;
+  
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // dayOfWeek đã là số chuẩn: 1 = Monday, 3 = Wednesday, 5 = Friday
+  // Kiểm tra có đúng ngày không
+  if (currentDay !== dayOfWeek) {
+    return false;
+  }
+  
+  // Kiểm tra thời gian (cho phép check-in từ 30 phút trước đến 2 giờ sau giờ bắt đầu)
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
+  const startTimeInMinutes = startHour * 60;
+  const timeDiff = currentTimeInMinutes - startTimeInMinutes;
+  
+  // Cho phép check-in từ -30 phút đến +120 phút (2 giờ)
+  return timeDiff >= -30 && timeDiff <= 120;
+}
+
 export async function fetchTechnicianDashboard() {
-  // có thể thay bằng API thật. Tạm thời mock giống ảnh
+  // có thể thay bằng API thật. Tạm thời mock với logic time-based
   await sleep(100);
+  
+  const now = new Date();
+  const currentDay = now.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  
+  // Tạo shifts với logic check-in dựa trên thời gian
+  // now.getDay(): 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  const shifts = [
+    { 
+      id: 1, 
+      label: "Thứ 2 8:00-12:00", 
+      progress: 80, 
+      canCheckin: canCheckinShift(1, 8), // Monday (1) 8AM
+      showCheckin: true,
+      dayOfWeek: 1 
+    },
+    { 
+      id: 2, 
+      label: "Thứ 4 8:00-12:00", 
+      progress: 60, 
+      canCheckin: canCheckinShift(3, 8), // Wednesday (3) 8AM
+      showCheckin: true,
+      dayOfWeek: 3 
+    },
+    { 
+      id: 3, 
+      label: "Thứ 6 8:00-12:00", 
+      progress: 40, 
+      canCheckin: canCheckinShift(5, 8), // Friday (5) 8AM
+      showCheckin: true,
+      dayOfWeek: 5 
+    },
+  ];
+  
   return {
     processingCount: 2,     // Số xe đang xử lý
     todayTaskCount: 2,      // Công việc trong ngày
-    shifts: [
-      { id: 1, label: "Thứ 2 8:00-12:00", progress: 80, canCheckin: true },
-      { id: 2, label: "Thứ 4 8:00-12:00", progress: 60, canCheckin: false },
-      { id: 3, label: "Thứ 6 8:00-12:00", progress: 40, canCheckin: false },
-    ],
+    shifts: shifts,
   };
 }
 
