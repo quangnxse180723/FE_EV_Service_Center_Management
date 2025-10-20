@@ -1,0 +1,2 @@
+.page { display:flex; flex-direction:column; gap:12px; }
+.loading { color:#667085; }

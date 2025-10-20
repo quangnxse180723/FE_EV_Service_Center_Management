@@ -1,0 +1,258 @@
+.vehicle-management {
+  padding: 2rem;
+  background: #f5f7fa;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vehicle-management h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #222;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  max-width: 600px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #222;
+}
+
+.search-btn {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.2rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+
+.search-btn:hover {
+  background: #0056b3;
+}
+
+.table-container {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  width: 100%;
+}
+
+.vehicle-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.vehicle-table thead {
+  background: #f0f0f0;
+}
+
+.vehicle-table th,
+.vehicle-table td {
+  border: 1.5px solid #222;
+  padding: 0.875rem 0.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #222;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vehicle-table th {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Phân bố width các cột */
+.vehicle-table th:nth-child(1), 
+.vehicle-table td:nth-child(1) { /* ID */
+  width: 7%;
+}
+
+.vehicle-table th:nth-child(2), 
+.vehicle-table td:nth-child(2) { /* Xe */
+  width: 17%;
+}
+
+.vehicle-table th:nth-child(3), 
+.vehicle-table td:nth-child(3) { /* Biển số xe */
+  width: 14%;
+}
+
+.vehicle-table th:nth-child(4), 
+.vehicle-table td:nth-child(4) { /* Chủ xe */
+  width: 17%;
+}
+
+.vehicle-table th:nth-child(5), 
+.vehicle-table td:nth-child(5) { /* Trạng thái */
+  width: 20%; /* ✅ Tăng từ 16% lên 20% */
+}
+
+.vehicle-table th:nth-child(6), 
+.vehicle-table td:nth-child(6) { /* Hành động */
+  width: 25%;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background: #baf7c3;
+  color: #008000;
+}
+
+.status-badge.inactive {
+  background: #f7baba;
+  color: #c00;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.8rem; /* ✅ Tăng từ 0.6rem lên 0.8rem */
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  padding: 0.2rem; /* ✅ Thêm padding xung quanh */
+}
+
+.btn-detail,
+.btn-edit,
+.btn-delete {
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem; /* ✅ Tăng padding để button rộng hơn */
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-block;
+  margin: 0 0.1rem; /* ✅ Thêm margin trái phải */
+}
+
+.btn-detail {
+  background: #007bff;
+  color: #fff;
+}
+
+.btn-detail:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+}
+
+.btn-edit {
+  background: #ffc107;
+  color: #222;
+  
+}
+
+.btn-edit:hover {
+  background: #e0a800;
+  transform: translateY(-2px);
+}
+
+.btn-delete {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.btn-delete:hover {
+  background: #c00;
+  transform: translateY(-2px);
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem 1rem !important;
+  color: #666;
+  font-size: 1rem !important;
+}
+
+/* Responsive */
+@media (max-width: 1440px) {
+  .vehicle-table th,
+  .vehicle-table td {
+    font-size: 0.85rem;
+    padding: 0.75rem 0.4rem;
+  }
+
+  .action-buttons {
+    gap: 0.6rem; /* ✅ Giảm xuống 0.6rem cho màn hình nhỏ */
+  }
+
+  .btn-detail,
+  .btn-edit,
+  .btn-delete {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.65rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .action-buttons {
+    gap: 0.5rem; /* ✅ Giảm xuống 0.5rem */
+  }
+
+  .btn-detail,
+  .btn-edit,
+  .btn-delete {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.55rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .vehicle-management {
+    padding: 1rem;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .vehicle-table {
+    min-width: 900px;
+  }
+
+  .action-buttons {
+    gap: 0.4rem; /* ✅ Giảm xuống 0.4rem */
+  }
+
+  .btn-detail,
+  .btn-edit,
+  .btn-delete {
+    font-size: 0.65rem;
+    padding: 0.35rem 0.5rem;
+  }
+}
