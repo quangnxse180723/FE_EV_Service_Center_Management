@@ -39,6 +39,10 @@ import PartsManagementPage from './modules/admin/pages/PartsManagementPage';
 import VehicleManagementPage from './modules/admin/pages/VehicleManagementPage';
 import SystemSettingsPage from './modules/admin/pages/SystemSettingsPage';
 
+// Technician Pages & Layout
+import TechnicianLayout from './modules/technician/layout/TechnicianLayout';
+import AssignedVehiclesPage from './modules/technician/pages/AssignedVehiclesPage';
+
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -132,6 +136,23 @@ function App() {
           } />
 
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+
+          {/* ===== Technician Routes ===== */}
+          <Route
+            path="/technician"
+            element={
+              <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+                <TechnicianLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/technician/assigned-vehicles" replace />} />
+            <Route path="assigned-vehicles" element={<AssignedVehiclesPage />} />
+            <Route path="dashboard" element={<div style={{ padding: '2rem' }}>Dashboard - Coming soon</div>} />
+            <Route path="services" element={<div style={{ padding: '2rem' }}>Phiếu dịch vụ - Coming soon</div>} />
+            <Route path="inspection" element={<div style={{ padding: '2rem' }}>Biên bản kiểm tra - Coming soon</div>} />
+            <Route path="maintenance-list" element={<div style={{ padding: '2rem' }}>Danh sách bảo dưỡng - Coming soon</div>} />
+          </Route>
 
           {/* ===== 404 Not Found ===== */}
           <Route path="*" element={<NotFoundPage />} />
