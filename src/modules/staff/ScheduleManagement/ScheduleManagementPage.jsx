@@ -15,6 +15,34 @@ const ScheduleManagementPage = () => {
     fetchSchedules();
   }, []);
 
+  // Auto search when status is selected
+  const handleStatusChange = (value) => {
+    setSearchTerm(value);
+    if (value) {
+      // Tự động search khi chọn status
+      searchByStatusValue(value);
+    } else {
+      // Reset về tất cả khi chọn "-- Chọn trạng thái --"
+      fetchSchedules();
+    }
+  };
+
+  const searchByStatusValue = async (status) => {
+    setLoading(true);
+    try {
+      console.log('🔍 Searching by status:', status);
+      const res = await scheduleApi.searchByStatus(status);
+      console.log('✅ Search result:', res);
+      console.log('✅ Result count:', Array.isArray(res) ? res.length : 0);
+      setSchedules(Array.isArray(res) ? res : []);
+    } catch (err) {
+      console.error('❌ Error searching by status:', err);
+      console.error('❌ Error response:', err.response?.data);
+      alert('Không tìm thấy lịch hẹn với trạng thái: ' + status);
+    }
+    setLoading(false);
+  };
+
   const fetchSchedules = async () => {
     setLoading(true);
     try {
@@ -43,9 +71,9 @@ const ScheduleManagementPage = () => {
       } else if (searchType === 'status') {
         res = await scheduleApi.searchByStatus(searchTerm);
       }
-      setSchedules(res);
+      setSchedules(Array.isArray(res) ? res : []);
     } catch (err) {
-      console.error(err);
+      console.error('Error searching:', err);
       alert('Không tìm thấy lịch hẹn');
     }
     setLoading(false);
@@ -53,7 +81,8 @@ const ScheduleManagementPage = () => {
 
   const handleCheckIn = async (id) => {
     try {
-      await scheduleApi.updateScheduleStatus(id, { status: 'Đang thực hiện' });
+      // Backend expects English status
+      await scheduleApi.updateScheduleStatus(id, { status: 'IN_PROGRESS' });
       alert('Check-in thành công');
       fetchSchedules();
     } catch (err) {
@@ -64,7 +93,8 @@ const ScheduleManagementPage = () => {
 
   const handleComplete = async (id) => {
     try {
-      await scheduleApi.updateScheduleStatus(id, { status: 'Hoàn tất' });
+      // Backend expects English status
+      await scheduleApi.updateScheduleStatus(id, { status: 'DONE' });
       alert('Hoàn tất lịch hẹn thành công');
       fetchSchedules();
     } catch (err) {
@@ -74,14 +104,21 @@ const ScheduleManagementPage = () => {
   };
 
   const getStatusClass = (status) => {
-    switch (status) {
-      case 'Chờ xác nhận':
+    // Map backend status (English) to CSS class
+    const statusUpper = status?.toUpperCase();
+    switch (statusUpper) {
+      case 'PENDING':
+      case 'CHỜ XÁC NHẬN':
         return 'status-pending';
-      case 'Đang thực hiện':
+      case 'IN_PROGRESS':
+      case 'ĐANG THỰC HIỆN':
         return 'status-in-progress';
-      case 'Hoàn tất':
+      case 'DONE':
+      case 'COMPLETED':
+      case 'HOÀN TẤT':
         return 'status-completed';
-      case 'Hủy':
+      case 'CANCELLED':
+      case 'HỦY':
         return 'status-cancelled';
       default:
         return '';
@@ -89,17 +126,29 @@ const ScheduleManagementPage = () => {
   };
 
   const getStatusText = (status) => {
-    switch (status) {
-      case 'Chờ xác nhận':
+    // Map backend status (English) to Vietnamese text
+    const statusUpper = status?.toUpperCase();
+    switch (statusUpper) {
+      case 'PENDING':
         return 'Chờ xác nhận';
-      case 'Đang thực hiện':
+      case 'IN_PROGRESS':
         return 'Đang thực hiện';
-      case 'Hoàn tất':
+      case 'DONE':
+      case 'COMPLETED':
         return 'Hoàn tất';
-      case 'Hủy':
+      case 'CANCELLED':
+        return 'Hủy';
+      // Fallback cho tiếng Việt
+      case 'CHỜ XÁC NHẬN':
+        return 'Chờ xác nhận';
+      case 'ĐANG THỰC HIỆN':
+        return 'Đang thực hiện';
+      case 'HOÀN TẤT':
+        return 'Hoàn tất';
+      case 'HỦY':
         return 'Hủy';
       default:
-        return status;
+        return status || 'Không xác định';
     }
   };
 
@@ -110,20 +159,44 @@ const ScheduleManagementPage = () => {
       <div className="search-bar">
         <select 
           value={searchType} 
-          onChange={(e) => setSearchType(e.target.value)}
+          onChange={(e) => {
+            setSearchType(e.target.value);
+            setSearchTerm(''); // Reset search term khi đổi loại search
+            fetchSchedules(); // Load lại tất cả schedules
+          }}
           className="search-type-select"
         >
           <option value="customer">Tên khách hàng</option>
           <option value="vehicle">Biển số xe</option>
           <option value="status">Trạng thái</option>
         </select>
-        <input
-          type="text"
-          placeholder="Tìm kiếm ..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        />
+        
+        {searchType === 'status' ? (
+          <select
+            value={searchTerm}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className="status-select"
+          >
+            <option value="">-- Chọn trạng thái --</option>
+            <option value="PENDING">Chờ xác nhận</option>
+            <option value="IN_PROGRESS">Đang thực hiện</option>
+            <option value="DONE">Hoàn tất</option>
+            <option value="CANCELLED">Hủy</option>
+          </select>
+        ) : (
+          <input
+            type="text"
+            placeholder={
+              searchType === 'customer' 
+                ? 'Nhập tên khách hàng...' 
+                : 'Nhập biển số xe...'
+            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+        )}
+        
         <button className="search-btn" onClick={handleSearch}>
           <FaSearch />
         </button>
@@ -151,7 +224,13 @@ const ScheduleManagementPage = () => {
                 <td colSpan={6} style={{ textAlign: 'center' }}>Không có dữ liệu</td>
               </tr>
             ) : (
-              schedules.map((schedule) => (
+              schedules.map((schedule) => {
+                console.log('🔍 Rendering schedule:', {
+                  id: schedule.scheduleId,
+                  status: schedule.status,
+                  fullData: schedule
+                });
+                return (
                 <tr key={schedule.scheduleId}>
                   <td>{schedule.scheduleId}</td>
                   <td>{schedule.scheduledDate}</td>
@@ -159,12 +238,12 @@ const ScheduleManagementPage = () => {
                   <td>{schedule.customerName}</td>
                   <td>
                     <span className={`status-badge ${getStatusClass(schedule.status)}`}>
-                      {getStatusText(schedule.status)}
+                      {schedule.status || 'Không xác định'}
                     </span>
                   </td>
                   <td>
                     <div className="action-buttons">
-                      {schedule.status === 'Chờ xác nhận' && (
+                      {(schedule.status?.toUpperCase() === 'PENDING' || schedule.status === 'Chờ xác nhận') && (
                         <button 
                           className="btn-checkin"
                           onClick={() => handleCheckIn(schedule.scheduleId)}
@@ -172,7 +251,7 @@ const ScheduleManagementPage = () => {
                           Check-in
                         </button>
                       )}
-                      {schedule.status === 'Đang thực hiện' && (
+                      {(schedule.status?.toUpperCase() === 'IN_PROGRESS' || schedule.status === 'Đang thực hiện') && (
                         <button 
                           className="btn-complete"
                           onClick={() => handleComplete(schedule.scheduleId)}
@@ -189,7 +268,8 @@ const ScheduleManagementPage = () => {
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

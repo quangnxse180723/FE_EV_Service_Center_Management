@@ -1,8 +1,8 @@
 /* Container */
 .container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 40px;
 }
 
 /* Auth Dropdown styles */
@@ -323,6 +323,9 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #2c3e50;
   line-height: 1.6;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -337,13 +340,13 @@
 }
 
 .hf-header-inner {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 0 20px;
+  padding: 0 40px;
 }
 
 .hf-logo .logo-image {
@@ -449,9 +452,9 @@
 }
 
 .hero-content {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 60px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 60px;
@@ -492,11 +495,17 @@
 .hero-image {
   text-align: center;
   position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-image img {
   max-width: 100%;
+  width: 100%;
   height: auto;
+  object-fit: contain;
   filter: drop-shadow(0 20px 40px rgba(0,0,0,0.3));
   animation: float 6s ease-in-out infinite;
 }
@@ -506,12 +515,57 @@
   50% { transform: translateY(-20px); }
 }
 
+/* Large Screen - Thêm padding cho màn hình lớn */
+@media (min-width: 1400px) {
+  .container {
+    padding: 0 80px;
+  }
+
+  .hf-header-inner {
+    padding: 0 80px;
+  }
+
+  .hero-content {
+    padding: 0 100px;
+    gap: 80px;
+  }
+}
+
+/* Extra Large Screen */
+@media (min-width: 1920px) {
+  .container {
+    padding: 0 120px;
+  }
+
+  .hf-header-inner {
+    padding: 0 120px;
+  }
+
+  .hero-content {
+    padding: 0 150px;
+    gap: 100px;
+  }
+
+  .hero-title {
+    font-size: 4rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.8rem;
+  }
+
+  .hero-description {
+    font-size: 1.25rem;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
   .hero-content {
     grid-template-columns: 1fr;
     gap: 40px;
     text-align: center;
+    padding: 0 40px;
   }
   
   .hero-title {
@@ -525,6 +579,14 @@
   .hero-buttons {
     justify-content: center;
   }
+
+  .container {
+    padding: 0 30px;
+  }
+
+  .hf-header-inner {
+    padding: 0 30px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -534,6 +596,10 @@
   
   .hf-hero {
     padding: 60px 0;
+  }
+
+  .hero-content {
+    padding: 0 24px;
   }
   
   .hero-title { 
@@ -580,5 +646,13 @@
   
   .section-title {
     font-size: 2rem;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  .hf-header-inner {
+    padding: 0 20px;
   }
 }

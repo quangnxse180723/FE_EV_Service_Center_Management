@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import authApi from "../../api/authApi";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -9,6 +10,7 @@ const LoginPage = () => {
   const { login } = useAuth();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   
   // Lấy trang redirect từ state (nếu có)
   const from = location.state?.from || '/';
@@ -17,34 +19,71 @@ const LoginPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Call login API here
+    
     if (!form.username || !form.password) {
       setError("Vui lòng nhập đầy đủ thông tin.");
       return;
     }
+    
     setError("");
+    setLoading(true);
     
-    // Giả lập data user
-    const userData = {
-      id: 1,
-      name: form.username === 'admin' ? 'Admin' : 'Nguyễn Văn A',
-      email: form.username === 'admin' ? 'admin@voltfix.com' : 'user@voltfix.com',
-      role: form.username === 'admin' ? 'admin' : 'customer'
-    };
-    
-    // Giả lập token
-    const token = 'fake-jwt-token-' + Date.now();
-    
-    // Lưu vào AuthContext
-    login(userData, token);
-    
-    // Chuyển hướng
-    if (form.username.toLowerCase() === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate(from); // Chuyển đến trang đã lưu hoặc trang chủ
+    try {
+      // Gọi API login thực
+      const response = await authApi.login(form.username, form.password);
+      
+      console.log('Login response:', response);
+      
+      // Response từ backend có format:
+      // { token, email, role, accountId, fullName, customerId (nếu là CUSTOMER) }
+      const { token, email, role, accountId, fullName, customerId } = response;
+      
+      // Tạo userData object
+      const userData = {
+        accountId: accountId,
+        email: email,
+        fullName: fullName || email.split('@')[0], // Fallback nếu không có fullName
+        role: role
+      };
+      
+      // Nếu là customer, thêm customerId
+      if (role === 'CUSTOMER' && customerId) {
+        userData.customerId = customerId;
+        localStorage.setItem('customerId', customerId);
+      }
+      
+      // Lưu vào AuthContext và localStorage
+      login(userData, token);
+      
+      // Lưu thêm role và accountId vào localStorage (compatibility)
+      localStorage.setItem('role', role);
+      localStorage.setItem('accountId', accountId);
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      // Chuyển hướng theo role
+      if (role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else if (role === 'STAFF') {
+        navigate('/staff/dashboard');
+      } else if (role === 'TECHNICIAN') {
+        navigate('/technician/dashboard');
+      } else if (role === 'CUSTOMER') {
+        navigate(from); // Customer về trang đã lưu hoặc trang chủ
+      } else {
+        navigate('/');
+      }
+      
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(
+        err.response?.data?.message || 
+        err.message || 
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,7 +106,9 @@ const LoginPage = () => {
           onChange={handleChange}
         />
         {error && <div className="auth-error">{error}</div>}
-        <button type="submit">Đăng nhập</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        </button>
         <div className="auth-link">
           Bạn chưa có tài khoản? <a href="/register">Đăng ký</a>
         </div>

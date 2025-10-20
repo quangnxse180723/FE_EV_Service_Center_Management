@@ -11,24 +11,47 @@ const scheduleApi = {
     return axiosClient.get(`/customer/schedules/${customerId}`);
   },
 
+  // ===== Staff/Admin API =====
+  
   // Lấy tất cả lịch hẹn
   getAllSchedules: () => {
     return axiosClient.get('/schedules');
   },
 
-  // Lấy lịch hẹn theo ID
+  // Lấy chi tiết lịch hẹn
   getScheduleById: (scheduleId) => {
     return axiosClient.get(`/schedules/${scheduleId}`);
   },
 
-  // Cập nhật lịch hẹn
-  updateSchedule: (scheduleId, data) => {
-    return axiosClient.put(`/schedules/${scheduleId}`, data);
+  // Cập nhật trạng thái lịch hẹn (check-in, hoàn tất, hủy)
+  updateScheduleStatus: (scheduleId, statusData) => {
+    return axiosClient.put(`/schedules/${scheduleId}/status`, statusData);
   },
 
-  // Hủy lịch hẹn
-  cancelSchedule: (scheduleId) => {
-    return axiosClient.delete(`/schedules/${scheduleId}`);
+  // Gán kỹ thuật viên cho lịch hẹn
+  assignTechnician: (scheduleId, technicianData) => {
+    return axiosClient.put(`/schedules/${scheduleId}/assign-technician`, technicianData);
+  },
+
+  // Tìm kiếm lịch hẹn theo tên khách hàng
+  searchByCustomerName: (name) => {
+    return axiosClient.get('/schedules/search/customer', {
+      params: { name }
+    });
+  },
+
+  // Tìm kiếm lịch hẹn theo biển số xe
+  searchByLicensePlate: (plate) => {
+    return axiosClient.get('/schedules/search/vehicle', {
+      params: { plate }
+    });
+  },
+
+  // Tìm kiếm lịch hẹn theo trạng thái
+  searchByStatus: (status) => {
+    return axiosClient.get('/schedules/search/status', {
+      params: { status }
+    });
   },
 };
 

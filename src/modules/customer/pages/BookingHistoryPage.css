@@ -1,6 +1,5 @@
 /* Booking History Page */
 .booking-history-page {
-  min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
@@ -9,7 +8,7 @@
 .hf-header {
   background: #b8f0f8;
   border-bottom: 4px solid #07a7d6;
-  padding: 12px 0;
+  padding: 0;
   width: 100%;
   box-sizing: border-box;
   position: sticky;
@@ -18,7 +17,7 @@
 }
 
 .hf-header-inner {
-  max-width: 1400px;
+ 
   margin: 0 auto;
   display: flex;
   align-items: center;

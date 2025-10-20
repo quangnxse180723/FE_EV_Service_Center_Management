@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 import './BookingPage.css';
 import XE01 from '/src/assets/img/XE01.png';
 import XE02 from '/src/assets/img/XE02.png';
@@ -8,19 +9,28 @@ import lichImage from '/src/assets/img/lich.png';
 import logoImage from '/src/assets/img/logo.png';
 import avtAdmin from '/src/assets/img/avtAdmin.jpg';
 import scheduleApi from '../../../api/scheduleApi';
+import vehicleApi from '../../../api/vehicleApi';
+import serviceApi from '../../../api/serviceApi';
+import centerApi from '../../../api/centerApi';
 
 export default function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isLoggedIn } = useAuth();
   
-  // Giả lập user đã đăng nhập
-  const [isLoggedIn] = useState(true); // Đặt lại thành true để hiển thị menu user
-  const [userInfo] = useState({
-    name: 'Nguyễn Văn A',
-    phone: '0901234567',
-    email: 'nguyenvana@example.com',
-    avatar: avtAdmin
-  });
+  // User info từ AuthContext
+  const userInfo = user ? {
+    id: user.accountId,
+    name: user.fullName || user.email?.split('@')[0] || 'Khách hàng',
+    phone: user.phone || 'Chưa cập nhật',
+    email: user.email || 'Chưa cập nhật',
+    avatar: user.avatar || null
+  } : {
+    name: 'Khách hàng',
+    phone: 'Chưa cập nhật',
+    email: 'Chưa cập nhật',
+    avatar: null
+  };
 
   // Mobile menu state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,62 +49,82 @@ export default function BookingPage() {
   const [searchCenter, setSearchCenter] = useState('');
   const [customerNote, setCustomerNote] = useState('');
 
-  // Danh sách slot thời gian với trạng thái
+  // State cho data từ API
+  const [userVehicles, setUserVehicles] = useState([]);
+  const [serviceCenters, setServiceCenters] = useState([]);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Danh sách slot thời gian với trạng thái (mock - có thể fetch từ API sau)
   const morningSlots = [
-    { time: '8:00', available: 0, total: 12, status: 'full' },
-    { time: '8:30', available: 8, total: 12, status: 'available' },
-    { time: '9:00', available: 9, total: 12, status: 'available' },
-    { time: '9:30', available: 9, total: 12, status: 'available' },
-    { time: '10:00', available: 0, total: 12, status: 'full' },
-    { time: '10:30', available: 8, total: 12, status: 'available' },
-    { time: '11:00', available: 9, total: 12, status: 'available' },
-    { time: '11:30', available: 9, total: 12, status: 'available' }
+    { id: 1, time: '8:00', available: 0, total: 12, status: 'full' },
+    { id: 2, time: '8:30', available: 8, total: 12, status: 'available' },
+    { id: 3, time: '9:00', available: 9, total: 12, status: 'available' },
+    { id: 4, time: '9:30', available: 9, total: 12, status: 'available' },
+    { id: 5, time: '10:00', available: 0, total: 12, status: 'full' },
+    { id: 6, time: '10:30', available: 8, total: 12, status: 'available' },
+    { id: 7, time: '11:00', available: 9, total: 12, status: 'available' },
+    { id: 8, time: '11:30', available: 9, total: 12, status: 'available' }
   ];
 
   const afternoonSlots = [
-    { time: '12:00', available: 0, total: 12, status: 'full' },
-    { time: '12:30', available: 9, total: 12, status: 'available' },
-    { time: '13:00', available: 10, total: 12, status: 'few' },
-    { time: '13:30', available: 10, total: 12, status: 'few' },
-    { time: '14:00', available: 0, total: 12, status: 'full' },
-    { time: '14:30', available: 9, total: 12, status: 'available' },
-    { time: '15:00', available: 10, total: 12, status: 'few' },
-    { time: '15:30', available: 10, total: 12, status: 'few' },
-    { time: '16:00', available: 0, total: 12, status: 'full' },
-    { time: '16:30', available: 9, total: 12, status: 'available' },
-    { time: '17:00', available: 10, total: 12, status: 'few' }
+    { id: 9, time: '12:00', available: 0, total: 12, status: 'full' },
+    { id: 10, time: '12:30', available: 9, total: 12, status: 'available' },
+    { id: 11, time: '13:00', available: 10, total: 12, status: 'few' },
+    { id: 12, time: '13:30', available: 10, total: 12, status: 'few' },
+    { id: 13, time: '14:00', available: 0, total: 12, status: 'full' },
+    { id: 14, time: '14:30', available: 9, total: 12, status: 'available' },
+    { id: 15, time: '15:00', available: 10, total: 12, status: 'few' },
+    { id: 16, time: '15:30', available: 10, total: 12, status: 'few' },
+    { id: 17, time: '16:00', available: 0, total: 12, status: 'full' },
+    { id: 18, time: '16:30', available: 9, total: 12, status: 'available' },
+    { id: 19, time: '17:00', available: 10, total: 12, status: 'few' }
   ];
 
-  // Danh sách xe của người dùng (giả lập)
-  const userVehicles = [
-    {
-      id: 1,
-      name: 'VinFast Feliz S',
-      plate: '29A-123.45',
-      image: XE01
-    },
-    {
-      id: 2,
-      name: 'Yadea Ulike',
-      plate: '30B-456.78',
-      image: XE02
-    }
-  ];
+  // Fetch data từ API khi component mount
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch tất cả data song song
+        const [vehiclesRes, centersRes, servicesRes] = await Promise.all([
+          vehicleApi.getAllVehicles().catch(err => {
+            console.error('Error fetching vehicles:', err);
+            return [];
+          }),
+          centerApi.getAllCenters().catch(err => {
+            console.error('Error fetching centers:', err);
+            return [];
+          }),
+          serviceApi.getAllServices().catch(err => {
+            console.error('Error fetching services:', err);
+            return [];
+          })
+        ]);
 
-  // Danh sách trung tâm dịch vụ
-  const serviceCenters = [
-    { id: 1, name: 'Voltfix Quận 1', distance: '1.2 km' },
-    { id: 2, name: 'Voltfix Cầu giấy', distance: '3.5 km' },
-    { id: 3, name: 'Voltfix Quận 9', distance: '7.5 km' },
-    { id: 4, name: 'Voltfix Thủ Đức', distance: '8.5 km' }
-  ];
+        // Set data (backend trả về trực tiếp array hoặc object với data field)
+        setUserVehicles(Array.isArray(vehiclesRes) ? vehiclesRes : vehiclesRes?.data || []);
+        setServiceCenters(Array.isArray(centersRes) ? centersRes : centersRes?.data || []);
+        setServices(Array.isArray(servicesRes) ? servicesRes : servicesRes?.data || []);
 
-  const services = [
-    { id: 1, name: 'Bảo dưỡng định kỳ', price: '300.000đ' },
-    { id: 2, name: 'Kiểm tra/Thay pin', price: '500.000đ' },
-    { id: 3, name: 'Kiểm tra phanh', price: '200.000đ' },
-    { id: 4, name: 'Thay lốp', price: '400.000đ' }
-  ];
+        console.log('✅ Data loaded:', {
+          vehicles: vehiclesRes,
+          centers: centersRes,
+          services: servicesRes
+        });
+      } catch (err) {
+        console.error('❌ Error fetching initial data:', err);
+        setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   const handleVehicleSelect = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -153,15 +183,23 @@ export default function BookingPage() {
 
   const handleSubmit = async () => {
     try {
-      // Chuẩn bị dữ liệu theo format BookingRequest của Backend
+      // Validation
+      if (!selectedVehicle?.id || !selectedCenter?.id || !selectedTimeSlot?.id) {
+        alert('Vui lòng chọn đầy đủ thông tin!');
+        return;
+      }
+
+      // Lấy ngày hiện tại nếu bookingDate rỗng
+      const dateToUse = bookingDate || new Date().toISOString().split('T')[0];
+      
+      // Chuẩn bị dữ liệu theo format BookScheduleRequest của Backend
       const bookingData = {
-        customerId: userInfo.id || 1, // Lấy từ AuthContext hoặc localStorage
-        vehicleId: selectedVehicle?.id,
-        centerId: selectedCenter?.id,
-        serviceIds: selectedService ? [selectedService.id] : [], // Có thể chọn nhiều dịch vụ
-        scheduledDate: bookingDate || new Date().toISOString().split('T')[0],
-        scheduledTime: selectedTimeSlot,
-        notes: customerNote,
+        vehicleId: selectedVehicle.id,
+        centerId: selectedCenter.id,
+        slotId: selectedTimeSlot.id, // Backend yêu cầu slotId (Integer)
+        scheduledDate: `${dateToUse}T${selectedTimeSlot.time}:00`, // LocalDateTime format: "2025-10-20T14:30:00"
+        packageId: null, // Optional - có thể thêm sau
+        notes: customerNote || '',
       };
 
       console.log('Sending booking data:', bookingData);
@@ -179,9 +217,11 @@ export default function BookingPage() {
       
     } catch (error) {
       console.error('Booking error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       
       // Hiển thị thông báo lỗi
-      const errorMessage = error.message || 'Đặt lịch thất bại. Vui lòng thử lại!';
+      const errorMessage = error.response?.data?.message || error.message || 'Đặt lịch thất bại. Vui lòng thử lại!';
       alert(errorMessage);
     }
   };
@@ -342,26 +382,56 @@ export default function BookingPage() {
           {/* Step 1: Chọn xe */}
           {currentStep === 1 && (
             <div className="step-content">
-              <div className="vehicle-grid">
-                {userVehicles.map((vehicle) => (
-                  <div 
-                    key={vehicle.id}
-                    className={`vehicle-card ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
-                    onClick={() => handleVehicleSelect(vehicle)}
-                  >
-                    <div className="vehicle-header">Xe máy điện {vehicle.id}</div>
-                    <div className="vehicle-image">
-                      <img src={vehicle.image} alt={vehicle.name} />
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <p>Đang tải danh sách xe...</p>
+                </div>
+              ) : error ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#f44336' }}>
+                  <p>{error}</p>
+                  <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1.5rem' }}>
+                    Thử lại
+                  </button>
+                </div>
+              ) : userVehicles.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <p>Bạn chưa có xe nào. Vui lòng thêm xe để đặt lịch.</p>
+                  <button onClick={() => navigate('/my-vehicles')} style={{ marginTop: '1rem', padding: '0.5rem 1.5rem' }}>
+                    Thêm xe
+                  </button>
+                </div>
+              ) : (
+                <div className="vehicle-grid">
+                  {userVehicles.map((vehicle) => (
+                    <div 
+                      key={vehicle.id}
+                      className={`vehicle-card ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
+                      onClick={() => handleVehicleSelect(vehicle)}
+                    >
+                      <div className="vehicle-header">Xe máy điện {vehicle.id}</div>
+                      <div className="vehicle-image">
+                        <img 
+                          src={vehicle.image || vehicle.imageUrl || XE01} 
+                          alt={vehicle.name || vehicle.model}
+                          onError={(e) => { e.target.src = XE01; }}
+                        />
+                      </div>
+                      <div className="vehicle-info">
+                        <div className="vehicle-name">
+                          {vehicle.name || vehicle.model || 'Xe điện'}
+                        </div>
+                        <div className="vehicle-plate">
+                          Biển số: {vehicle.plate || vehicle.licensePlate || 'N/A'}
+                        </div>
+                        <div className="vehicle-vin">
+                          Số VIN: {vehicle.vin || vehicle.vinNumber || '...'}
+                        </div>
+                      </div>
+                      <button className="btn-select-vehicle">Chọn</button>
                     </div>
-                    <div className="vehicle-info">
-                      <div className="vehicle-name">Thể xe {vehicle.id}: {vehicle.name}</div>
-                      <div className="vehicle-plate">Biển số: {vehicle.plate}</div>
-                      <div className="vehicle-vin">Số VIN: ...</div>
-                    </div>
-                    <button className="btn-select-vehicle">Chọn</button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -407,23 +477,39 @@ export default function BookingPage() {
                     <button className="btn-search">Tìm</button>
                   </div>
                   <div className="center-list">
-                    {serviceCenters.map((center) => (
-                      <div 
-                        key={center.id}
-                        className={`center-item ${selectedCenter?.id === center.id ? 'selected' : ''}`}
-                      >
-                        <div className="center-info">
-                          <div className="center-name">{center.name}</div>
-                          <div className="center-distance">| {center.distance}</div>
-                        </div>
-                        <button 
-                          className="btn-select-center"
-                          onClick={() => handleCenterSelect(center)}
-                        >
-                          Chọn
-                        </button>
+                    {loading ? (
+                      <div style={{ padding: '2rem', textAlign: 'center' }}>Đang tải...</div>
+                    ) : serviceCenters.length === 0 ? (
+                      <div style={{ padding: '2rem', textAlign: 'center' }}>
+                        Không tìm thấy trung tâm dịch vụ
                       </div>
-                    ))}
+                    ) : (
+                      serviceCenters
+                        .filter(center => 
+                          !searchCenter || 
+                          (center.name || '').toLowerCase().includes(searchCenter.toLowerCase()) ||
+                          (center.address || '').toLowerCase().includes(searchCenter.toLowerCase())
+                        )
+                        .map((center) => (
+                          <div 
+                            key={center.id}
+                            className={`center-item ${selectedCenter?.id === center.id ? 'selected' : ''}`}
+                          >
+                            <div className="center-info">
+                              <div className="center-name">{center.name || center.centerName}</div>
+                              <div className="center-distance">
+                                | {center.distance || center.address || 'Khoảng cách: N/A'}
+                              </div>
+                            </div>
+                            <button 
+                              className="btn-select-center"
+                              onClick={() => handleCenterSelect(center)}
+                            >
+                              Chọn
+                            </button>
+                          </div>
+                        ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -437,21 +523,45 @@ export default function BookingPage() {
                 <div className="calendar-section">
                   <div className="selected-center-info">
                     <div className="center-name-display">
-                      {selectedCenter?.name || 'Voltfix Quận 1'} | {selectedCenter?.distance || '1.2 km'}
+                      <span>{selectedCenter?.name || 'Voltfix Quận 1'}</span>
+                      <span> - </span>
+                      <span>{selectedCenter?.distance || '1.2 km'}</span>
                     </div>
                   </div>
                   <img src={lichImage} alt="Calendar" className="calendar-image" />
                 </div>
                 <div className="timeslots-section">
+                  {/* Date Picker */}
+                  <div className="date-picker-section" style={{marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px'}}>
+                    <label htmlFor="booking-date" style={{display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333'}}>
+                      Chọn ngày đặt lịch:
+                    </label>
+                    <input
+                      id="booking-date"
+                      type="date"
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  </div>
+                  
                   <div className="timeslots-container">
                     <div className="timeslot-period">
                       <h4>Sáng</h4>
                       <div className="timeslot-grid">
-                        {morningSlots.map((slot, index) => (
+                        {morningSlots.map((slot) => (
                           <button
-                            key={index}
-                            className={`timeslot-btn ${slot.status} ${selectedTimeSlot === slot.time ? 'selected' : ''}`}
-                            onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot.time)}
+                            key={slot.time}
+                            className={`timeslot-btn ${slot.status} ${selectedTimeSlot?.id === slot.id ? 'selected' : ''}`}
+                            onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot)}
                             disabled={slot.status === 'full'}
                           >
                             {slot.time}<br />
@@ -463,11 +573,11 @@ export default function BookingPage() {
                     <div className="timeslot-period">
                       <h4>Chiều</h4>
                       <div className="timeslot-grid">
-                        {afternoonSlots.map((slot, index) => (
+                        {afternoonSlots.map((slot) => (
                           <button
-                            key={index}
-                            className={`timeslot-btn ${slot.status} ${selectedTimeSlot === slot.time ? 'selected' : ''}`}
-                            onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot.time)}
+                            key={slot.time}
+                            className={`timeslot-btn ${slot.status} ${selectedTimeSlot?.id === slot.id ? 'selected' : ''}`}
+                            onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot)}
                             disabled={slot.status === 'full'}
                           >
                             {slot.time}<br />
@@ -497,15 +607,23 @@ export default function BookingPage() {
                 </div>
                 <div className="summary-item">
                   <span>Xe:</span>
-                  <strong>{selectedVehicle?.name} - {selectedVehicle?.plate}</strong>
+                  <strong>
+                    <span>{selectedVehicle?.name}</span>
+                    <span> - </span>
+                    <span>{selectedVehicle?.plate}</span>
+                  </strong>
                 </div>
                 <div className="summary-item">
                   <span>Trung tâm:</span>
                   <strong>{selectedCenter?.name}</strong>
                 </div>
                 <div className="summary-item">
-                  <span>Thời gian:</span>
-                  <strong>{selectedTimeSlot}</strong>
+                  <span>Ngày:</span>
+                  <strong>{bookingDate || new Date().toISOString().split('T')[0]}</strong>
+                </div>
+                <div className="summary-item">
+                  <span>Giờ:</span>
+                  <strong>{selectedTimeSlot?.time}</strong>
                 </div>
               </div>
               
