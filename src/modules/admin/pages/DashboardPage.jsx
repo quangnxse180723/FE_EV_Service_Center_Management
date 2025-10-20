@@ -1,39 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
 import logoImage from '/src/assets/img/logo.png';
-import authApi from '../../../api/authApi';
+import adminAvatar from '/src/assets/img/avtAdmin.jpg';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [adminInfo, setAdminInfo] = useState({
+
+  // Giả lập dữ liệu admin
+  const adminInfo = {
     name: 'Admin',
-    role: 'Administrator',
-    email: ''
-  });
-
-  // Lấy thông tin admin từ localStorage khi component mount
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const role = localStorage.getItem('role');
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    
-    // Kiểm tra nếu chưa đăng nhập hoặc không phải ADMIN thì redirect về login
-    if (!isAuthenticated || role !== 'ADMIN') {
-      navigate('/login', { replace: true });
-      return;
-    }
-
-    // Cập nhật thông tin admin
-    if (user) {
-      setAdminInfo({
-        name: user.fullName || 'Admin',
-        role: 'Administrator',
-        email: user.email || ''
-      });
-    }
-  }, [navigate]);
+    role: 'Administrator'
+  };
 
   // Dữ liệu thống kê
   const stats = {
@@ -42,9 +21,10 @@ export default function DashboardPage() {
     services: 2
   };
 
-  const handleLogout = async () => {
-    await authApi.logout();
-    navigate('/', { replace: true });
+  const handleLogout = () => {
+    // Xử lý logout
+    alert('Đăng xuất thành công!');
+    navigate('/');
   };
 
   const handleMenuClick = (menu) => {
@@ -53,12 +33,12 @@ export default function DashboardPage() {
       navigate('/admin/users');
     } else if (menu === 'revenue') {
       navigate('/admin/revenue');
-    } else if (menu === 'services') {
-      navigate('/admin/services');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
-    } else if (menu === 'dashboard') {
-      navigate('/admin/dashboard');
+    } else if (menu === 'vehicles') {
+      navigate('/admin/vehicles');
+    } else if (menu === 'settings') {
+      navigate('/admin/settings');
     }
   };
 
@@ -67,67 +47,61 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="sidebar-logo">
-          <img 
-            src={logoImage} 
-            alt="VOLTFIX Logo" 
-            className="logo" 
-            onClick={() => navigate('/')}
-            style={{ cursor: 'pointer' }}
-          />
+          <img src={logoImage} alt="VOLTFIX Logo" className="logo" />
         </div>
         <nav className="sidebar-nav">
           <button
             className={`nav-item ${activeMenu === 'dashboard' ? 'active' : ''}`}
             onClick={() => handleMenuClick('dashboard')}
           >
-            📊 Bảng điều khiển
+            Bảng điều khiển
           </button>
           <button
             className={`nav-item ${activeMenu === 'accounts' ? 'active' : ''}`}
             onClick={() => handleMenuClick('accounts')}
           >
-            👥 Quản lý tài khoản
+            Quản lý tài khoản
           </button>
           <button
             className={`nav-item ${activeMenu === 'revenue' ? 'active' : ''}`}
             onClick={() => handleMenuClick('revenue')}
           >
-            💰 Quản lý doanh thu
-          </button>
-          <button
-            className={`nav-item ${activeMenu === 'services' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('services')}
-          >
-            🔧 Quản lý dịch vụ
+            Quản lý doanh thu
           </button>
           <button
             className={`nav-item ${activeMenu === 'parts' ? 'active' : ''}`}
             onClick={() => handleMenuClick('parts')}
           >
-            🔩 Quản lý phụ tùng
+            Quản lý phụ tùng
+          </button>
+          <button
+            className={`nav-item ${activeMenu === 'vehicles' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('vehicles')}
+          >
+            Quản lý xe
+          </button>
+          <button
+            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('settings')}
+          >
+            Cài đặt hệ thống
           </button>
         </nav>
-        
-        {/* Logout button ở sidebar */}
-        <button className="sidebar-logout" onClick={handleLogout}>
-          🚪 Đăng xuất
-        </button>
       </aside>
 
       {/* Main Content */}
       <div className="admin-main">
         {/* Header */}
         <header className="admin-header">
-          <h2 className="header-title">Admin Panel</h2>
           <div className="header-user">
-            <div className="user-info">
-              <span className="user-name">{adminInfo.name}</span>
-              <span className="user-role">{adminInfo.role}</span>
-            </div>
             <div className="user-avatar">
-              <div className="avatar-circle">A</div>
+              <img src={adminAvatar} alt="Admin Avatar" className="avatar-image" />
             </div>
+            <span className="user-name">{adminInfo.name}</span>
           </div>
+          <button className="btn-logout" onClick={handleLogout}>
+            Logout
+          </button>
         </header>
 
         {/* Content */}
@@ -137,47 +111,29 @@ export default function DashboardPage() {
           {/* Stats Cards */}
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-info">
-                <div className="stat-label">Khách hàng</div>
-                <div className="stat-value">{stats.customers}</div>
-              </div>
+              <div className="stat-label">Khách hàng</div>
+              <div className="stat-value">{stats.customers}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">👨‍💼</div>
-              <div className="stat-info">
-                <div className="stat-label">Nhân viên</div>
-                <div className="stat-value">{stats.employees}</div>
-              </div>
+              <div className="stat-label">Nhân viên</div>
+              <div className="stat-value">{stats.employees}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">🔧</div>
-              <div className="stat-info">
-                <div className="stat-label">Dịch vụ</div>
-                <div className="stat-value">{stats.services}</div>
-              </div>
+              <div className="stat-label">Dịch vụ</div>
+              <div className="stat-value">{stats.services}</div>
             </div>
           </div>
 
           {/* Charts Placeholder */}
           <div className="charts-grid">
             <div className="chart-card">
-              <h3 className="chart-title">Biểu đồ doanh thu</h3>
-              <div className="chart-placeholder">
-                📈 Biểu đồ sẽ được hiển thị ở đây
-              </div>
+              <div className="chart-placeholder">Chart 1</div>
             </div>
             <div className="chart-card">
-              <h3 className="chart-title">Khách hàng mới</h3>
-              <div className="chart-placeholder">
-                📊 Biểu đồ sẽ được hiển thị ở đây
-              </div>
+              <div className="chart-placeholder">Chart 2</div>
             </div>
             <div className="chart-card">
-              <h3 className="chart-title">Dịch vụ phổ biến</h3>
-              <div className="chart-placeholder">
-                📉 Biểu đồ sẽ được hiển thị ở đây
-              </div>
+              <div className="chart-placeholder">Chart 3</div>
             </div>
           </div>
         </div>

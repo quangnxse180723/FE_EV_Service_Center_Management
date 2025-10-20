@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ServiceManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
-import authApi from '../../../api/authApi';
+import adminAvatar from '/src/assets/img/avtAdmin.jpg';
 
 export default function ServiceManagementPage() {
   const navigate = useNavigate();
@@ -40,8 +40,8 @@ export default function ServiceManagementPage() {
     }
   ]);
 
-  const handleLogout = async () => {
-    await authApi.logout();
+  const handleLogout = () => {
+    alert('Đăng xuất thành công!');
     navigate('/login');
   };
 
@@ -55,6 +55,10 @@ export default function ServiceManagementPage() {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
+    } else if (menu === 'vehicles') {
+      navigate('/admin/vehicles');
+    } else if (menu === 'settings') {
+      navigate('/admin/settings');
     }
   };
 
@@ -114,6 +118,18 @@ export default function ServiceManagementPage() {
           >
             Quản lý phụ tùng
           </button>
+          <button
+            className={`nav-item ${activeMenu === 'vehicles' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('vehicles')}
+          >
+            Quản lý xe
+          </button>
+          <button
+            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('settings')}
+          >
+            Cài đặt hệ thống
+          </button>
         </nav>
       </aside>
 
@@ -123,7 +139,7 @@ export default function ServiceManagementPage() {
         <header className="admin-header">
           <div className="header-user">
             <div className="user-avatar">
-              <div className="avatar-circle"></div>
+              <img src={adminAvatar} alt="Admin Avatar" className="avatar-image" />
             </div>
             <span className="user-name">{adminInfo.name}</span>
           </div>

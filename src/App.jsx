@@ -6,49 +6,55 @@ import {
   Navigate,
 } from "react-router-dom";
 
-// Public Pages
-import HomePage from "./pages/HomePage/HomePage";
-import LoginPage from "./modules/auth/LoginPage";
-import RegisterPage from "./modules/auth/RegisterPage";
-import NotFoundPage from "./pages/NotFoundPage";
-
-// Customer Pages
-import BookingPage from './modules/customer/pages/BookingPage';
-import BookingHistoryPage from './modules/customer/pages/BookingHistoryPage';
-
-// Layouts
-import StaffLayout from "./modules/staff/layout/StaffLayout";
-
-// Staff Pages
-import CustomerManagement from "./modules/staff/CustomerManagement/CustomerManagement";
-import StaffDashboard from "./modules/staff/pages/DashboardPage";
-import CheckinPage from "./modules/staff/pages/CheckinPage";
-import ScheduleManagementPage from "./modules/staff/ScheduleManagement/ScheduleManagementPage";
-import PartInventoryPage from "./modules/staff/pages/PartInventoryPage";
-import InvoiceManagementPage from "./modules/staff/pages/InvoiceManagemetPage";
-import VehicleManagement from "./modules/staff/pages/VehicleManagement";
-import VehicleDetailPage from "./modules/staff/pages/VehicleDetailPage";
-import ScheduleDetailPage from "./modules/staff/pages/ScheduleDetail/ScheduleDetailPage";
-
-// Admin Pages
-import AdminDashboard from './modules/admin/pages/DashboardPage';
-import UserManagementPage from './modules/admin/pages/UserManagementPage';
-import RevenueManagementPage from './modules/admin/pages/RevenueManagementPage';
-import ServiceManagementPage from './modules/admin/pages/ServiceManagementPage';
-import PartsManagementPage from './modules/admin/pages/PartsManagementPage';
-import VehicleManagementPage from './modules/admin/pages/VehicleManagementPage';
-import SystemSettingsPage from './modules/admin/pages/SystemSettingsPage';
-
-// Technician Pages & Layout
-import TechnicianLayout from './modules/technician/layout/TechnicianLayout';
-import AssignedVehiclesPage from './modules/technician/pages/AssignedVehiclesPage';
-
-// Components
-import ProtectedRoute from "./components/ProtectedRoute";
-
-// Context
+// ===== Contexts =====
 import { AuthProvider } from "./contexts/AuthContext";
 
+// ===== Components =====
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// ===== Public Pages =====
+import HomePage from "./pages/HomePage";
+import NotFoundPage from "./pages/NotFoundPage";
+
+// ===== Auth Pages =====
+import LoginPage from "./modules/auth/LoginPage";
+import RegisterPage from "./modules/auth/RegisterPage";
+
+// ===== Customer Pages =====
+import BookingPage from "./modules/customer/pages/BookingPage";
+import BookingHistoryPage from "./modules/customer/pages/BookingHistoryPage";
+import MyVehiclesPage from "./modules/customer/pages/MyVehiclesPage";
+import PaymentHistoryPage from "./modules/customer/pages/PaymentHistoryPage";
+
+// ===== Staff Layout & Pages =====
+import StaffLayout from "./modules/staff/layout/StaffLayout";
+import StaffDashboard from "./modules/staff/pages/DashboardPage";
+import CustomerManagement from "./modules/staff/CustomerManagement/CustomerManagement";
+import VehicleManagement from "./modules/staff/pages/VehicleManagement";
+import VehicleDetailPage from "./modules/staff/pages/VehicleDetailPage";
+import ScheduleManagementPage from "./modules/staff/ScheduleManagement/ScheduleManagementPage";
+import ScheduleDetailPage from "./modules/staff/pages/ScheduleDetail/ScheduleDetailPage";
+import InvoiceManagementPage from "./modules/staff/pages/InvoiceManagemetPage";
+import CheckinPage from "./modules/staff/pages/CheckinPage";
+import PartInventoryPage from "./modules/staff/pages/PartInventoryPage";
+
+// ===== Admin Pages =====
+import AdminDashboard from "./modules/admin/pages/DashboardPage";
+import UserManagementPage from "./modules/admin/pages/UserManagementPage";
+import RevenueManagementPage from "./modules/admin/pages/RevenueManagementPage";
+import ServiceManagementPage from "./modules/admin/pages/ServiceManagementPage";
+import PartsManagementPage from "./modules/admin/pages/PartsManagementPage";
+import VehicleManagementPage from "./modules/admin/pages/VehicleManagementPage";
+import SystemSettingsPage from "./modules/admin/pages/SystemSettingsPage";
+
+// ===== Technician Layout & Pages =====
+import TechnicianLayout from "./modules/technician/layout/TechnicianLayout";
+import AssignedVehiclesPage from "./modules/technician/pages/AssignedVehiclesPage";
+import TechnicianDashboardPage from "./modules/technician/pages/DashboardPage";
+import AssignedJobsPage from "./modules/technician/pages/AssignedJobsPage";
+import InspectionPage from "./modules/technician/pages/InspectionPage";
+
+// ===== Styles =====
 import "./App.css";
 
 function App() {
@@ -60,8 +66,12 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+
+          {/* ===== Customer Routes ===== */}
           <Route path="/booking" element={<BookingPage />} />
           <Route path="/booking-history" element={<BookingHistoryPage />} />
+          <Route path="/my-vehicles" element={<MyVehiclesPage />} />
+          <Route path="/payment-history" element={<PaymentHistoryPage />} />
 
           {/* ===== Staff Routes ===== */}
           <Route
@@ -146,11 +156,13 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/technician/assigned-vehicles" replace />} />
+            <Route index element={<TechnicianDashboardPage />} />
+            <Route path="dashboard" element={<TechnicianDashboardPage />} />
             <Route path="assigned-vehicles" element={<AssignedVehiclesPage />} />
-            <Route path="dashboard" element={<div style={{ padding: '2rem' }}>Dashboard - Coming soon</div>} />
+            <Route path="assigned-jobs" element={<AssignedJobsPage />} />
+            <Route path="inspection" element={<InspectionPage />} />
+            <Route path="inspection/:recordId" element={<InspectionPage />} />
             <Route path="services" element={<div style={{ padding: '2rem' }}>Phiếu dịch vụ - Coming soon</div>} />
-            <Route path="inspection" element={<div style={{ padding: '2rem' }}>Biên bản kiểm tra - Coming soon</div>} />
             <Route path="maintenance-list" element={<div style={{ padding: '2rem' }}>Danh sách bảo dưỡng - Coming soon</div>} />
           </Route>
 

@@ -1,42 +1,29 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8080/api';
+import axiosClient from './axiosClient';
 
 const vehicleApi = {
-  // Lấy tất cả xe
-  getAllVehicles: async () => {
-    const response = await axios.get(`${API_BASE_URL}/vehicles`);
-    return response.data;
+  // Lấy danh sách xe của khách hàng
+  getCustomerVehicles: (customerId) => {
+    return axiosClient.get(`/api/vehicles/customer/${customerId}`);
   },
 
-  // Lấy chi tiết xe theo ID
-  getVehicleById: async (id) => {
-    const response = await axios.get(`${API_BASE_URL}/vehicles/${id}`);
-    return response.data;
+  // Thêm xe mới cho khách hàng
+  addVehicle: (vehicleData) => {
+    return axiosClient.post('/api/vehicles', vehicleData);
   },
 
-  // Tạo mới xe
-  createVehicle: async (data) => {
-    const response = await axios.post(`${API_BASE_URL}/vehicles`, data);
-    return response.data;
-  },
-
-  // Cập nhật xe
-  updateVehicle: async (id, data) => {
-    const response = await axios.put(`${API_BASE_URL}/vehicles/${id}`, data);
-    return response.data;
+  // Cập nhật thông tin xe
+  updateVehicle: (vehicleId, vehicleData) => {
+    return axiosClient.put(`/api/vehicles/${vehicleId}`, vehicleData);
   },
 
   // Xóa xe
-  deleteVehicle: async (id) => {
-    const response = await axios.delete(`${API_BASE_URL}/vehicles/${id}`);
-    return response.data;
+  deleteVehicle: (vehicleId) => {
+    return axiosClient.delete(`/api/vehicles/${vehicleId}`);
   },
 
-  // Tìm kiếm xe
-  searchVehicles: async (keyword) => {
-    const response = await axios.get(`${API_BASE_URL}/vehicles/search?keyword=${keyword}`);
-    return response.data;
+  // Lấy chi tiết xe
+  getVehicleById: (vehicleId) => {
+    return axiosClient.get(`/api/vehicles/${vehicleId}`);
   }
 };
 
