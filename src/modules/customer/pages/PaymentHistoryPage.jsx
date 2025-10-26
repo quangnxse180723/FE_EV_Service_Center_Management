@@ -12,95 +12,8 @@ export default function PaymentHistoryPage() {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // User info (thực tế sẽ lấy từ AuthContext)
-  const userInfo = {
-    id: 'KH001',
-    name: 'Nguyễn Văn A'
-  };
-
-  // Mock data cho demo
-  const mockPayments = [
-    {
-      id: 'PAY001',
-      invoiceNumber: 'HD001',
-      date: '2024-03-15',
-      vehicleLicense: '29A-123.45',
-      vehicleModel: 'VinFast Feliz S',
-      serviceType: 'Bảo dưỡng định kỳ',
-      serviceDetails: [
-        'Thay dầu động cơ',
-        'Kiểm tra hệ thống phanh',
-        'Kiểm tra lốp xe',
-        'Kiểm tra hệ thống điện'
-      ],
-      partsCost: 450000,
-      laborCost: 300000,
-      totalAmount: 750000,
-      paymentMethod: 'Thẻ tín dụng',
-      status: 'completed',
-      technician: 'Nguyễn Văn B',
-      serviceCenter: 'Trung tâm Quận 1'
-    },
-    {
-      id: 'PAY002',
-      invoiceNumber: 'HD002',
-      date: '2024-02-10',
-      vehicleLicense: '30B-456.78',
-      vehicleModel: 'Yadea Ulike',
-      serviceType: 'Sửa chữa',
-      serviceDetails: [
-        'Thay pin xe',
-        'Sửa hệ thống sạc',
-        'Kiểm tra motor'
-      ],
-      partsCost: 2500000,
-      laborCost: 500000,
-      totalAmount: 3000000,
-      paymentMethod: 'Chuyển khoản',
-      status: 'completed',
-      technician: 'Trần Văn C',
-      serviceCenter: 'Trung tâm Quận 3'
-    },
-    {
-      id: 'PAY003',
-      invoiceNumber: 'HD003',
-      date: '2024-01-20',
-      vehicleLicense: '29A-123.45',
-      vehicleModel: 'VinFast Feliz S',
-      serviceType: 'Kiểm tra an toàn',
-      serviceDetails: [
-        'Kiểm tra tổng quan',
-        'Test hệ thống an toàn',
-        'Cập nhật phần mềm'
-      ],
-      partsCost: 0,
-      laborCost: 200000,
-      totalAmount: 200000,
-      paymentMethod: 'Tiền mặt',
-      status: 'completed',
-      technician: 'Lê Thị D',
-      serviceCenter: 'Trung tâm Quận 1'
-    },
-    {
-      id: 'PAY004',
-      invoiceNumber: 'HD004',
-      date: '2024-10-15',
-      vehicleLicense: '29A-123.45',
-      vehicleModel: 'VinFast Feliz S',
-      serviceType: 'Bảo dưỡng định kỳ',
-      serviceDetails: [
-        'Thay lốp trước',
-        'Kiểm tra hệ thống điều hòa'
-      ],
-      partsCost: 800000,
-      laborCost: 150000,
-      totalAmount: 950000,
-      paymentMethod: 'Thẻ tín dụng',
-      status: 'pending',
-      technician: 'Nguyễn Văn B',
-      serviceCenter: 'Trung tâm Quận 1'
-    }
-  ];
+  // User info - lấy customerId từ localStorage
+  const customerId = localStorage.getItem('customerId');
 
   useEffect(() => {
     fetchPaymentHistory();
@@ -109,33 +22,39 @@ export default function PaymentHistoryPage() {
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true);
-      // Trong thực tế sẽ gọi API
-      // const response = await paymentApi.getCustomerPaymentHistory(userInfo.id);
-      // setPayments(response.data);
+      setError(null);
+
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        throw new Error('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+      }
+
+      // Gọi API lấy payment history từ database
+      console.log('🔍 Fetching payment history for customerId:', customerId);
+      const response = await paymentApi.getCustomerPaymentHistory(customerId);
+      let paymentsData = Array.isArray(response) ? response : response?.data || [];
       
-      // Demo với mock data
-      setTimeout(() => {
-        let filteredPayments = mockPayments;
-        
-        // Filter by year
-        if (filterYear !== 'all') {
-          filteredPayments = filteredPayments.filter(payment => 
-            new Date(payment.date).getFullYear() === parseInt(filterYear)
-          );
-        }
-        
-        // Filter by status
-        if (filterStatus !== 'all') {
-          filteredPayments = filteredPayments.filter(payment => 
-            payment.status === filterStatus
-          );
-        }
-        
-        setPayments(filteredPayments);
-        setLoading(false);
-      }, 1000);
+      console.log('✅ Payments loaded from database:', paymentsData);
+
+      // Filter by year
+      if (filterYear !== 'all') {
+        paymentsData = paymentsData.filter(payment => {
+          const paymentDate = new Date(payment.paymentDate || payment.date);
+          return paymentDate.getFullYear() === parseInt(filterYear);
+        });
+      }
+      
+      // Filter by status
+      if (filterStatus !== 'all') {
+        paymentsData = paymentsData.filter(payment => 
+          (payment.status || '').toLowerCase() === filterStatus.toLowerCase()
+        );
+      }
+      
+      setPayments(paymentsData);
     } catch (err) {
-      setError('Không thể tải lịch sử thanh toán');
+      console.error('❌ Error loading payment history:', err);
+      setError(err.message || 'Không thể tải lịch sử thanh toán. Vui lòng thử lại.');
+    } finally {
       setLoading(false);
     }
   };

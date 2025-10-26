@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Time Slots API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #1976d2;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #1565c0;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .result h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .status.success { background: #4caf50; color: white; }
+        .status.error { background: #f44336; color: white; }
+        .status.loading { background: #ff9800; color: white; }
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .slot-item {
+            padding: 15px;
+            text-align: center;
+            border-radius: 6px;
+            border: 2px solid #ddd;
+            font-weight: 600;
+        }
+        .slot-item.available {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .slot-item.few {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #e65100;
+        }
+        .slot-item.full {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .slot-time {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .slot-count {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box strong {
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Time Slots API</h1>
+        
+        <div class="info-box">
+            <strong>📍 API Endpoint:</strong> GET /api/customer/schedules/available-slots<br>
+            <strong>🖥️ Backend:</strong> http://localhost:8080<br>
+            <strong>💡 Mục đích:</strong> Kiểm tra xem backend đã implement API getAvailableSlots chưa
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Cấu hình Test</h2>
+            
+            <label for="centerId">Center ID:</label>
+            <input type="number" id="centerId" value="1" placeholder="Nhập ID của trung tâm (ví dụ: 1)">
+            
+            <label for="testDate">Ngày đặt lịch:</label>
+            <input type="date" id="testDate" value="">
+            
+            <button onclick="testAPI()" id="testBtn">🚀 Gọi API</button>
+        </div>
+
+        <div id="resultContainer"></div>
+    </div>
+
+    <script>
+        // Set default date to today
+        document.getElementById('testDate').valueAsDate = new Date();
+
+        async function testAPI() {
+            const centerId = document.getElementById('centerId').value;
+            const date = document.getElementById('testDate').value;
+            const resultContainer = document.getElementById('resultContainer');
+            const testBtn = document.getElementById('testBtn');
+
+            if (!centerId || !date) {
+                alert('Vui lòng nhập đầy đủ Center ID và Ngày!');
+                return;
+            }
+
+            // Show loading
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ Đang gọi API...';
+            resultContainer.innerHTML = `
+                <div class="result">
+                    <span class="status loading">LOADING</span>
+                    <p>Đang gọi API với params: centerId=${centerId}, date=${date}</p>
+                </div>
+            `;
+
+            try {
+                const url = `http://localhost:8080/api/customer/schedules/available-slots?centerId=${centerId}&date=${date}`;
+                console.log('🔍 Calling API:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Add token if needed
+                        // 'Authorization': 'Bearer YOUR_TOKEN_HERE'
+                    }
+                });
+
+                console.log('📡 Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Response data:', data);
+
+                // Display success result
+                displaySuccessResult(data, centerId, date);
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                displayErrorResult(error);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🚀 Gọi API';
+            }
+        }
+
+        function displaySuccessResult(data, centerId, date) {
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // Separate morning and afternoon
+            const morning = [];
+            const afternoon = [];
+
+            data.forEach(slot => {
+                const hour = parseInt(slot.time.split(':')[0]);
+                const slotWithStatus = {
+                    ...slot,
+                    status: slot.available === 0 ? 'full' : 
+                            slot.available <= 3 ? 'few' : 'available'
+                };
+                
+                if (hour < 12) {
+                    morning.push(slotWithStatus);
+                } else {
+                    afternoon.push(slotWithStatus);
+                }
+            });
+
+            resultContainer.innerHTML = `
+                <div class="result">
+                    <span class="status success">SUCCESS ✅</span>
+                    <h3>📊 Kết quả API</h3>
+                    <p><strong>Center ID:</strong> ${centerId}</p>
+                    <p><strong>Ngày:</strong> ${date}</p>
+                    <p><strong>Tổng số slots:</strong> ${data.length} (Sáng: ${morning.length}, Chiều: ${afternoon.length})</p>
+                    
+                    ${morning.length > 0 ? `
+                        <h4>☀️ Buổi Sáng (${morning.length} slots)</h4>
+                        <div class="slot-grid">
+                            ${morning.map(slot => `
+                                <div class="slot-item ${slot.status}">
+                                    <span class="slot-time">${slot.time}</span>
+                                    <span class="slot-count">${slot.available}/${slot.total || 12}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${afternoon.length > 0 ? `
+                        <h4>🌙 Buổi Chiều (${afternoon.length} slots)</h4>
+                        <div class="slot-grid">
+                            ${afternoon.map(slot => `
+                                <div class="slot-item ${slot.status}">
+                                    <span class="slot-time">${slot.time}</span>
+                                    <span class="slot-count">${slot.available}/${slot.total || 12}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <h4>📋 Raw JSON Response:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        function displayErrorResult(error) {
+            const resultContainer = document.getElementById('resultContainer');
+            
+            let errorMessage = error.message;
+            let suggestion = '';
+
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                suggestion = `
+                    <div class="info-box" style="background: #fff3e0; border-color: #ff9800;">
+                        <strong>🔍 Khả năng cao:</strong><br>
+                        1. Backend chưa chạy (http://localhost:8080)<br>
+                        2. CORS chưa được cấu hình đúng<br>
+                        3. Endpoint chưa được implement trong backend
+                    </div>
+                `;
+            } else if (error.message.includes('404')) {
+                suggestion = `
+                    <div class="info-box" style="background: #ffebee; border-color: #f44336;">
+                        <strong>❌ Lỗi 404:</strong> Endpoint chưa tồn tại trong backend<br>
+                        <strong>✅ Cần làm:</strong> Backend cần implement method <code>getAvailableSlots()</code>
+                    </div>
+                `;
+            } else if (error.message.includes('500')) {
+                suggestion = `
+                    <div class="info-box" style="background: #ffebee; border-color: #f44336;">
+                        <strong>❌ Lỗi 500:</strong> Backend có lỗi khi xử lý request<br>
+                        <strong>🔍 Kiểm tra:</strong> Console log của backend để xem chi tiết lỗi
+                    </div>
+                `;
+            }
+
+            resultContainer.innerHTML = `
+                <div class="result">
+                    <span class="status error">ERROR ❌</span>
+                    <h3>⚠️ Lỗi khi gọi API</h3>
+                    <p><strong>Message:</strong> ${errorMessage}</p>
+                    ${suggestion}
+                    <h4>📋 Full Error:</h4>
+                    <pre>${error.stack || error.toString()}</pre>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

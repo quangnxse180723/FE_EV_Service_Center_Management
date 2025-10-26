@@ -3,7 +3,18 @@ import axiosClient from './axiosClient';
 const scheduleApi = {
   // Đặt lịch mới
   bookSchedule: (bookingData) => {
+    // GIỮ LẠI customerId trong body vì backend cần nó (không lấy được từ token)
+    console.log('📍 Booking endpoint:', '/customer/schedules/book');
+    console.log('📦 Data sent (WITH customerId):', bookingData);
     return axiosClient.post('/customer/schedules/book', bookingData);
+  },
+
+  // Lấy danh sách time slots có sẵn theo ngày và trung tâm
+  getAvailableTimeSlots: (centerId, date) => {
+    console.log('🔍 Fetching time slots for:', { centerId, date });
+    return axiosClient.get('/customer/schedules/available-slots', {
+      params: { centerId, date }
+    });
   },
 
   // Lấy danh sách lịch hẹn của khách hàng

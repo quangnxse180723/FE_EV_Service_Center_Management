@@ -25,6 +25,7 @@ import BookingPage from "./modules/customer/pages/BookingPage";
 import BookingHistoryPage from "./modules/customer/pages/BookingHistoryPage";
 import MyVehiclesPage from "./modules/customer/pages/MyVehiclesPage";
 import PaymentHistoryPage from "./modules/customer/pages/PaymentHistoryPage";
+import CustomerProfilePage from "./modules/customer/pages/CustomerProfilePage";
 
 // ===== Staff Layout & Pages =====
 import StaffLayout from "./modules/staff/layout/StaffLayout";
@@ -72,6 +73,7 @@ function App() {
           <Route path="/booking-history" element={<BookingHistoryPage />} />
           <Route path="/my-vehicles" element={<MyVehiclesPage />} />
           <Route path="/payment-history" element={<PaymentHistoryPage />} />
+          <Route path="/customer-profile" element={<CustomerProfilePage />} />
 
           {/* ===== Staff Routes ===== */}
           <Route

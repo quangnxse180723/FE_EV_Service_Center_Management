@@ -2,83 +2,142 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './MyVehiclesPage.css';
 import vehicleApi from '../../../api/vehicleApi';
-import XE01 from '/src/assets/img/XE01.png';
-import XE02 from '/src/assets/img/XE02.png';
+import customerApi from '../../../api/customerApi';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function MyVehiclesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  
+  // State cho customer data
+  const [customerData, setCustomerData] = useState(null);
 
-  // State cho form thêm xe
+  // State cho form thêm xe - Match với CreateVehicleRequest Backend
   const [newVehicle, setNewVehicle] = useState({
     licensePlate: '',
     model: '',
-    year: '',
-    color: ''
+    vin: '',
+    currentMileage: '',
+    lastServiceDate: '',
+    imageFile: null,
+    imagePreview: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Giả lập user info (thực tế sẽ lấy từ AuthContext)
-  const userInfo = {
-    id: 'KH001',
-    name: 'Nguyễn Văn A'
-  };
-
-  // Mock data cho demo (thực tế sẽ gọi API)
-  const mockVehicles = [
-    {
-      id: 1,
-      licensePlate: '29A-123.45',
-      model: 'VinFast Feliz S',
-      year: 2023,
-      color: 'Trắng',
-      batteryCapacity: '51.8 kWh',
-      range: '300 km',
-      registrationDate: '2023-05-15',
-      lastService: '2024-03-15',
-      nextService: '2024-09-15',
-      status: 'active',
-      image: XE01
-    },
-    {
-      id: 2,
-      licensePlate: '30B-456.78',
-      model: 'Yadea Ulike',
-      year: 2022,
-      color: 'Đen',
-      batteryCapacity: '3.2 kWh',
-      range: '80 km',
-      registrationDate: '2022-08-20',
-      lastService: '2024-02-10',
-      nextService: '2024-08-10',
-      status: 'active',
-      image: XE02
-    }
-  ];
+  // User info từ API
+  const [userInfo, setUserInfo] = useState({
+    id: user?.customerId || 'KH001',
+    name: user?.fullName || 'Khách hàng'
+  });
 
   useEffect(() => {
+    fetchCustomerData();
     fetchVehicles();
   }, []);
+
+  const fetchCustomerData = async () => {
+    try {
+      let customerId = localStorage.getItem('customerId');
+      
+      // Tìm bằng email nếu không có customerId
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const userEmail = user?.email;
+          
+          if (userEmail) {
+            const allCustomers = await customerApi.getAllCustomers();
+            const customers = Array.isArray(allCustomers) ? allCustomers : allCustomers?.data || [];
+            const foundCustomer = customers.find(c => 
+              c.email?.toLowerCase() === userEmail?.toLowerCase()
+            );
+            
+            if (foundCustomer) {
+              customerId = foundCustomer.customerId || foundCustomer.id;
+              localStorage.setItem('customerId', customerId);
+            } else if (customers.length === 1 && user?.role === 'CUSTOMER') {
+              customerId = customers[0].customerId || customers[0].id;
+              localStorage.setItem('customerId', customerId);
+            }
+          }
+        }
+      }
+      
+      if (customerId && customerId !== 'null' && customerId !== 'undefined') {
+        const data = await customerApi.getCustomerById(customerId);
+        setCustomerData(data);
+        setUserInfo({
+          id: `KH${String(data.customerId || customerId).padStart(3, '0')}`,
+          name: data.fullName || user?.fullName || 'Khách hàng'
+        });
+        console.log('✅ Customer data loaded:', data);
+      } else {
+        throw new Error('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+      }
+    } catch (err) {
+      console.error('❌ Error fetching customer data:', err);
+      setError(err.message || 'Không thể tải thông tin khách hàng');
+      setLoading(false);
+    }
+  };
 
   const fetchVehicles = async () => {
     try {
       setLoading(true);
-      // Trong môi trường thực tế, sẽ gọi API
-      // const response = await vehicleApi.getCustomerVehicles(userInfo.id);
-      // setVehicles(response.data);
+      setError(null);
       
-      // Demo với mock data
-      setTimeout(() => {
-        setVehicles(mockVehicles);
-        setLoading(false);
-      }, 1000);
+      // Lấy customerId từ localStorage
+      let customerId = localStorage.getItem('customerId');
+      
+      // Nếu không có customerId, thử lấy từ user object hoặc accountId
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        console.warn('⚠️ No customerId in localStorage, trying alternative sources...');
+        
+        const userStr = localStorage.getItem('user');
+        const accountId = localStorage.getItem('accountId');
+        
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            customerId = user.customerId || user.accountId || accountId;
+            if (customerId) {
+              console.log('✅ Found customerId from user object:', customerId);
+              localStorage.setItem('customerId', customerId);
+            }
+          } catch (e) {
+            console.error('Error parsing user:', e);
+          }
+        } else if (accountId) {
+          customerId = accountId;
+          console.log('✅ Using accountId as customerId:', customerId);
+          localStorage.setItem('customerId', customerId);
+        }
+      }
+      
+      // Nếu vẫn không có customerId, báo lỗi
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        throw new Error('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+      }
+      
+      // Gọi API lấy xe của khách hàng
+      console.log('🔍 Fetching vehicles for customerId:', customerId);
+      const response = await vehicleApi.getCustomerVehicles(customerId);
+      const vehiclesData = Array.isArray(response) ? response : response?.data || [];
+      
+      console.log('✅ Vehicles loaded from database:', vehiclesData);
+      setVehicles(vehiclesData);
+      
     } catch (err) {
-      setError('Không thể tải danh sách xe');
+      console.error('❌ Error loading vehicles:', err);
+      setError(err.message || 'Không thể tải danh sách xe. Vui lòng thử lại.');
+    } finally {
       setLoading(false);
     }
   };
@@ -87,8 +146,10 @@ export default function MyVehiclesPage() {
     setNewVehicle({
       licensePlate: '',
       model: '',
-      year: '',
-      color: ''
+      vin: '',
+      currentMileage: '',
+      imageFile: null,
+      imagePreview: null
     });
     setShowAddModal(true);
   };
@@ -100,95 +161,137 @@ export default function MyVehiclesPage() {
     }));
   };
 
+  // Handle image upload with compression
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file ảnh!');
+        return;
+      }
+      
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Kích thước file không được vượt quá 2MB!');
+        return;
+      }
+
+      // Compress and convert to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Resize image to max 800x600
+          const maxWidth = 800;
+          const maxHeight = 600;
+          let { width, height } = img;
+          
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+          
+          setNewVehicle(prev => ({
+            ...prev,
+            imageFile: null, // Clear file object
+            imagePreview: compressedBase64,
+            imageBase64: compressedBase64
+          }));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmitVehicle = async (e) => {
     e.preventDefault();
     
     // Validation
-    if (!newVehicle.licensePlate || !newVehicle.model || !newVehicle.year || !newVehicle.color) {
-      alert('Vui lòng điền đầy đủ thông tin');
+    if (!newVehicle.licensePlate || !newVehicle.model || !newVehicle.vin) {
+      alert('Vui lòng điền đầy đủ thông tin bắt buộc (Biển số, Model và VIN)');
       return;
     }
 
     try {
       setIsSubmitting(true);
       
-      // Tạo vehicle object mới
-      const vehicleToAdd = {
-        id: Date.now(), // Tạm thời dùng timestamp làm ID
-        licensePlate: newVehicle.licensePlate,
-        model: newVehicle.model,
-        year: parseInt(newVehicle.year),
-        color: newVehicle.color,
-        batteryCapacity: getDefaultBatteryCapacity(newVehicle.model),
-        range: getDefaultRange(newVehicle.model),
-        registrationDate: new Date().toISOString().split('T')[0],
-        lastService: null,
-        nextService: getNextServiceDate(),
-        status: 'active',
-        image: getDefaultImage(newVehicle.model)
+      // Lấy customerId
+      const customerId = localStorage.getItem('customerId');
+      console.log('🔍 CustomerId from localStorage:', customerId);
+      
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        console.error('❌ No valid customerId found');
+        alert('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+        return;
+      }
+
+      // Tạo vehicle object theo format CreateVehicleRequest của Backend
+      const vehicleData = {
+        customerId: parseInt(customerId),
+        licensePlate: newVehicle.licensePlate.trim(),
+        model: newVehicle.model.trim(),
+        vin: newVehicle.vin.trim(),
+        currentMileage: newVehicle.currentMileage ? parseInt(newVehicle.currentMileage) : 0,
+        imageUrl: null, // ✅ TẠM THỜI BỎ ẢNH - Backend cần fix database column
+        lastServiceDate: null
       };
 
-      // Trong thực tế sẽ gọi API
-      // await vehicleApi.addVehicle(vehicleToAdd);
+      console.log('📤 Adding vehicle (WITHOUT IMAGE):');
+      console.log('  - customerId:', vehicleData.customerId);
+      console.log('  - licensePlate:', vehicleData.licensePlate);
+      console.log('  - model:', vehicleData.model);
+      console.log('  - vin:', vehicleData.vin);
+      console.log('  - currentMileage:', vehicleData.currentMileage);
+      console.log('⚠️ Image upload disabled temporarily');
       
-      // Cập nhật danh sách vehicles
-      setVehicles(prev => [...prev, vehicleToAdd]);
+      // Gọi API để lưu vào database - Gửi JSON object trực tiếp
+      const response = await vehicleApi.createVehicle(vehicleData);
+      
+      console.log('✅ Vehicle added successfully:', response);
+      
+      // Reload danh sách xe từ server
+      await fetchVehicles();
       
       // Đóng modal và reset form
       setShowAddModal(false);
       setNewVehicle({
         licensePlate: '',
         model: '',
-        year: '',
-        color: ''
+        vin: '',
+        currentMileage: '',
+        imageFile: null,
+        imagePreview: null
       });
       
       // Hiển thị thông báo thành công
-      setSuccessMessage(`Thêm xe ${vehicleToAdd.licensePlate} thành công!`);
+      setSuccessMessage(`✅ Thêm xe ${vehicleData.licensePlate} thành công!`);
       setTimeout(() => setSuccessMessage(''), 3000);
       
     } catch (err) {
-      alert('Lỗi khi thêm xe: ' + err.message);
+      console.error('❌ Error adding vehicle:', err);
+      alert('Lỗi khi thêm xe: ' + (err.response?.data?.message || err.message));
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Helper functions
-  const getDefaultBatteryCapacity = (model) => {
-    const capacityMap = {
-      'VinFast Feliz S': '51.8 kWh',
-      'Yadea Ulike': '3.2 kWh',
-      'VinFast Klara S': '2.5 kWh',
-      'VinFast Impes': '3.5 kWh'
-    };
-    return capacityMap[model] || '2.5 kWh';
-  };
-
-  const getDefaultRange = (model) => {
-    const rangeMap = {
-      'VinFast Feliz S': '300 km',
-      'Yadea Ulike': '80 km',
-      'VinFast Klara S': '60 km',
-      'VinFast Impes': '90 km'
-    };
-    return rangeMap[model] || '60 km';
-  };
-
-  const getDefaultImage = (model) => {
-    const imageMap = {
-      'VinFast Feliz S': XE01,
-      'Yadea Ulike': XE02,
-      'VinFast Klara S': XE01,
-      'VinFast Impes': XE02
-    };
-    return imageMap[model] || XE01;
-  };
-
-  const getNextServiceDate = () => {
-    const nextService = new Date();
-    nextService.setMonth(nextService.getMonth() + 6); // 6 tháng sau
-    return nextService.toISOString().split('T')[0];
   };
 
   const handleViewDetail = (vehicle) => {
@@ -198,22 +301,37 @@ export default function MyVehiclesPage() {
   const handleDeleteVehicle = async (vehicleId) => {
     if (window.confirm('Bạn có chắc muốn xóa xe này?')) {
       try {
-        // await vehicleApi.deleteVehicle(vehicleId);
+        await vehicleApi.deleteVehicle(vehicleId);
         setVehicles(vehicles.filter(v => v.id !== vehicleId));
+        setSuccessMessage('✅ Xóa xe thành công!');
+        setTimeout(() => setSuccessMessage(''), 3000);
       } catch (err) {
-        alert('Lỗi khi xóa xe');
+        console.error('❌ Error deleting vehicle:', err);
+        alert('Lỗi khi xóa xe: ' + (err.response?.data?.message || err.message));
       }
     }
   };
 
   const getStatusBadge = (status) => {
     const statusMap = {
+      'ACTIVE': { text: 'Hoạt động', class: 'status-active' },
       'active': { text: 'Hoạt động', class: 'status-active' },
+      'MAINTENANCE': { text: 'Bảo trì', class: 'status-maintenance' },
       'maintenance': { text: 'Bảo trì', class: 'status-maintenance' },
+      'INACTIVE': { text: 'Ngưng hoạt động', class: 'status-inactive' },
       'inactive': { text: 'Ngưng hoạt động', class: 'status-inactive' }
     };
-    const statusInfo = statusMap[status] || statusMap['active'];
+    const statusInfo = statusMap[status] || { text: 'Hoạt động', class: 'status-active' };
     return <span className={`status-badge ${statusInfo.class}`}>{statusInfo.text}</span>;
+  };
+
+  // Helper function để hiển thị ảnh xe với fallback
+  const getVehicleImage = (vehicle) => {
+    if (vehicle.imageUrl) {
+      return vehicle.imageUrl;
+    }
+    // Placeholder image nếu không có ảnh
+    return 'https://via.placeholder.com/400x250/4CAF50/ffffff?text=EV+Vehicle';
   };
 
   if (loading) {
@@ -276,13 +394,11 @@ export default function MyVehiclesPage() {
           </div>
         ) : (
           <div className="vehicles-grid">
-            {vehicles.map(vehicle => {
-              console.log('Rendering vehicle:', vehicle.model, 'nextService:', vehicle.nextService);
-              return (
-              <div key={vehicle.id} className="vehicle-card">
+            {vehicles.map(vehicle => (
+              <div key={vehicle.vehicleId || vehicle.id} className="vehicle-card">
                 <div className="vehicle-image">
-                  <img src={vehicle.image} alt={vehicle.model} />
-                  {getStatusBadge(vehicle.status)}
+                  <img src={getVehicleImage(vehicle)} alt={vehicle.model} />
+                  {getStatusBadge(vehicle.status || 'ACTIVE')}
                 </div>
                 
                 <div className="vehicle-info">
@@ -293,52 +409,62 @@ export default function MyVehiclesPage() {
                   
                   <div className="vehicle-specs">
                     <div className="spec-grid">
-                      <div className="spec-item">
-                        <div className="spec-icon">📅</div>
-                        <div className="spec-content">
-                          <span className="spec-label">Năm sản xuất</span>
-                          <span className="spec-value">{vehicle.year}</span>
+                      {vehicle.year && (
+                        <div className="spec-item">
+                          <div className="spec-icon">📅</div>
+                          <div className="spec-content">
+                            <span className="spec-label">Năm sản xuất</span>
+                            <span className="spec-value">{vehicle.year}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="spec-item">
-                        <div className="spec-icon">🎨</div>
-                        <div className="spec-content">
-                          <span className="spec-label">Màu sắc</span>
-                          <span className="spec-value">{vehicle.color}</span>
+                      )}
+                      {vehicle.color && (
+                        <div className="spec-item">
+                          <div className="spec-icon">🎨</div>
+                          <div className="spec-content">
+                            <span className="spec-label">Màu sắc</span>
+                            <span className="spec-value">{vehicle.color}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="spec-item">
-                        <div className="spec-icon">🔋</div>
-                        <div className="spec-content">
-                          <span className="spec-label">Dung lượng pin</span>
-                          <span className="spec-value">{vehicle.batteryCapacity}</span>
+                      )}
+                      {vehicle.vin && (
+                        <div className="spec-item">
+                          <div className="spec-icon">�</div>
+                          <div className="spec-content">
+                            <span className="spec-label">VIN</span>
+                            <span className="spec-value">{vehicle.vin}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="spec-item">
-                        <div className="spec-icon">🛣️</div>
-                        <div className="spec-content">
-                          <span className="spec-label">Quãng đường</span>
-                          <span className="spec-value">{vehicle.range}</span>
+                      )}
+                      {vehicle.currentMileage !== null && vehicle.currentMileage !== undefined && (
+                        <div className="spec-item">
+                          <div className="spec-icon">🛣️</div>
+                          <div className="spec-content">
+                            <span className="spec-label">Số km hiện tại</span>
+                            <span className="spec-value">{vehicle.currentMileage.toLocaleString()} km</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <div className="spec-item maintenance-item">
                         <div className="spec-icon">🔧</div>
                         <div className="spec-content">
                           <span className="spec-label">Bảo dưỡng cuối</span>
                           <span className="spec-value">
-                            {vehicle.lastService ? new Date(vehicle.lastService).toLocaleDateString('vi-VN') : 'Chưa có'}
+                            {vehicle.lastServiceDate ? new Date(vehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
                           </span>
                         </div>
                       </div>
-                      <div className="spec-item next-maintenance-item">
-                        <div className="spec-icon">⏰</div>
-                        <div className="spec-content">
-                          <span className="spec-label">Bảo dưỡng tiếp theo</span>
-                          <span className="spec-value next-service-date">
-                            {new Date(vehicle.nextService).toLocaleDateString('vi-VN')}
-                          </span>
+                      {vehicle.nextService && (
+                        <div className="spec-item next-maintenance-item">
+                          <div className="spec-icon">⏰</div>
+                          <div className="spec-content">
+                            <span className="spec-label">Bảo dưỡng tiếp theo</span>
+                            <span className="spec-value next-service-date">
+                              {new Date(vehicle.nextService).toLocaleDateString('vi-VN')}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 
@@ -361,15 +487,14 @@ export default function MyVehiclesPage() {
                     Đặt lịch
                   </button>
                   <button 
-                    onClick={() => handleDeleteVehicle(vehicle.id)}
+                    onClick={() => handleDeleteVehicle(vehicle.vehicleId || vehicle.id)}
                     className="delete-btn"
                   >
                     Xóa
                   </button>
                 </div>
               </div>
-            );
-            })}
+            ))}
           </div>
         )}
       </div>
@@ -385,7 +510,7 @@ export default function MyVehiclesPage() {
             
             <div className="modal-content">
               <div className="vehicle-image-large">
-                <img src={selectedVehicle.image} alt={selectedVehicle.model} />
+                <img src={getVehicleImage(selectedVehicle)} alt={selectedVehicle.model} />
               </div>
               
               <div className="vehicle-full-info">
@@ -394,28 +519,36 @@ export default function MyVehiclesPage() {
                 
                 <div className="info-grid">
                   <div className="info-item">
-                    <label>Năm sản xuất:</label>
-                    <span>{selectedVehicle.year}</span>
+                    <label>VIN:</label>
+                    <span>{selectedVehicle.vin || 'Chưa cập nhật'}</span>
                   </div>
-                  <div className="info-item">
-                    <label>Màu sắc:</label>
-                    <span>{selectedVehicle.color}</span>
-                  </div>
-                  <div className="info-item">
-                    <label>Dung lượng pin:</label>
-                    <span>{selectedVehicle.batteryCapacity}</span>
-                  </div>
-                  <div className="info-item">
-                    <label>Quãng đường:</label>
-                    <span>{selectedVehicle.range}</span>
-                  </div>
-                  <div className="info-item">
-                    <label>Ngày đăng ký:</label>
-                    <span>{new Date(selectedVehicle.registrationDate).toLocaleDateString('vi-VN')}</span>
-                  </div>
+                  {selectedVehicle.year && (
+                    <div className="info-item">
+                      <label>Năm sản xuất:</label>
+                      <span>{selectedVehicle.year}</span>
+                    </div>
+                  )}
+                  {selectedVehicle.color && (
+                    <div className="info-item">
+                      <label>Màu sắc:</label>
+                      <span>{selectedVehicle.color}</span>
+                    </div>
+                  )}
+                  {selectedVehicle.currentMileage !== null && selectedVehicle.currentMileage !== undefined && (
+                    <div className="info-item">
+                      <label>Số km hiện tại:</label>
+                      <span>{selectedVehicle.currentMileage.toLocaleString()} km</span>
+                    </div>
+                  )}
+                  {selectedVehicle.lastServiceDate && (
+                    <div className="info-item">
+                      <label>Bảo dưỡng cuối:</label>
+                      <span>{new Date(selectedVehicle.lastServiceDate).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  )}
                   <div className="info-item">
                     <label>Trạng thái:</label>
-                    {getStatusBadge(selectedVehicle.status)}
+                    {getStatusBadge(selectedVehicle.status || 'ACTIVE')}
                   </div>
                 </div>
               </div>
@@ -435,6 +568,30 @@ export default function MyVehiclesPage() {
             
             <div className="modal-content">
               <form className="add-vehicle-form" onSubmit={handleSubmitVehicle}>
+                {/* Image Upload */}
+                <div className="form-group full-width">
+                  <label>Ảnh xe:</label>
+                  <div className="image-upload-container">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ display: 'none' }}
+                      id="image-upload"
+                    />
+                    <label htmlFor="image-upload" className="image-upload-btn">
+                      {newVehicle.imagePreview ? (
+                        <img src={newVehicle.imagePreview} alt="Preview" className="image-preview" />
+                      ) : (
+                        <div className="upload-placeholder">
+                          <span>📷</span>
+                          <p>Click để chọn ảnh</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                </div>
+                
                 <div className="form-row">
                   <div className="form-group">
                     <label>Biển số xe: <span className="required">*</span></label>
@@ -458,30 +615,30 @@ export default function MyVehiclesPage() {
                       <option value="Yadea Ulike">Yadea Ulike</option>
                       <option value="VinFast Klara S">VinFast Klara S</option>
                       <option value="VinFast Impes">VinFast Impes</option>
+                      <option value="Honda SH">Honda SH</option>
+                      <option value="Yamaha NVX">Yamaha NVX</option>
                     </select>
                   </div>
                 </div>
                 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Năm sản xuất: <span className="required">*</span></label>
+                    <label>VIN (Vehicle Identification Number):</label>
                     <input 
-                      type="number" 
-                      min="2000" 
-                      max="2024"
-                      value={newVehicle.year}
-                      onChange={(e) => handleFormChange('year', e.target.value)}
-                      required
+                      type="text" 
+                      placeholder="VD: 1HGBH41JXMN109186"
+                      value={newVehicle.vin}
+                      onChange={(e) => handleFormChange('vin', e.target.value)}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Màu sắc: <span className="required">*</span></label>
+                    <label>Số km hiện tại:</label>
                     <input 
-                      type="text" 
-                      placeholder="VD: Trắng, Đen, Đỏ"
-                      value={newVehicle.color}
-                      onChange={(e) => handleFormChange('color', e.target.value)}
-                      required
+                      type="number" 
+                      min="0"
+                      placeholder="VD: 15000"
+                      value={newVehicle.currentMileage}
+                      onChange={(e) => handleFormChange('currentMileage', e.target.value)}
                     />
                   </div>
                 </div>

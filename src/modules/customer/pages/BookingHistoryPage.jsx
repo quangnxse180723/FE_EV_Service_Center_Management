@@ -7,17 +7,24 @@ import scheduleApi from '../../../api/scheduleApi';
 export default function BookingHistoryPage() {
   const navigate = useNavigate();
   
-  // Giả lập user đã đăng nhập
-  const [userInfo] = useState({
-    name: 'Nguyễn Văn A',
-    id: 1,
-    phone: '0901234567',
-    email: 'nguyenvana@example.com',
-    avatar: '/src/assets/img/avtAdmin.jpg'
+  // Lấy customerId từ localStorage
+  const customerId = localStorage.getItem('customerId');
+  
+  // Lấy user info từ localStorage
+  const [userInfo] = useState(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (e) {
+        return { name: 'Khách hàng', id: customerId };
+      }
+    }
+    return { name: 'Khách hàng', id: customerId };
   });
 
   const [bookingHistory, setBookingHistory] = useState([]);
-  const [loading, setLoading] = useState(false); // Đổi thành false để không tự động load
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -25,8 +32,7 @@ export default function BookingHistoryPage() {
 
   // Fetch booking history khi component mount
   useEffect(() => {
-    // Comment out auto-fetch để tránh lỗi khi backend chưa sẵn sàng
-    // fetchBookingHistory();
+    fetchBookingHistory();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -51,75 +57,73 @@ export default function BookingHistoryPage() {
       setLoading(true);
       setError(null);
       
-      const response = await scheduleApi.getByCustomer(userInfo.id);
-      console.log('Booking history response:', response);
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        throw new Error('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+      }
+
+      console.log('🔍 Fetching booking history for customerId:', customerId);
+      const response = await scheduleApi.getByCustomer(customerId);
+      const bookings = Array.isArray(response) ? response : response?.data || [];
+      
+      console.log('✅ Booking history loaded from database:', bookings);
       
       // Transform dữ liệu từ BE sang format FE
-      const transformedData = response.map(item => ({
-        id: item.id || item.scheduleId,
-        vehicle: item.vehicleName || 'N/A',
-        licensePlate: item.vehiclePlate || 'N/A',
-        service: item.serviceName || item.services?.join('\n') || 'N/A',
+      const transformedData = bookings.map(item => ({
+        id: item.scheduleId || item.id,
+        vehicle: item.vehicleModel || item.vehicleName || 'N/A',
+        licensePlate: item.vehicleLicensePlate || item.vehiclePlate || 'N/A',
+        service: item.serviceName || item.services?.join('\n') || 'Dịch vụ',
         center: item.centerName || 'N/A',
-        date: item.scheduledDate || 'N/A',
-        time: item.scheduledTime || 'N/A',
-        status: item.status || 'Chờ xử lý'
+        date: item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString('vi-VN') : 'N/A',
+        time: item.scheduledDate ? new Date(item.scheduledDate).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+        status: item.status || 'PENDING',
+        rawData: item // Giữ lại data gốc để dùng sau
       }));
       
       setBookingHistory(transformedData);
-      setLoading(false);
     } catch (err) {
-      console.error('Error fetching booking history:', err);
-      setError(err.message || 'Không thể tải lịch sử đặt lịch');
+      console.error('❌ Error fetching booking history:', err);
+      setError(err.message || 'Không thể tải lịch sử đặt lịch. Vui lòng thử lại.');
+    } finally {
       setLoading(false);
-      
-      // Fallback to mock data for development/demo
-      setBookingHistory([
-        {
-          id: 'B01',
-          vehicle: 'VinFast Feliz S',
-          licensePlate: '29A-123.45',
-          service: 'Bảo dưỡng định kỳ\nKiểm tra tổng quát',
-          center: 'Voltfix Quận 1',
-          date: '26/9/2025',
-          time: '08:00',
-          status: 'Chờ xử lý'
-        },
-        {
-          id: 'B02',
-          vehicle: 'Yadea Ulike',
-          licensePlate: '30B-456.78',
-          service: 'Thay thế pin\nKiểm tra hệ thống điện',
-          center: 'Voltfix Quận 2',
-          date: '20/9/2025',
-          time: '14:30',
-          status: 'Hoàn thành'
-        },
-        {
-          id: 'B03',
-          vehicle: 'VinFast Klara S',
-          licensePlate: '51C-789.01',
-          service: 'Sửa chữa phanh\nKiểm tra an toàn',
-          center: 'Voltfix Quận 3',
-          date: '15/9/2025',
-          time: '10:00',
-          status: 'Đã hủy'
-        }
-      ]);
     }
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Chờ xử lý':
+    const statusUpper = (status || '').toUpperCase();
+    switch (statusUpper) {
+      case 'PENDING':
+      case 'CHỜ XỬ LÝ':
         return 'status-pending';
-      case 'Hoàn thành':
+      case 'COMPLETED':
+      case 'HOÀN THÀNH':
         return 'status-completed';
-      case 'Đã hủy':
+      case 'CANCELLED':
+      case 'ĐÃ HỦY':
+      case 'CANCELED':
         return 'status-cancelled';
+      case 'CONFIRMED':
+      case 'ĐÃ XÁC NHẬN':
+        return 'status-confirmed';
+      case 'IN_PROGRESS':
+      case 'ĐANG THỰC HIỆN':
+        return 'status-in-progress';
       default:
         return 'status-pending';
     }
+  };
+
+  const getStatusText = (status) => {
+    const statusUpper = (status || '').toUpperCase();
+    const statusMap = {
+      'PENDING': 'Chờ xử lý',
+      'CONFIRMED': 'Đã xác nhận',
+      'IN_PROGRESS': 'Đang thực hiện',
+      'COMPLETED': 'Hoàn thành',
+      'CANCELLED': 'Đã hủy',
+      'CANCELED': 'Đã hủy'
+    };
+    return statusMap[statusUpper] || status || 'Chờ xử lý';
   };
 
   return (
@@ -294,7 +298,7 @@ export default function BookingHistoryPage() {
                       </td>
                       <td>
                         <span className={`status-badge ${getStatusColor(booking.status)}`}>
-                          {booking.status}
+                          {getStatusText(booking.status)}
                         </span>
                       </td>
                     </tr>
