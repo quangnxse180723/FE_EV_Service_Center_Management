@@ -75,7 +75,8 @@
 
 /* Table Container */
 .table-container {
-  background: white;
+  /* move the header gradient to the container so it spans full width */
+  background: linear-gradient(to bottom, #f8f9fb, #f1f3f5);
   border-radius: 0 0 12px 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 
@@ -85,6 +86,13 @@
   border-top: none;
 }
 
+/* remove container padding so the table (and its header background) spans full width;
+   keep cell padding on th/td for internal spacing */
+.table-container {
+  padding: 0rem ;
+  box-sizing: border-box;
+}
+
 /* Table */
 .user-table {
   width: 100%;
@@ -92,13 +100,15 @@
 }
 
 .user-table thead {
-  background: linear-gradient(to bottom, #f8f9fb, #f1f3f5);
+  background: transparent; /* container provides the full-width header background */
   border-bottom: 2px solid #e0e0e0;
 }
 
 .user-table th {
   padding: 1.25rem 1.5rem;
   text-align: left;
+  vertical-align: middle; /* ensure header text aligns with row cells */
+  white-space: nowrap; /* keep header labels on one line */
   font-weight: 700;
   color: #202124;
   font-size: 0.9rem;
@@ -127,11 +137,65 @@
   color: #3c4043;
   font-size: 0.95rem;
   line-height: 1.5;
+  text-align: left;
 }
 
 .user-table td:first-child {
   font-weight: 600;
   color: #202124;
+}
+
+/* action column: tighter width and right-aligned buttons */
+.user-table th:last-child,
+.user-table td.cell-actions {
+  width: 180px; /* increased to comfortably fit both buttons */
+  text-align: left; /* align header with action buttons */
+  /* match other cells' vertical and horizontal padding so spacing is consistent */
+  padding: 1.25rem 1.5rem;
+}
+
+.cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-start; /* left-align buttons inside the cell */
+}
+
+.cell-actions .btn-action {
+  padding: 0.45rem 0.9rem;
+  min-width: 72px;
+  text-align: center; /* ensure label centered inside button */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make per-row delete match the Add button size and visual weight */
+.cell-actions .btn-delete {
+  padding: 0.875rem 1.25rem; /* slightly narrower than global add but visually the same weight */
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
+  color: white;
+}
+
+.cell-actions .btn-delete:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(244,67,54,0.35);
+}
+
+/* Edit button: keep existing sizing and look, center label and push to left */
+.btn-edit {
+  /* keep original small size */
+  padding: 0.45rem 0.9rem;
+  min-width: 72px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* no auto margin so it aligns to the right with other actions */
 }
 
 /* Action Buttons */
@@ -190,13 +254,24 @@
 }
 
 .btn-delete {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  /* make delete visually match the add button size and be red */
+  padding: 0.875rem 2.5rem; /* same as .btn-add */
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
   color: white;
 }
 
 .btn-delete:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.35);
 }
 
 .btn-delete:active:not(:disabled) {

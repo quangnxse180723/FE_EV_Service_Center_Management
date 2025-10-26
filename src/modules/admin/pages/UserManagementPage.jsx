@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
 import adminAvatar from '/src/assets/img/avtAdmin.jpg';
+import { getAllCustomers, createCustomer, updateCustomer, deleteCustomer, getAllTechnicians, createTechnician, updateTechnician, deleteTechnician, getAllStaffs, createStaff, updateStaff, deleteStaff } from '../../../api/adminApi.js';
 
 export default function UserManagementPage() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('accounts');
-  const [activeTab, setActiveTab] = useState('employees');
+  const [activeTab, setActiveTab] = useState('customers');
+
+  // State for data
+  const [customers, setCustomers] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Giả lập dữ liệu admin
   const adminInfo = {
@@ -15,38 +22,33 @@ export default function UserManagementPage() {
     role: 'Administrator'
   };
 
-  // Dữ liệu nhân viên
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: 'Nguyễn Văn A',
-      accountId: 'No.12345',
-      username: 'nva123',
-      status: 'Hoạt động'
-    }
-  ]);
+  // Dữ liệu nhân viên (lấy từ backend - staff)
+  const [employees, setEmployees] = useState([]);
 
-  // Dữ liệu khách hàng (giả lập)
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      name: 'Trần Thị B',
-      accountId: 'No.12346',
-      username: 'ttb456',
-      status: 'Hoạt động'
-    }
-  ]);
+  // Fetch data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [customersData, techniciansData, staffsData] = await Promise.all([
+          getAllCustomers(),
+          getAllTechnicians(),
+          getAllStaffs()
+        ]);
+        setCustomers(customersData);
+        setTechnicians(techniciansData);
+        setEmployees(Array.isArray(staffsData) ? staffsData : []);
+      } catch (err) {
+        setError('Failed to fetch data');
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Dữ liệu kỹ thuật viên (giả lập)
-  const [technicians, setTechnicians] = useState([
-    {
-      id: 1,
-      name: 'Lê Văn C',
-      accountId: 'No.12347',
-      username: 'lvc789',
-      status: 'Hoạt động'
-    }
-  ]);
+    fetchData();
+  }, []);
 
   const handleLogout = () => {
     alert('Đăng xuất thành công!');
@@ -68,21 +70,103 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa tài khoản này?')) {
-      if (activeTab === 'employees') {
-        setEmployees(employees.filter(emp => emp.id !== id));
-      } else if (activeTab === 'customers') {
-        setCustomers(customers.filter(cust => cust.id !== id));
-      } else if (activeTab === 'technicians') {
-        setTechnicians(technicians.filter(tech => tech.id !== id));
+      try {
+        if (activeTab === 'customers') {
+          await deleteCustomer(id);
+          setCustomers(customers.filter(cust => cust.customerId !== id));
+        } else if (activeTab === 'technicians') {
+          await deleteTechnician(id);
+          setTechnicians(technicians.filter(tech => tech.technicianId !== id));
+        } else if (activeTab === 'employees') {
+          // call backend delete for staff
+          try {
+            await deleteStaff(id);
+              setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
+          } catch (e) {
+            console.warn('deleteStaff failed, falling back to client filter', e.message);
+            setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
+          }
+        }
+        alert('Đã xóa tài khoản!');
+      } catch (err) {
+        alert('Lỗi khi xóa tài khoản');
+        console.error('Error deleting:', err);
       }
-      alert('Đã xóa tài khoản!');
     }
   };
 
+  // Modal & form state for add/edit
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [editingItem, setEditingItem] = React.useState(null);
+  const [formData, setFormData] = React.useState({ name: '', email: '', phone: '', address: '' });
+
   const handleAdd = () => {
-    alert('Chức năng thêm tài khoản sẽ được phát triển!');
+    setEditingItem(null);
+    setFormData({ name: '', email: '', phone: '', address: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setFormData({
+      name: item.name || item.fullName || '',
+      email: item.email || '',
+      phone: item.phone || '',
+      address: item.address || ''
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (activeTab === 'customers') {
+        if (editingItem) {
+          const updated = await updateCustomer(editingItem.customerId, formData);
+          setCustomers(customers.map(c => (c.customerId === editingItem.customerId ? updated : c)));
+        } else {
+          const created = await createCustomer(formData);
+          setCustomers([...customers, created]);
+        }
+      } else if (activeTab === 'technicians') {
+        if (editingItem) {
+          const updated = await updateTechnician(editingItem.technicianId, formData);
+          setTechnicians(technicians.map(t => (t.technicianId === editingItem.technicianId ? updated : t)));
+        } else {
+          const created = await createTechnician(formData);
+          setTechnicians([...technicians, created]);
+        }
+      } else if (activeTab === 'employees') {
+        // staff CRUD
+        if (editingItem) {
+          try {
+            const updated = await updateStaff(editingItem.staffId || editingItem.id, formData);
+            setEmployees(employees.map(e => ((e.staffId || e.id) === (editingItem.staffId || editingItem.id) ? updated : e)));
+          } catch (e) {
+            console.error('updateStaff failed', e);
+            alert('Cập nhật nhân viên thất bại');
+          }
+        } else {
+          try {
+            const created = await createStaff(formData);
+            setEmployees([...employees, created]);
+          } catch (e) {
+            console.error('createStaff failed', e);
+            alert('Tạo nhân viên thất bại');
+          }
+        }
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Error saving item', err);
+      alert('Lưu thất bại');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
   };
 
   // Lấy dữ liệu theo tab hiện tại
@@ -159,7 +243,7 @@ export default function UserManagementPage() {
 
         {/* Content */}
         <div className="admin-content">
-          <h1 className="page-title">Quản lý tài khoản nhân viên</h1>
+          <h1 className="page-title">Quản lý tài khoản</h1>
 
           {/* Tabs */}
           <div className="user-tabs">
@@ -185,34 +269,51 @@ export default function UserManagementPage() {
 
           {/* Table */}
           <div className="table-container">
-            <table className="user-table">
-              <thead>
-                <tr>
-                  <th>Họ và tên</th>
-                  <th>Id tài khoản</th>
-                  <th>Tài khoản</th>
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.length === 0 ? (
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+            ) : error ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>{error}</div>
+            ) : (
+              <table className="user-table">
+                <thead>
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
-                      Không có dữ liệu
-                    </td>
+                    <th>Họ và tên</th>
+                    <th>Id tài khoản</th>
+                    <th>Tài khoản</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
                   </tr>
-                ) : (
-                  currentData.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.name}</td>
-                      <td>{user.accountId}</td>
-                      <td>{user.username}</td>
-                      <td>{user.status}</td>
+                </thead>
+                <tbody>
+                  {currentData.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
+                        Không có dữ liệu
+                      </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    currentData.map((user) => (
+                      <tr key={user.customerId || user.technicianId || user.id}>
+                        <td>{user.name || user.fullName || 'N/A'}</td>
+                        <td>{user.customerId || user.technicianId || user.id}</td>
+                        <td>{user.username || user.email || 'N/A'}</td>
+                        <td>{user.status || 'Hoạt động'}</td>
+                        <td className="cell-actions">
+                          <button className="btn-action btn-edit" onClick={() => handleEdit(user)} disabled={activeTab === 'employees'}>Sửa</button>
+                          <button
+                            className="btn-action btn-delete"
+                            onClick={() => handleDelete(user.customerId || user.technicianId || user.id)}
+                            disabled={loading}
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -220,16 +321,28 @@ export default function UserManagementPage() {
             <button className="btn-action btn-add" onClick={handleAdd}>
               Thêm
             </button>
-            <button 
-              className="btn-action btn-delete" 
-              onClick={() => currentData.length > 0 && handleDelete(currentData[0].id)}
-              disabled={currentData.length === 0}
-            >
-              Xóa
-            </button>
+          </div>
           </div>
         </div>
+
+      {/* Modal for Add / Edit */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{editingItem ? 'Chỉnh sửa' : 'Thêm mới'} {activeTab === 'customers' ? 'khách hàng' : activeTab === 'technicians' ? 'kỹ thuật viên' : 'nhân viên'}</h3>
+            <div className="modal-form">
+              <input type="text" placeholder="Họ và tên" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+              <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+              <input type="tel" placeholder="Số điện thoại" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+              <input type="text" placeholder="Địa chỉ" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+              <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '12px'}}>
+                <button onClick={handleCloseModal}>Hủy</button>
+                <button onClick={handleSave}>Lưu</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
-    </div>
   );
 }
