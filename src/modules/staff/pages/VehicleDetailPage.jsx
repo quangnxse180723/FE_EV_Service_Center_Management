@@ -33,7 +33,7 @@ const VehicleDetailPage = () => {
       <div className="vehicle-detail-card">
         <div className="vehicle-info">
           <h3>Thông tin xe:</h3>
-          <div>Chủ xe: {vehicle.ownerName || 'N/A'}</div>
+          <div>Chủ xe: {vehicle.customerName || 'N/A'}</div>
           <div>Xe: {vehicle.model || 'N/A'}</div>
           <div>Biển số xe: {vehicle.licensePlate || 'N/A'}</div>
           <div>VIN: {vehicle.vin || 'N/A'}</div>
@@ -55,12 +55,6 @@ const VehicleDetailPage = () => {
           </ul>
         </div>
         <hr />
-        <div className="vehicle-status">
-          <strong>Trạng thái xe: </strong>
-          <span className={vehicle.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}>
-            {vehicle.status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
-          </span>
-        </div>
       </div>
     </div>
   );

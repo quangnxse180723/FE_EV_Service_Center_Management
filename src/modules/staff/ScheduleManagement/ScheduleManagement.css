@@ -151,26 +151,27 @@
   font-weight: 600;
   text-transform: uppercase;
   white-space: nowrap;
+  color: #111 !important;
 }
 
 .status-pending {
   background: #fff3cd;
-  color: #856404;
+}
+
+.status-confirmed {
+  background: #d1ecf1;
 }
 
 .status-in-progress {
   background: #cce5ff;
-  color: #004085;
 }
 
 .status-completed {
   background: #d4edda;
-  color: #155724;
 }
 
 .status-cancelled {
   background: #f8d7da;
-  color: #721c24;
 }
 
 .action-buttons {

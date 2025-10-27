@@ -90,7 +90,6 @@ const CustomerManagement = () => {
                 <th>Email</th>
                 <th>Số điện thoại</th>
                 <th>Địa chỉ</th>
-                <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -109,11 +108,7 @@ const CustomerManagement = () => {
                     <td>{customer.email}</td>
                     <td>{customer.phone}</td>
                     <td>{customer.address || 'N/A'}</td>
-                    <td>
-                      <span className={`status-badge ${customer.status?.toLowerCase()}`}>
-                        {customer.status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
-                      </span>
-                    </td>
+                    
                     <td>
                       <div className="action-buttons">
                         <button className="btn-edit" title="Chỉnh sửa">

@@ -34,7 +34,7 @@ import VehicleManagement from "./modules/staff/pages/VehicleManagement";
 import VehicleDetailPage from "./modules/staff/pages/VehicleDetailPage";
 import ScheduleManagementPage from "./modules/staff/ScheduleManagement/ScheduleManagementPage";
 import ScheduleDetailPage from "./modules/staff/pages/ScheduleDetail/ScheduleDetailPage";
-import InvoiceManagementPage from "./modules/staff/pages/InvoiceManagemetPage";
+import PaymentManagementPage from "./modules/staff/pages/PaymentManagementPage";
 import CheckinPage from "./modules/staff/pages/CheckinPage";
 import PartInventoryPage from "./modules/staff/pages/PartInventoryPage";
 
@@ -89,7 +89,7 @@ function App() {
             <Route path="vehicles/:id" element={<VehicleDetailPage />} />
             <Route path="schedules" element={<ScheduleManagementPage />} />
             <Route path="schedules/:id" element={<ScheduleDetailPage />} />
-            <Route path="payments" element={<InvoiceManagementPage />} />
+            <Route path="payments" element={<PaymentManagementPage />} />
             <Route path="checkin" element={<CheckinPage />} />
             <Route path="inventory" element={<PartInventoryPage />} />
             <Route

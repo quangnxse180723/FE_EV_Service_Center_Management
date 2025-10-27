@@ -77,7 +77,6 @@ const VehicleManagement = () => {
               <th>Xe</th>
               <th>Biển số xe</th>
               <th>Chủ xe</th>
-              <th>Trạng thái</th>
               <th>Hành động</th>
             </tr>
           </thead>
@@ -97,11 +96,6 @@ const VehicleManagement = () => {
                   <td>{vehicle.model}</td>
                   <td>{vehicle.licensePlate}</td>
                   <td>{vehicle.customerName}</td>
-                  <td>
-                    <span className={`status-badge ${vehicle.status === 'ACTIVE' ? 'active' : 'inactive'}`}>
-                      {vehicle.status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
-                    </span>
-                  </td>
                   <td>
                     <button 
                       className="btn-detail"

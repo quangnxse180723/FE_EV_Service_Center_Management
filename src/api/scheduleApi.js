@@ -53,6 +53,13 @@ const scheduleApi = {
       params: { status }
     });
   },
+
+  // Lấy danh sách lịch hẹn dạng AppointmentResponse (dùng cho staff UI)
+  getAppointments: (keyword = '') => {
+    return axiosClient.get('/schedules/appointments', {
+      params: keyword ? { keyword } : {}
+    });
+  },
 };
 
 export default scheduleApi;

@@ -24,6 +24,11 @@ const centerApi = {
       params: location
     });
   },
+
+  // Lấy tất cả staff và technician của một trung tâm
+  getMembersByCenter: (centerId) => {
+    return axiosClient.get(`/center/${centerId}/members`);
+  },
 };
 
 export default centerApi;

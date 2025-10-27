@@ -13,17 +13,20 @@ const ScheduleDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showTechnicianModal, setShowTechnicianModal] = useState(false);
 
+  // Fetch data on component mount and when ID changes
   useEffect(() => {
     fetchScheduleDetail();
     fetchTechnicians();
   }, [id]);
 
   const fetchScheduleDetail = async () => {
+    setLoading(true);
     try {
-      const data = await scheduleApi.getScheduleById(id);
-      setSchedule(data);
+      // The axios interceptor already returns response.data, so we use the result directly.
+      const scheduleData = await scheduleApi.getScheduleById(id);
+      setSchedule(scheduleData);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching schedule details:', err);
       alert('Không tìm thấy lịch hẹn');
     }
     setLoading(false);
@@ -31,96 +34,85 @@ const ScheduleDetailPage = () => {
 
   const fetchTechnicians = async () => {
     try {
-      const data = await technicianApi.getAllTechnicians();
-      setTechnicians(data);
+      const techniciansData = await technicianApi.getAllTechnicians();
+      console.log('--- Technician Data From API (Post-Backend-Fix) ---', JSON.stringify(techniciansData, null, 2));
+      
+      // The API now provides technicianId directly, no mapping needed.
+      if (Array.isArray(techniciansData)) {
+        setTechnicians(techniciansData);
+      } else {
+        setTechnicians([]);
+      }
+
     } catch (err) {
       console.error('Error fetching technicians:', err);
       alert('Không thể tải danh sách kỹ thuật viên');
     }
   };
 
-  // ✅ Hàm chọn kỹ thuật viên (chỉ chọn, chưa phân công)
-  const handleSelectTechnician = () => {
+  // Simplified: Assign technician and update status in one go
+  const handleAssignTechnician = async () => {
     if (!selectedTechnician) {
       alert('Vui lòng chọn kỹ thuật viên');
       return;
     }
-
-    // Đóng modal
-    setShowTechnicianModal(false);
-    alert('Đã chọn kỹ thuật viên. Vui lòng ấn nút "Phân công Technician" để xác nhận.');
-  };
-
-  // ✅ Hàm phân công và chuyển PENDING → IN_PROGRESS
-  const handleAssignTechnician = async () => {
-    if (!selectedTechnician) {
-      alert('Vui lòng chọn kỹ thuật viên trước');
-      setShowTechnicianModal(true);
+    const techId = Number(selectedTechnician);
+    if (isNaN(techId) || !Number.isInteger(techId)) {
+      alert('ID kỹ thuật viên không hợp lệ!');
       return;
     }
 
     try {
-      // Gọi API gán technician và chuyển trạng thái sang IN_PROGRESS
-      await scheduleApi.assignTechnician(id, {
-        technicianId: selectedTechnician,
-        status: 'IN_PROGRESS'
-      });
+      // 1. Assign technician
+      await scheduleApi.assignTechnician(id, { technicianId: techId });
       
-      alert('Đã phân công thành công');
+      // 2. Update status to IN_PROGRESS
+      await scheduleApi.updateScheduleStatus(id, { status: 'IN_PROGRESS' });
       
-      // ✅ Chuyển về trang quản lý lịch hẹn
-      navigate('/staff/schedules');
+      alert('Đã phân công thành công!');
+      
+      // 3. Close modal and refresh data on the page
+      setShowTechnicianModal(false);
+      fetchScheduleDetail(); // Re-fetch to show updated info
+
     } catch (err) {
-      console.error('Error:', err.response?.data || err.message);
+      console.error('Lỗi phân công:', err.response?.data || err.message);
       alert('Phân công thất bại: ' + (err.response?.data?.message || err.message));
     }
   };
 
   const handleCancel = async () => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) return;
-
     try {
       await scheduleApi.updateScheduleStatus(id, { status: 'CANCELLED' });
       alert('Hủy lịch hẹn thành công');
-      navigate('/staff/schedules');
+      fetchScheduleDetail(); // Refresh data
     } catch (err) {
-      console.error(err);
+      console.error('Error cancelling schedule:', err);
       alert('Hủy lịch hẹn thất bại');
     }
   };
 
   const handleComplete = async () => {
     if (!window.confirm('Xác nhận hoàn tất lịch hẹn?')) return;
-
     try {
       await scheduleApi.updateScheduleStatus(id, { status: 'COMPLETED' });
       alert('Hoàn tất lịch hẹn thành công');
-      navigate('/staff/schedules');
+      fetchScheduleDetail(); // Refresh data
     } catch (err) {
-      console.error(err);
+      console.error('Error completing schedule:', err);
       alert('Hoàn tất lịch hẹn thất bại');
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'PENDING':
-        return 'Chờ check-in';
-      case 'IN_PROGRESS':
-        return 'Đang thực hiện';
-      case 'COMPLETED':
-        return 'Hoàn tất';
-      case 'CANCELLED':
-        return 'Đã hủy';
-      default:
-        return status;
+      case 'PENDING': return 'Chờ check-in';
+      case 'IN_PROGRESS': return 'Đang thực hiện';
+      case 'COMPLETED': return 'Hoàn tất';
+      case 'CANCELLED': return 'Đã hủy';
+      default: return status;
     }
-  };
-
-  // ✅ Tìm tên technician đã chọn
-  const getSelectedTechnicianName = () => {
-    const tech = technicians.find(t => t.technicianId === parseInt(selectedTechnician));
-    return tech ? tech.fullName : null;
   };
 
   if (loading) return <div className="loading">Đang tải...</div>;
@@ -137,29 +129,19 @@ const ScheduleDetailPage = () => {
 
       <div className="detail-card">
         <div className="detail-info">
-          <div className="info-row">
-            <strong>Chủ xe:</strong> {schedule.customerName || 'N/A'}
-          </div>
-          <div className="info-row">
-            <strong>Xe:</strong> {schedule.vehicleModel || 'N/A'}
-          </div>
-          <div className="info-row">
-            <strong>Biển số xe:</strong> {schedule.licensePlate || 'N/A'}
-          </div>
-          <div className="info-row">
-            <strong>Ngày / giờ:</strong> {schedule.scheduledDate || 'N/A'}
-          </div>
+          <div className="info-row"><strong>Chủ xe:</strong> {schedule.customerName || 'N/A'}</div>
+          <div className="info-row"><strong>Xe:</strong> {schedule.vehicleModel || 'N/A'}</div>
+          <div className="info-row"><strong>Biển số xe:</strong> {schedule.licensePlate || 'N/A'}</div>
+          <div className="info-row"><strong>Ngày / giờ:</strong> {schedule.scheduledDate || 'N/A'}</div>
         </div>
 
         <hr />
 
         <div className="status-section">
-          <div className="info-row">
-            <strong>Trạng thái:</strong> {getStatusText(schedule.status)}
-          </div>
+          <div className="info-row"><strong>Trạng thái:</strong> {getStatusText(schedule.status)}</div>
           <div className="info-row">
             <strong>Kỹ thuật viên phụ trách:</strong>{' '}
-            {schedule.technicianName || getSelectedTechnicianName() || '(chưa phân công)'}
+            {schedule.technicianName || '(chưa phân công)'}
           </div>
         </div>
 
@@ -168,74 +150,45 @@ const ScheduleDetailPage = () => {
         <div className="actions-section">
           <h4>Biên bản sửa chữa:</h4>
           
-          {/* PENDING: Hiển thị nút Chọn và Hủy */}
           {schedule.status === 'PENDING' && (
             <>
-              <button 
-                className="btn-assign"
-                onClick={() => setShowTechnicianModal(true)}
-              >
-                Chọn
+              <button className="btn-assign" onClick={() => setShowTechnicianModal(true)}>
+                Phân công KTV
               </button>
-              <button 
-                className="btn-cancel"
-                onClick={handleCancel}
-              >
+              <button className="btn-cancel" onClick={handleCancel}>
                 Hủy
               </button>
             </>
           )}
 
-          {/* IN_PROGRESS: Hiển thị Chi tiết, Hoàn tất, Hủy */}
           {schedule.status === 'IN_PROGRESS' && (
             <>
               <button className="btn-detail">Chi tiết</button>
-              <button 
-                className="btn-complete"
-                onClick={handleComplete}
-              >
+              <button className="btn-complete" onClick={handleComplete}>
                 Hoàn tất
               </button>
-              <button 
-                className="btn-cancel"
-                onClick={handleCancel}
-              >
+              <button className="btn-cancel" onClick={handleCancel}>
                 Hủy
               </button>
             </>
           )}
 
-          {/* COMPLETED: Chỉ hiển thị Chi tiết */}
           {schedule.status === 'COMPLETED' && (
             <button className="btn-detail">Chi tiết</button>
           )}
         </div>
-
-        {/* ✅ Nút "Phân công Technician" - CHỈ HIỆN KHI PENDING */}
-        {schedule.status === 'PENDING' && (
-          <>
-            <hr />
-            <div className="technician-section">
-              <button 
-                className="btn-assign-tech"
-                onClick={handleAssignTechnician}
-              >
-                Phân công Technician
-              </button>
-            </div>
-          </>
-        )}
       </div>
 
-      {/* Modal chọn kỹ thuật viên */}
+      {/* Simplified Modal for Technician Assignment */}
       {showTechnicianModal && (
         <div className="modal-overlay" onClick={() => setShowTechnicianModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Chọn kỹ thuật viên</h3>
+            <h3>Chọn và phân công kỹ thuật viên</h3>
             <select 
               value={selectedTechnician}
               onChange={(e) => setSelectedTechnician(e.target.value)}
               className="technician-select"
+              autoFocus
             >
               <option value="">-- Chọn kỹ thuật viên --</option>
               {technicians.map((tech) => (
@@ -245,8 +198,8 @@ const ScheduleDetailPage = () => {
               ))}
             </select>
             <div className="modal-actions">
-              <button className="btn-confirm" onClick={handleSelectTechnician}>
-                Xác nhận
+              <button className="btn-confirm" onClick={handleAssignTechnician}>
+                Xác nhận Phân công
               </button>
               <button className="btn-close" onClick={() => setShowTechnicianModal(false)}>
                 Đóng

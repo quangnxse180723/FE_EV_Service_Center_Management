@@ -102,30 +102,32 @@
 
 /* Phân bố width cho các cột - tối ưu để full width */
 .customer-table thead th:nth-child(1) { /* ID */
+  text-align: center;
   width: 4%;
 }
 
 .customer-table thead th:nth-child(2) { /* Họ tên */
+  text-align: center;
   width: 14%;
 }
 
 .customer-table thead th:nth-child(3) { /* Email */
+  text-align: center;
   width: 18%;
 }
 
 .customer-table thead th:nth-child(4) { /* Số điện thoại */
+  text-align: center;
   width: 12%;
 }
 
 .customer-table thead th:nth-child(5) { /* Địa chỉ */
+  text-align: center;
   width: 31%;
 }
 
-.customer-table thead th:nth-child(6) { /* Trạng thái */
-  width: 11%;
-}
-
 .customer-table thead th:nth-child(7) { /* Hành động */
+  text-align: center;
   width: 14%;
 }
 
