@@ -5,6 +5,7 @@ import './BookingPage.css';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
 import logoImage from '/src/assets/img/logo.png';
+import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
 import vehicleApi from '../../../api/vehicleApi';
 import serviceApi from '../../../api/serviceApi';
@@ -27,12 +28,12 @@ export default function BookingPage() {
     name: customerData.fullName || 'Khách hàng',
     phone: customerData.phone || 'Chưa cập nhật',
     email: customerData.email || 'Chưa cập nhật',
-    avatar: customerData.avatar || null
+    avatar: defaultAvatar // Sử dụng avatar mặc định
   } : {
     name: user?.fullName || 'Khách hàng',
     phone: user?.phone || 'Chưa cập nhật',
     email: user?.email || 'Chưa cập nhật',
-    avatar: null
+    avatar: defaultAvatar // Sử dụng avatar mặc định
   };
 
   // Mobile menu state
@@ -471,13 +472,7 @@ export default function BookingPage() {
                     <>
                     <div className="user-dropdown-header">
                       <div className="user-avatar-small">
-                        {userInfo.avatar ? (
-                          <img src={userInfo.avatar} alt="User Avatar" onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }} />
-                        ) : null}
-                        <div className="avatar-placeholder" style={{ display: userInfo.avatar ? 'none' : 'flex' }}>👤</div>
+                        <img src={userInfo.avatar || defaultAvatar} alt="User Avatar" />
                       </div>
                       <div className="user-info-dropdown">
                         <div className="user-name">{userInfo.name}</div>

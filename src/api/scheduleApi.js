@@ -19,7 +19,20 @@ const scheduleApi = {
 
   // Lấy danh sách lịch hẹn của khách hàng
   getByCustomer: (customerId) => {
-    return axiosClient.get(`/customer/schedules/${customerId}`);
+    console.log('🔍 Trying to fetch schedules for customerId:', customerId);
+    // Thử nhiều endpoint khác nhau (backend có thể dùng endpoint khác)
+    // Option 1: /customer/schedules/{id}
+    // Option 2: /schedules/customer/{id}  
+    // Option 3: /schedules?customerId={id}
+    return axiosClient.get(`/schedules/customer/${customerId}`)
+      .catch(err404 => {
+        console.warn('⚠️ /schedules/customer/{id} failed, trying /customer/schedules/{id}...');
+        return axiosClient.get(`/customer/schedules/${customerId}`);
+      })
+      .catch(err => {
+        console.warn('⚠️ /customer/schedules/{id} failed, trying /schedules with query param...');
+        return axiosClient.get('/schedules', { params: { customerId } });
+      });
   },
 
   // ===== Staff/Admin API =====

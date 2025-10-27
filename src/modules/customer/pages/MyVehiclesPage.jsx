@@ -372,9 +372,9 @@ export default function MyVehiclesPage() {
           <button onClick={() => navigate('/')} className="back-btn">
             ← Quay lại
           </button>
-          <div className="header-info">
+          <div className="header-center">
             <h1>Quản lý xe của tôi</h1>
-            <p>Khách hàng: {userInfo.name}</p>
+            <p className="customer-name">Khách hàng: {userInfo.name}</p>
           </div>
           <button onClick={handleAddVehicle} className="add-vehicle-btn">
             + Thêm xe mới

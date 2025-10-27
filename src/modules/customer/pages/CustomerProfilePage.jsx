@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './CustomerProfilePage.css';
 import customerApi from '../../../api/customerApi';
 import { useAuth } from '../../../contexts/AuthContext';
+import defaultAvatar from '/src/assets/img/user-avatar.jpg'; // Ảnh của bạn
 
 export default function CustomerProfilePage() {
   const navigate = useNavigate();
@@ -42,10 +43,10 @@ export default function CustomerProfilePage() {
       console.log('✅ Customer data loaded:', data);
       setCustomerData(data);
       
-      // Set form data
+      // Set form data - hỗ trợ cả fullName và name
       setEditForm({
-        fullName: data.fullName || '',
-        phone: data.phone || '',
+        fullName: data.fullName || data.name || '',
+        phone: data.phone || data.phoneNumber || '',
         email: data.email || '',
         address: data.address || ''
       });
@@ -206,12 +207,10 @@ export default function CustomerProfilePage() {
         <div className="profile-card">
           <div className="profile-header">
             <div className="profile-avatar">
-              <div className="avatar-placeholder">
-                {customerData?.fullName?.charAt(0).toUpperCase() || 'K'}
-              </div>
+              <img src={defaultAvatar} alt="Customer Avatar" className="avatar-image" />
             </div>
             <div className="profile-title">
-              <h2>{customerData?.fullName || 'Khách hàng'}</h2>
+              <h2>{customerData?.fullName || customerData?.name || 'Khách hàng'}</h2>
               <p className="customer-id">Mã KH: KH{String(customerData?.customerId || '').padStart(3, '0')}</p>
             </div>
           </div>
