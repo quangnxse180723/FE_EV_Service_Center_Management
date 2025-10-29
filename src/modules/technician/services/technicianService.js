@@ -107,6 +107,8 @@ export async function getOrCreateChecklist(scheduleId) {
           description: item.description,
           status: item.status,
           actionStatus: item.actionStatus,
+          originalPartCost: item.originalPartCost,
+          originalLaborCost: item.originalLaborCost,
           mapped_name: item.name || item.partName || '',
           mapped_status: item.description || item.actionStatus || 'Kiểm tra'
         });
@@ -116,7 +118,9 @@ export async function getOrCreateChecklist(scheduleId) {
           name: item.name || item.partName || '',
           status: item.description || item.actionStatus || 'Kiểm tra',  // Ưu tiên description (Kiểm tra/Thay thế/Bôi trơn)
           partCost: item.partCost || item.materialCost || 0,
-          laborCost: item.laborCost || 0
+          laborCost: item.laborCost || 0,
+          originalPartCost: item.originalPartCost || 0,  // Giá gốc vật tư từ kho
+          originalLaborCost: item.originalLaborCost || 0  // Giá gốc nhân công
         };
       });
       

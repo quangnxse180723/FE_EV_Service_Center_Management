@@ -17,7 +17,8 @@ export default function InspectionPage() {
     if (!scheduleId) return; // không có id thì chưa load
     (async () => {
       const { header, items } = await getOrCreateChecklist(scheduleId);
-      setHeader(header); setItems(items);
+      setHeader(header); 
+      setItems(items);
     })();
   }, [scheduleId]);
 
@@ -68,11 +69,15 @@ export default function InspectionPage() {
         <hr className="divider" />
         <div className="est">
           <div className="left">
-            <b>Chi phí dự kiến:</b>
-            <ul>
-              <li>Nhân công: {formatVND(totals.labor)}</li>
-              <li>Vật tư: {formatVND(totals.part)}</li>
-            </ul>
+            <b>Tổng chi phí:</b>
+            <div className="cost-row">
+              <span className="cost-label">Vật tư:</span>
+              <span className="cost-value">{formatVND(totals.part)}</span>
+            </div>
+            <div className="cost-row">
+              <span className="cost-label">Nhân công:</span>
+              <span className="cost-value">{formatVND(totals.labor)}</span>
+            </div>
           </div>
           <div className="right">
             <span className="total">Tổng: {formatVND(totals.all)}</span>
@@ -89,12 +94,13 @@ export default function InspectionPage() {
         .divider{border:none;border-top:3px solid #111;margin:12px 0}
         .est{display:flex;justify-content:space-between;align-items:center}
         .left{text-align:left}
-        .left ul{margin:4px 0;padding-left:0;list-style:none}
-        .left li{margin:2px 0}
-        .total{background:#ffeb3b;padding:6px 10px;border-radius:6px;font-weight:800}
+        .cost-row{display:grid;grid-template-columns:100px 1fr;gap:10px;margin:4px 0;font-size:16px}
+        .cost-label{text-align:left}
+        .cost-value{text-align:left;font-weight:600}
+        .total{background:#ffeb3b;padding:6px 10px;border-radius:6px;font-weight:800;font-size:17px}
         .btn{background:#1e88e5;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer}
       `}</style>
     </div>
   );
 }
-function formatVND(n){ try{return n.toLocaleString("vi-VN")+" vnđ"}catch{return `${n} vnđ`}}
+function formatVND(n){ try{return n.toLocaleString("vi-VN")+" VNĐ"}catch{return `${n} VNĐ`}}
