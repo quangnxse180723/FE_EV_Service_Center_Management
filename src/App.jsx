@@ -48,11 +48,12 @@ import VehicleManagementPage from "./modules/admin/pages/VehicleManagementPage";
 import SystemSettingsPage from "./modules/admin/pages/SystemSettingsPage";
 
 // ===== Technician Layout & Pages =====
-import TechnicianLayout from "./modules/technician/layout/TechnicianLayout";
-import AssignedVehiclesPage from "./modules/technician/pages/AssignedVehiclesPage";
+import TechnicianLayout from "./modules/technician/layouts/TechnicianLayout";
 import TechnicianDashboardPage from "./modules/technician/pages/DashboardPage";
 import AssignedJobsPage from "./modules/technician/pages/AssignedJobsPage";
 import InspectionPage from "./modules/technician/pages/InspectionPage";
+import ServiceTicketsPage from "./modules/technician/pages/ServiceTicketsPage";
+import ServiceTicketDetailPage from "./modules/technician/pages/ServiceTicketDetailPage";
 
 // ===== Styles =====
 import "./App.css";
@@ -158,11 +159,11 @@ function App() {
           >
             <Route index element={<TechnicianDashboardPage />} />
             <Route path="dashboard" element={<TechnicianDashboardPage />} />
-            <Route path="assigned-vehicles" element={<AssignedVehiclesPage />} />
             <Route path="assigned-jobs" element={<AssignedJobsPage />} />
             <Route path="inspection" element={<InspectionPage />} />
             <Route path="inspection/:recordId" element={<InspectionPage />} />
-            <Route path="services" element={<div style={{ padding: '2rem' }}>Phiếu dịch vụ - Coming soon</div>} />
+            <Route path="services" element={<ServiceTicketsPage />} />
+            <Route path="services/:ticketId" element={<ServiceTicketDetailPage />} />
             <Route path="maintenance-list" element={<div style={{ padding: '2rem' }}>Danh sách bảo dưỡng - Coming soon</div>} />
           </Route>
 

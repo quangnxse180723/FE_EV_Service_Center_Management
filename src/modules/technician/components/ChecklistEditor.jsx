@@ -27,7 +27,9 @@ export default function ChecklistEditor({ items=[], onChange }) {
               <td><input className="ipt" value={it.name} onChange={e=>update(it.id,"name",e.target.value)} /></td>
               <td>
                 <select className="ipt" value={it.status} onChange={e=>update(it.id,"status",e.target.value)}>
-                  <option>Kiểm tra</option><option>Thay thế</option><option>Bôi trơn</option><option>Khác</option>
+                  <option>Kiểm tra</option>
+                  <option>Thay thế</option>
+                  <option>Bôi trơn</option>
                 </select>
               </td>
               <td><input type="number" className="ipt" value={it.partCost} min={0} onChange={e=>update(it.id,"partCost",+e.target.value)} /></td>
