@@ -52,6 +52,9 @@ export default function BookingPage() {
   const [bookingTime, setBookingTime] = useState('');
   const [searchCenter, setSearchCenter] = useState('');
   const [customerNote, setCustomerNote] = useState('');
+  const [vehicleKm, setVehicleKm] = useState({}); // Lưu km của từng xe
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [pendingVehicle, setPendingVehicle] = useState(null);
 
   // State cho data từ API
   const [userVehicles, setUserVehicles] = useState([]);
@@ -61,6 +64,77 @@ export default function BookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Hàm tính số tháng đã trôi qua kể từ ngày bảo dưỡng cuối hoặc ngày mua xe
+  const calculateMonthsSinceLastService = (lastServiceDate) => {
+    if (!lastServiceDate) return 0;
+    const lastDate = new Date(lastServiceDate);
+    const today = new Date();
+    const monthsDiff = (today.getFullYear() - lastDate.getFullYear()) * 12 + 
+                       (today.getMonth() - lastDate.getMonth());
+    return monthsDiff;
+  };
+
+  // Hàm tính lần bảo dưỡng dựa trên km HOẶC thời gian (3 tháng)
+  // Cứ 1000km HOẶC 3 tháng thì bảo dưỡng 1 lần
+  const calculateMaintenanceLevel = (km, lastServiceDate) => {
+    const kmPerMaintenance = 1000;
+    const monthsPerMaintenance = 3;
+    
+    // Tính số lần bảo dưỡng dựa trên km
+    const levelByKm = km ? Math.floor(km / kmPerMaintenance) : 0;
+    
+    // Tính số lần bảo dưỡng dựa trên thời gian
+    const monthsPassed = calculateMonthsSinceLastService(lastServiceDate);
+    const levelByTime = Math.floor(monthsPassed / monthsPerMaintenance);
+    
+    // Lấy giá trị lớn hơn (đạt điều kiện nào trước thì tính theo đó)
+    const maintenanceLevel = Math.max(levelByKm, levelByTime);
+    
+    return maintenanceLevel > 0 ? maintenanceLevel : null;
+  };
+
+  // Hàm tính toán thông tin bảo dưỡng tiếp theo
+  const calculateNextMaintenance = (km, lastServiceDate) => {
+    const kmPerMaintenance = 1000;
+    const monthsPerMaintenance = 3;
+    
+    // Tính km còn lại đến lần bảo dưỡng tiếp theo
+    const currentLevel = Math.floor(km / kmPerMaintenance);
+    const nextKmMilestone = (currentLevel + 1) * kmPerMaintenance;
+    const kmRemaining = nextKmMilestone - km;
+    
+    // Tính thời gian còn lại đến lần bảo dưỡng tiếp theo
+    let monthsRemaining = null;
+    let nextMaintenanceDate = null;
+    
+    if (lastServiceDate) {
+      const monthsPassed = calculateMonthsSinceLastService(lastServiceDate);
+      const currentTimeLevel = Math.floor(monthsPassed / monthsPerMaintenance);
+      const nextMonthMilestone = (currentTimeLevel + 1) * monthsPerMaintenance;
+      monthsRemaining = nextMonthMilestone - monthsPassed;
+      
+      // Tính ngày bảo dưỡng tiếp theo
+      const lastDate = new Date(lastServiceDate);
+      nextMaintenanceDate = new Date(lastDate);
+      nextMaintenanceDate.setMonth(lastDate.getMonth() + nextMonthMilestone);
+    }
+    
+    return {
+      kmRemaining,
+      nextKmMilestone,
+      monthsRemaining,
+      nextMaintenanceDate
+    };
+  };
+
+  // Hàm xử lý thay đổi km của xe
+  const handleKmChange = (vehicleId, value) => {
+    setVehicleKm(prev => ({
+      ...prev,
+      [vehicleId]: value
+    }));
+  };
 
   // Fetch data từ API khi component mount
   useEffect(() => {
@@ -161,7 +235,79 @@ export default function BookingPage() {
   };
 
   const handleVehicleSelect = (vehicle) => {
-    setSelectedVehicle(vehicle);
+    const vehicleId = vehicle.vehicleId || vehicle.id;
+    // Ưu tiên lấy km từ input, nếu không có thì lấy từ database
+    const inputKm = vehicleKm[vehicleId];
+    const km = inputKm !== undefined && inputKm !== '' ? parseFloat(inputKm) : (vehicle.currentMileage || 0);
+    
+    const maintenanceLevel = calculateMaintenanceLevel(km, vehicle.lastServiceDate);
+    
+    // Tính thông tin chi tiết
+    const monthsSinceLastService = calculateMonthsSinceLastService(vehicle.lastServiceDate);
+    const kmPerMaintenance = 1000;
+    const monthsPerMaintenance = 3;
+    
+    // Kiểm tra xem có chạy quá km không (quá 200km so với kỳ bảo dưỡng)
+    const kmOverdue = maintenanceLevel ? (km - (maintenanceLevel * kmPerMaintenance)) : 0;
+    const isKmOverdue = kmOverdue > 200;
+    
+    // Kiểm tra xem có quá hạn theo thời gian không (quá 1 tháng so với kỳ bảo dưỡng)
+    const monthsOverdue = maintenanceLevel ? (monthsSinceLastService - (maintenanceLevel * monthsPerMaintenance)) : 0;
+    const isTimeOverdue = monthsOverdue > 1;
+    
+    // Xe quá hạn nếu quá km HOẶC quá thời gian
+    const isOverdue = isKmOverdue || isTimeOverdue;
+    
+    // Xác định lý do bảo dưỡng
+    let maintenanceReason = '';
+    if (maintenanceLevel) {
+      const levelByKm = Math.floor(km / kmPerMaintenance);
+      const levelByTime = Math.floor(monthsSinceLastService / monthsPerMaintenance);
+      
+      if (levelByKm >= levelByTime) {
+        maintenanceReason = `(Đã chạy ${km.toLocaleString()} km)`;
+      } else {
+        maintenanceReason = `(Đã ${monthsSinceLastService} tháng kể từ lần cuối)`;
+      }
+    }
+    
+    // Lưu thông tin xe tạm thời và hiển thị modal
+    const vehicleWithMaintenance = {
+      ...vehicle,
+      inputKm: km,
+      maintenanceLevel: maintenanceLevel,
+      maintenanceReason: maintenanceReason,
+      maintenanceText: maintenanceLevel ? `Bảo dưỡng lần ${maintenanceLevel}` : 'Chưa đến kỳ bảo dưỡng',
+      monthsSinceLastService: monthsSinceLastService,
+      isOverdue: isOverdue,
+      kmOverdue: kmOverdue,
+      monthsOverdue: monthsOverdue,
+      isKmOverdue: isKmOverdue,
+      isTimeOverdue: isTimeOverdue
+    };
+    
+    setPendingVehicle(vehicleWithMaintenance);
+    setShowMaintenanceModal(true);
+  };
+
+  const handleConfirmVehicle = () => {
+    setSelectedVehicle(pendingVehicle);
+    setShowMaintenanceModal(false);
+    handleNextStep();
+    
+    console.log('✅ Xe đã chọn:', {
+      model: pendingVehicle.model,
+      licensePlate: pendingVehicle.licensePlate,
+      km: pendingVehicle.inputKm,
+      monthsSinceLastService: pendingVehicle.monthsSinceLastService,
+      maintenanceLevel: pendingVehicle.maintenanceLevel,
+      reason: pendingVehicle.maintenanceReason
+    });
+  };
+
+  const handleCancelVehicle = () => {
+    setShowMaintenanceModal(false);
+    setPendingVehicle(null);
   };
 
   const handleCenterSelect = (center) => {
@@ -390,6 +536,30 @@ export default function BookingPage() {
         notes: customerNote || ''
       };
 
+      // Thêm thông tin km và lần bảo dưỡng vào notes nếu có
+      if (selectedVehicle?.inputKm > 0 || selectedVehicle?.monthsSinceLastService > 0) {
+        let maintenanceInfo = `\n\n📊 Thông tin bảo dưỡng:`;
+        
+        if (selectedVehicle.inputKm > 0) {
+          maintenanceInfo += `\n- Số km đã chạy: ${selectedVehicle.inputKm.toLocaleString()} km`;
+        }
+        
+        if (selectedVehicle.monthsSinceLastService > 0) {
+          maintenanceInfo += `\n- Thời gian kể từ lần cuối: ${selectedVehicle.monthsSinceLastService} tháng`;
+        }
+        
+        if (selectedVehicle.maintenanceLevel) {
+          maintenanceInfo += `\n- ${selectedVehicle.maintenanceText}`;
+          if (selectedVehicle.maintenanceReason) {
+            maintenanceInfo += ` ${selectedVehicle.maintenanceReason}`;
+          }
+        } else {
+          maintenanceInfo += `\n- Chưa đến kỳ bảo dưỡng`;
+        }
+        
+        bookingData.notes = (customerNote || '') + maintenanceInfo;
+      }
+
       console.log('═══════════════════════════════════════');
       console.log('📤 SENDING BOOKING DATA');
       console.log('═══════════════════════════════════════');
@@ -400,7 +570,9 @@ export default function BookingPage() {
         'vehicleId (number)': typeof bookingData.vehicleId === 'number' ? `✅ ${bookingData.vehicleId}` : `❌ ${bookingData.vehicleId}`,
         'centerId (number)': typeof bookingData.centerId === 'number' ? `✅ ${bookingData.centerId}` : `❌ ${bookingData.centerId}`,
         'scheduledDate': bookingData.scheduledDate,
-        'scheduledTime': bookingData.scheduledTime
+        'scheduledTime': bookingData.scheduledTime,
+        'vehicleKm': selectedVehicle?.inputKm || 'N/A',
+        'maintenanceLevel': selectedVehicle?.maintenanceText || 'N/A'
       });
       console.log('═══════════════════════════════════════');
 
@@ -606,36 +778,101 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <div className="vehicle-grid">
-                  {userVehicles.map((vehicle) => (
-                    <div 
-                      key={vehicle.vehicleId || vehicle.id}
-                      className={`vehicle-card ${selectedVehicle?.vehicleId === vehicle.vehicleId || selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
-                      onClick={() => handleVehicleSelect(vehicle)}
-                    >
-                      <div className="vehicle-header">Xe máy điện</div>
-                      <div className="vehicle-image">
-                        <img 
-                          src={vehicle.imageUrl || 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle'} 
-                          alt={vehicle.model || 'Xe điện'}
-                          onError={(e) => { 
-                            e.target.src = 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle';
-                          }}
-                        />
+                  {userVehicles.map((vehicle) => {
+                    const vehicleId = vehicle.vehicleId || vehicle.id;
+                    // Ưu tiên lấy km từ input, nếu không có thì lấy từ database
+                    const inputKm = vehicleKm[vehicleId];
+                    const displayKm = inputKm !== undefined && inputKm !== '' ? inputKm : vehicle.currentMileage || '';
+                    const kmValue = parseFloat(displayKm) || 0;
+                    
+                    const maintenanceLevel = calculateMaintenanceLevel(kmValue, vehicle.lastServiceDate);
+                    const monthsSinceLastService = calculateMonthsSinceLastService(vehicle.lastServiceDate);
+                    const nextMaintenance = calculateNextMaintenance(kmValue, vehicle.lastServiceDate);
+                    
+                    return (
+                      <div 
+                        key={vehicleId}
+                        className={`vehicle-card ${selectedVehicle?.vehicleId === vehicleId || selectedVehicle?.id === vehicleId ? 'selected' : ''}`}
+                      >
+                        <div className="vehicle-header">Xe máy điện</div>
+                        <div className="vehicle-image">
+                          <img 
+                            src={vehicle.imageUrl || 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle'} 
+                            alt={vehicle.model || 'Xe điện'}
+                            onError={(e) => { 
+                              e.target.src = 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle';
+                            }}
+                          />
+                        </div>
+                        <div className="vehicle-info">
+                          <div className="vehicle-name" style={{ 
+                            fontSize: '18px', 
+                            fontWeight: '700',
+                            marginBottom: '12px',
+                            color: '#1a1a1a'
+                          }}>
+                            {vehicle.model || 'Xe điện'}
+                          </div>
+                          <div className="vehicle-plate" style={{
+                            display: 'inline-block',
+                            padding: '6px 12px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            fontWeight: '700',
+                            fontSize: '14px',
+                            marginBottom: '10px',
+                            letterSpacing: '1px',
+                            boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                          }}>
+                            {vehicle.licensePlate || 'N/A'}
+                          </div>
+                          <div className="vehicle-vin" style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '6px',
+                            marginBottom: '8px'
+                          }}>
+                            <span style={{ fontSize: '16px' }}>🔑</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '11px', color: '#999', marginBottom: '2px' }}>Số VIN</div>
+                              <div style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>
+                                {vehicle.vin || 'Chưa cập nhật'}
+                              </div>
+                            </div>
+                          </div>
+                          {vehicle.currentMileage > 0 && (
+                            <div className="vehicle-mileage" style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '10px 12px',
+                              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                              borderRadius: '8px',
+                              boxShadow: '0 3px 10px rgba(245, 87, 108, 0.3)'
+                            }}>
+                              <span style={{ fontSize: '20px' }}>🛣️</span>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '11px', color: '#fff', opacity: 0.9, marginBottom: '2px' }}>Đã chạy</div>
+                                <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>
+                                  {vehicle.currentMileage.toLocaleString()} km
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <button 
+                          className="btn-select-vehicle"
+                          onClick={() => handleVehicleSelect(vehicle)}
+                        >
+                          Chọn
+                        </button>
                       </div>
-                      <div className="vehicle-info">
-                        <div className="vehicle-name">
-                          {vehicle.model || 'Xe điện'}
-                        </div>
-                        <div className="vehicle-plate">
-                          Biển số: {vehicle.licensePlate || 'N/A'}
-                        </div>
-                        <div className="vehicle-vin">
-                          Số VIN: {vehicle.vin || 'Chưa cập nhật'}
-                        </div>
-                      </div>
-                      <button className="btn-select-vehicle">Chọn</button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -662,7 +899,79 @@ export default function BookingPage() {
                       <div className="vehicle-license">{selectedVehicle.licensePlate}</div>
                       <div className="vehicle-specs">
                         {selectedVehicle.vin ? `VIN: ${selectedVehicle.vin}` : 'Xe điện'}
-                        {selectedVehicle.currentMileage ? ` • ${selectedVehicle.currentMileage.toLocaleString()} km` : ''}
+                        {selectedVehicle.inputKm > 0 ? ` • ${selectedVehicle.inputKm.toLocaleString()} km` : ''}
+                      </div>
+                      
+                      {/* Hiển thị thông tin bảo dưỡng khi đã chọn xe */}
+                      <div style={{ marginTop: '10px' }}>
+                        {selectedVehicle.maintenanceLevel && (
+                          <div style={{
+                            marginBottom: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: selectedVehicle.maintenanceLevel === 1 ? '#e3f2fd' : selectedVehicle.maintenanceLevel === 2 ? '#fff3e0' : '#ffebee',
+                            borderLeft: `3px solid ${selectedVehicle.maintenanceLevel === 1 ? '#2196F3' : selectedVehicle.maintenanceLevel === 2 ? '#FF9800' : '#F44336'}`,
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: selectedVehicle.maintenanceLevel === 1 ? '#1976d2' : selectedVehicle.maintenanceLevel === 2 ? '#f57c00' : '#d32f2f'
+                          }}>
+                            ⚙️ {selectedVehicle.maintenanceText}
+                            {selectedVehicle.maintenanceReason && (
+                              <div style={{ fontSize: '11px', fontWeight: 'normal', marginTop: '3px', opacity: 0.9 }}>
+                                {selectedVehicle.maintenanceReason}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Hiển thị bảo dưỡng tiếp theo */}
+                        {(() => {
+                          const currentKm = selectedVehicle.inputKm || selectedVehicle.currentMileage || 0;
+                          const nextMaintenance = calculateNextMaintenance(
+                            currentKm,
+                            selectedVehicle.lastServiceDate
+                          );
+                          
+                          console.log('🔍 Debug Next Maintenance:', {
+                            currentKm,
+                            nextKmMilestone: nextMaintenance.nextKmMilestone,
+                            kmRemaining: nextMaintenance.kmRemaining
+                          });
+                          
+                          if (!nextMaintenance.kmRemaining && !nextMaintenance.monthsRemaining) return null;
+                          
+                          const isKmSooner = !nextMaintenance.monthsRemaining || 
+                                            (nextMaintenance.kmRemaining && nextMaintenance.kmRemaining < nextMaintenance.monthsRemaining * 333);
+                          
+                          return (
+                            <div style={{
+                              padding: '8px 12px',
+                              backgroundColor: '#f0f7ff',
+                              border: '2px solid #2196F3',
+                              borderRadius: '4px',
+                              fontSize: '12px'
+                            }}>
+                              <div style={{ fontWeight: '600', color: '#1976d2', marginBottom: '4px' }}>
+                                ⏰ Bảo dưỡng tiếp theo
+                              </div>
+                              {isKmSooner && nextMaintenance.kmRemaining > 0 ? (
+                                <div style={{ color: '#666' }}>
+                                  Còn {nextMaintenance.kmRemaining.toLocaleString()} km
+                                  <div style={{ fontSize: '10px', marginTop: '2px', opacity: 0.8 }}>
+                                    (Khi đạt {nextMaintenance.nextKmMilestone.toLocaleString()} km)
+                                  </div>
+                                </div>
+                              ) : nextMaintenance.nextMaintenanceDate ? (
+                                <div style={{ color: '#666' }}>
+                                  {nextMaintenance.nextMaintenanceDate.toLocaleDateString('vi-VN')}
+                                  <div style={{ fontSize: '10px', marginTop: '2px', opacity: 0.8 }}>
+                                    (Còn {nextMaintenance.monthsRemaining} tháng)
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                     <button 
@@ -883,6 +1192,61 @@ export default function BookingPage() {
                       <span>{selectedVehicle?.licensePlate || 'N/A'}</span>
                     </strong>
                   </div>
+                  
+                  {/* Hiển thị số km nếu có */}
+                  {selectedVehicle?.inputKm > 0 && (
+                    <div className="summary-item">
+                      <span>Số km đã chạy:</span>
+                      <strong>{selectedVehicle.inputKm.toLocaleString()} km</strong>
+                    </div>
+                  )}
+                  
+                  {/* Hiển thị thời gian nếu có */}
+                  {selectedVehicle?.monthsSinceLastService > 0 && (
+                    <div className="summary-item">
+                      <span>Thời gian kể từ lần cuối:</span>
+                      <strong>{selectedVehicle.monthsSinceLastService} tháng</strong>
+                    </div>
+                  )}
+                  
+                  {/* Hiển thị lần bảo dưỡng - QUAN TRỌNG */}
+                  {selectedVehicle?.maintenanceLevel && (
+                    <div className="summary-item" style={{ 
+                      backgroundColor: '#f9f9f9', 
+                      padding: '12px', 
+                      borderRadius: '8px',
+                      border: '2px solid #e0e0e0'
+                    }}>
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#555' }}>
+                        Lần bảo dưỡng:
+                      </span>
+                      <strong style={{
+                        padding: '8px 16px',
+                        backgroundColor: selectedVehicle.maintenanceLevel === 1 ? '#e3f2fd' : selectedVehicle.maintenanceLevel === 2 ? '#fff3e0' : '#ffebee',
+                        borderRadius: '6px',
+                        color: selectedVehicle.maintenanceLevel === 1 ? '#1976d2' : selectedVehicle.maintenanceLevel === 2 ? '#f57c00' : '#d32f2f',
+                        fontWeight: '700',
+                        fontSize: '16px',
+                        display: 'inline-block',
+                        marginLeft: '10px',
+                        border: `2px solid ${selectedVehicle.maintenanceLevel === 1 ? '#2196F3' : selectedVehicle.maintenanceLevel === 2 ? '#FF9800' : '#F44336'}`
+                      }}>
+                        ⚙️ Lần {selectedVehicle.maintenanceLevel}
+                      </strong>
+                      {selectedVehicle.maintenanceReason && (
+                        <div style={{ 
+                          fontSize: '12px', 
+                          fontWeight: 'normal', 
+                          marginTop: '8px',
+                          color: '#666',
+                          fontStyle: 'italic'
+                        }}>
+                          {selectedVehicle.maintenanceReason}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="summary-item">
                     <span>Trung tâm:</span>
                     <strong>{selectedCenter?.name || selectedCenter?.centerName || 'N/A'}</strong>
@@ -1062,6 +1426,243 @@ export default function BookingPage() {
                   <span className="notification-time">5 ngày trước</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Progress Modal */}
+      {showMaintenanceModal && pendingVehicle && (
+        <div className="modal-overlay" onClick={handleCancelVehicle}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', padding: '30px' }}>
+            <div className="modal-header" style={{ borderBottom: '2px solid #f0f0f0', paddingBottom: '15px', marginBottom: '25px' }}>
+              <h2 style={{ fontSize: '24px', color: '#333', margin: 0 }}>
+                Thông tin bảo dưỡng xe
+              </h2>
+              <button className="modal-close-btn" onClick={handleCancelVehicle} style={{ fontSize: '28px', color: '#999' }}>
+                ✕
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {/* Thông tin xe */}
+              <div style={{ 
+                marginBottom: '25px', 
+                padding: '15px', 
+                backgroundColor: '#f9f9f9', 
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '15px'
+              }}>
+                <div style={{ fontSize: '40px' }}>🏍️</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '18px', fontWeight: '600', color: '#333', marginBottom: '5px' }}>
+                    {pendingVehicle.model}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    Biển số: {pendingVehicle.licensePlate} • {pendingVehicle.inputKm?.toLocaleString() || 0} km
+                  </div>
+                </div>
+              </div>
+
+              {/* Thanh tiến trình bảo dưỡng */}
+              {pendingVehicle.maintenanceLevel && (
+                <div style={{ marginBottom: '25px' }}>
+                  <h3 style={{ fontSize: '16px', color: '#555', marginBottom: '15px', textAlign: 'center' }}>
+                    Lịch sử bảo dưỡng
+                  </h3>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    marginBottom: '20px',
+                    position: 'relative'
+                  }}>
+                    {[1, 2, 3, 4, 5].map((level) => {
+                      const isCompleted = level < pendingVehicle.maintenanceLevel;
+                      const isCurrent = level === pendingVehicle.maintenanceLevel;
+                      const isUpcoming = level > pendingVehicle.maintenanceLevel;
+                      
+                      // Xác định màu: Đỏ nếu quá hạn, Cam nếu đúng hạn
+                      const currentColor = isCurrent && pendingVehicle.isOverdue ? '#F44336' : '#FF9800';
+                      const currentShadow = isCurrent && pendingVehicle.isOverdue 
+                        ? '0 4px 8px rgba(244, 67, 54, 0.3)' 
+                        : '0 4px 8px rgba(255, 152, 0, 0.3)';
+                      
+                      return (
+                        <div key={level} style={{ 
+                          flex: 1, 
+                          textAlign: 'center',
+                          position: 'relative',
+                          zIndex: 2
+                        }}>
+                          <div style={{
+                            display: 'inline-block',
+                            padding: '10px 20px',
+                            backgroundColor: isCompleted ? '#4CAF50' : isCurrent ? currentColor : '#E0E0E0',
+                            color: isCompleted || isCurrent ? '#fff' : '#999',
+                            borderRadius: '25px',
+                            fontWeight: '700',
+                            fontSize: '15px',
+                            boxShadow: isCurrent ? currentShadow : 'none',
+                            position: 'relative',
+                            zIndex: 3
+                          }}>
+                            Lần {level}
+                          </div>
+                          {level < 5 && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '60%',
+                              right: '-40%',
+                              height: '4px',
+                              backgroundColor: isCompleted ? '#4CAF50' : '#E0E0E0',
+                              zIndex: 1,
+                              transform: 'translateY(-50%)'
+                            }} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Legend */}
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    gap: '20px',
+                    fontSize: '13px',
+                    color: '#666'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ 
+                        width: '14px', 
+                        height: '14px', 
+                        backgroundColor: '#4CAF50', 
+                        borderRadius: '50%',
+                        display: 'inline-block'
+                      }} />
+                      <span>Đúng hạn</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ 
+                        width: '14px', 
+                        height: '14px', 
+                        backgroundColor: '#FF9800', 
+                        borderRadius: '50%',
+                        display: 'inline-block'
+                      }} />
+                      <span>Cần bảo dưỡng</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ 
+                        width: '14px', 
+                        height: '14px', 
+                        backgroundColor: '#F44336', 
+                        borderRadius: '50%',
+                        display: 'inline-block'
+                      }} />
+                      <span>Quá hạn</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ 
+                        width: '14px', 
+                        height: '14px', 
+                        backgroundColor: '#E0E0E0', 
+                        borderRadius: '50%',
+                        display: 'inline-block'
+                      }} />
+                      <span>Lần kế tiếp</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Thông tin bảo dưỡng hiện tại */}
+              {pendingVehicle.maintenanceLevel && (
+                <div style={{
+                  padding: '15px',
+                  backgroundColor: pendingVehicle.isOverdue ? '#FFEBEE' : '#fff8e1',
+                  border: pendingVehicle.isOverdue ? '2px solid #EF5350' : '2px solid #FFC107',
+                  borderRadius: '8px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ fontWeight: '600', color: pendingVehicle.isOverdue ? '#D32F2F' : '#F57C00', marginBottom: '8px', fontSize: '15px' }}>
+                    {pendingVehicle.isOverdue ? '⚠️' : '⚙️'} {pendingVehicle.maintenanceText}
+                  </div>
+                  {pendingVehicle.maintenanceReason && (
+                    <div style={{ fontSize: '13px', color: '#666' }}>
+                      {pendingVehicle.maintenanceReason}
+                    </div>
+                  )}
+                  {pendingVehicle.isOverdue && (
+                    <div style={{ 
+                      fontSize: '13px', 
+                      color: '#D32F2F', 
+                      fontWeight: '600',
+                      marginTop: '8px',
+                      marginBottom: '8px'
+                    }}>
+                      {pendingVehicle.isKmOverdue && pendingVehicle.isTimeOverdue ? (
+                        <>Quá {pendingVehicle.kmOverdue.toLocaleString()} km và {pendingVehicle.monthsOverdue} tháng</>
+                      ) : pendingVehicle.isKmOverdue ? (
+                        <>Quá {pendingVehicle.kmOverdue.toLocaleString()} km so với kỳ bảo dưỡng</>
+                      ) : (
+                        <>Quá {pendingVehicle.monthsOverdue} tháng so với kỳ bảo dưỡng</>
+                      )}
+                    </div>
+                  )}
+                  <div style={{ 
+                    fontSize: '13px', 
+                    color: pendingVehicle.isOverdue ? '#D32F2F' : '#F57C00', 
+                    fontWeight: '600',
+                    marginTop: '8px',
+                    padding: '8px 12px',
+                    backgroundColor: pendingVehicle.isOverdue ? '#FFCDD2' : '#FFF3E0',
+                    borderRadius: '4px',
+                    display: 'inline-block'
+                  }}>
+                    {pendingVehicle.isOverdue ? '⚠️ Quá hạn bảo dưỡng' : '⏰ Đã đến kỳ bảo dưỡng'}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-footer" style={{ 
+              display: 'flex', 
+              gap: '15px', 
+              justifyContent: 'flex-end',
+              paddingTop: '20px',
+              borderTop: '2px solid #f0f0f0'
+            }}>
+              <button 
+                className="btn-secondary" 
+                onClick={handleCancelVehicle}
+                style={{
+                  padding: '12px 30px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Hủy
+              </button>
+              <button 
+                className="btn-primary"
+                onClick={handleConfirmVehicle}
+                style={{
+                  padding: '12px 30px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Tiếp tục
+              </button>
             </div>
           </div>
         </div>

@@ -17,6 +17,62 @@ export default function MyVehiclesPage() {
   // State cho customer data
   const [customerData, setCustomerData] = useState(null);
 
+  // Helper functions cho logic bảo dưỡng
+  const calculateMonthsSinceLastService = (lastServiceDate) => {
+    if (!lastServiceDate) return 0;
+    const lastDate = new Date(lastServiceDate);
+    const today = new Date();
+    const monthsDiff = (today.getFullYear() - lastDate.getFullYear()) * 12 + 
+                       (today.getMonth() - lastDate.getMonth());
+    return monthsDiff;
+  };
+
+  const calculateMaintenanceLevel = (km, lastServiceDate) => {
+    const kmPerMaintenance = 1000;
+    const monthsPerMaintenance = 3;
+    
+    const levelByKm = km ? Math.floor(km / kmPerMaintenance) : 0;
+    const monthsPassed = calculateMonthsSinceLastService(lastServiceDate);
+    const levelByTime = Math.floor(monthsPassed / monthsPerMaintenance);
+    
+    const maintenanceLevel = Math.max(levelByKm, levelByTime);
+    return maintenanceLevel > 0 ? maintenanceLevel : null;
+  };
+
+  // Hàm tính toán thông tin bảo dưỡng tiếp theo
+  const calculateNextMaintenance = (km, lastServiceDate) => {
+    const kmPerMaintenance = 1000;
+    const monthsPerMaintenance = 3;
+    
+    // Tính km còn lại đến lần bảo dưỡng tiếp theo
+    const currentLevel = Math.floor(km / kmPerMaintenance);
+    const nextKmMilestone = (currentLevel + 1) * kmPerMaintenance;
+    const kmRemaining = nextKmMilestone - km;
+    
+    // Tính thời gian còn lại đến lần bảo dưỡng tiếp theo
+    let monthsRemaining = null;
+    let nextMaintenanceDate = null;
+    
+    if (lastServiceDate) {
+      const monthsPassed = calculateMonthsSinceLastService(lastServiceDate);
+      const currentTimeLevel = Math.floor(monthsPassed / monthsPerMaintenance);
+      const nextMonthMilestone = (currentTimeLevel + 1) * monthsPerMaintenance;
+      monthsRemaining = nextMonthMilestone - monthsPassed;
+      
+      // Tính ngày bảo dưỡng tiếp theo
+      const lastDate = new Date(lastServiceDate);
+      nextMaintenanceDate = new Date(lastDate);
+      nextMaintenanceDate.setMonth(lastDate.getMonth() + nextMonthMilestone);
+    }
+    
+    return {
+      kmRemaining,
+      nextKmMilestone,
+      monthsRemaining,
+      nextMaintenanceDate
+    };
+  };
+
   // State cho form thêm xe - Match với CreateVehicleRequest Backend
   const [newVehicle, setNewVehicle] = useState({
     licensePlate: '',
@@ -252,7 +308,7 @@ export default function MyVehiclesPage() {
         vin: newVehicle.vin.trim(),
         currentMileage: newVehicle.currentMileage ? parseInt(newVehicle.currentMileage) : 0,
         imageUrl: null, // ✅ TẠM THỜI BỎ ẢNH - Backend cần fix database column
-        lastServiceDate: null
+        lastServiceDate: newVehicle.lastServiceDate ? newVehicle.lastServiceDate : null
       };
 
       console.log('📤 Adding vehicle (WITHOUT IMAGE):');
@@ -261,6 +317,7 @@ export default function MyVehiclesPage() {
       console.log('  - model:', vehicleData.model);
       console.log('  - vin:', vehicleData.vin);
       console.log('  - currentMileage:', vehicleData.currentMileage);
+      console.log('  - lastServiceDate:', vehicleData.lastServiceDate);
       console.log('⚠️ Image upload disabled temporarily');
       
       // Gọi API để lưu vào database - Gửi JSON object trực tiếp
@@ -428,23 +485,95 @@ export default function MyVehiclesPage() {
                         </div>
                       )}
                       {vehicle.vin && (
-                        <div className="spec-item">
-                          <div className="spec-icon">�</div>
+                        <div className="spec-item" style={{
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          border: 'none',
+                          boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                          padding: '14px 16px',
+                          borderRadius: '12px'
+                        }}>
+                          <div className="spec-icon" style={{ fontSize: '26px' }}>🔑</div>
                           <div className="spec-content">
-                            <span className="spec-label">VIN</span>
-                            <span className="spec-value">{vehicle.vin}</span>
+                            <span className="spec-label" style={{ 
+                              color: '#fff', 
+                              opacity: 0.95, 
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}>Số VIN</span>
+                            <span className="spec-value" style={{ 
+                              color: '#fff', 
+                              fontWeight: '700',
+                              fontSize: '13px',
+                              letterSpacing: '0.5px',
+                              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}>{vehicle.vin}</span>
                           </div>
                         </div>
                       )}
                       {vehicle.currentMileage !== null && vehicle.currentMileage !== undefined && (
-                        <div className="spec-item">
-                          <div className="spec-icon">🛣️</div>
+                        <div className="spec-item" style={{
+                          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                          border: 'none',
+                          boxShadow: '0 4px 15px rgba(245, 87, 108, 0.3)',
+                          padding: '14px 16px',
+                          borderRadius: '12px'
+                        }}>
+                          <div className="spec-icon" style={{ fontSize: '26px' }}>🛣️</div>
                           <div className="spec-content">
-                            <span className="spec-label">Số km hiện tại</span>
-                            <span className="spec-value">{vehicle.currentMileage.toLocaleString()} km</span>
+                            <span className="spec-label" style={{ 
+                              color: '#fff', 
+                              opacity: 0.95, 
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}>Đã chạy</span>
+                            <span className="spec-value" style={{ 
+                              color: '#fff', 
+                              fontWeight: '700',
+                              fontSize: '17px',
+                              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}>{vehicle.currentMileage.toLocaleString()} km</span>
                           </div>
                         </div>
                       )}
+                      {(() => {
+                        const maintenanceLevel = calculateMaintenanceLevel(vehicle.currentMileage, vehicle.lastServiceDate);
+                        const monthsSinceLastService = calculateMonthsSinceLastService(vehicle.lastServiceDate);
+                        
+                        if (!maintenanceLevel) return null;
+                        
+                        const levelByKm = vehicle.currentMileage ? Math.floor(vehicle.currentMileage / 1000) : 0;
+                        const levelByTime = Math.floor(monthsSinceLastService / 3);
+                        const isTimeTriggered = levelByTime > levelByKm;
+                        
+                        return (
+                          <div className="spec-item" style={{
+                            backgroundColor: (() => {
+                              return maintenanceLevel === 1 ? '#e3f2fd' : maintenanceLevel === 2 ? '#fff3e0' : '#ffebee';
+                            })(),
+                            border: `2px solid ${(() => {
+                              return maintenanceLevel === 1 ? '#2196F3' : maintenanceLevel === 2 ? '#FF9800' : '#F44336';
+                            })()}`
+                          }}>
+                            <div className="spec-icon">⚙️</div>
+                            <div className="spec-content">
+                              <span className="spec-label">Lần bảo dưỡng</span>
+                              <span className="spec-value" style={{
+                                fontWeight: '700',
+                                color: (() => {
+                                  return maintenanceLevel === 1 ? '#1976d2' : maintenanceLevel === 2 ? '#f57c00' : '#d32f2f';
+                                })()
+                              }}>
+                                Lần {maintenanceLevel}
+                              </span>
+                              <div style={{ fontSize: '11px', marginTop: '3px', opacity: 0.8 }}>
+                                {isTimeTriggered 
+                                  ? `${monthsSinceLastService} tháng kể từ lần cuối`
+                                  : `${vehicle.currentMileage.toLocaleString()} km`}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <div className="spec-item maintenance-item">
                         <div className="spec-icon">🔧</div>
                         <div className="spec-content">
@@ -454,17 +583,48 @@ export default function MyVehiclesPage() {
                           </span>
                         </div>
                       </div>
-                      {vehicle.nextService && (
-                        <div className="spec-item next-maintenance-item">
-                          <div className="spec-icon">⏰</div>
-                          <div className="spec-content">
-                            <span className="spec-label">Bảo dưỡng tiếp theo</span>
-                            <span className="spec-value next-service-date">
-                              {new Date(vehicle.nextService).toLocaleDateString('vi-VN')}
-                            </span>
+                      {(() => {
+                        const nextMaintenance = calculateNextMaintenance(
+                          vehicle.currentMileage || 0, 
+                          vehicle.lastServiceDate
+                        );
+                        
+                        // Hiển thị nếu có thông tin km hoặc thời gian
+                        if (!nextMaintenance.kmRemaining && !nextMaintenance.monthsRemaining) return null;
+                        
+                        // Xác định điều kiện nào sẽ đến trước
+                        const isKmSooner = !nextMaintenance.monthsRemaining || 
+                                          (nextMaintenance.kmRemaining && nextMaintenance.kmRemaining < nextMaintenance.monthsRemaining * 333); // Giả sử trung bình 333km/tháng
+                        
+                        return (
+                          <div className="spec-item next-maintenance-item" style={{
+                            backgroundColor: '#f0f7ff',
+                            border: '2px solid #2196F3'
+                          }}>
+                            <div className="spec-icon">⏰</div>
+                            <div className="spec-content">
+                              <span className="spec-label">Bảo dưỡng tiếp theo</span>
+                              <span className="spec-value next-service-date" style={{ fontWeight: '600', color: '#1976d2' }}>
+                                {isKmSooner ? (
+                                  <>
+                                    Còn {nextMaintenance.kmRemaining.toLocaleString()} km
+                                    <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
+                                      (Đạt {nextMaintenance.nextKmMilestone.toLocaleString()} km)
+                                    </div>
+                                  </>
+                                ) : nextMaintenance.nextMaintenanceDate ? (
+                                  <>
+                                    {nextMaintenance.nextMaintenanceDate.toLocaleDateString('vi-VN')}
+                                    <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
+                                      (Còn {nextMaintenance.monthsRemaining} tháng)
+                                    </div>
+                                  </>
+                                ) : 'Chưa xác định'}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -551,6 +711,233 @@ export default function MyVehiclesPage() {
                     {getStatusBadge(selectedVehicle.status || 'ACTIVE')}
                   </div>
                 </div>
+
+                {/* Thanh tiến trình bảo dưỡng */}
+                {(() => {
+                  const maintenanceLevel = calculateMaintenanceLevel(selectedVehicle.currentMileage, selectedVehicle.lastServiceDate);
+                  if (!maintenanceLevel) return null;
+
+                  const kmPerMaintenance = 1000;
+                  const monthsPerMaintenance = 3;
+                  const kmOverdue = maintenanceLevel ? (selectedVehicle.currentMileage - (maintenanceLevel * kmPerMaintenance)) : 0;
+                  const isKmOverdue = kmOverdue > 200;
+                  
+                  const monthsSinceLastService = calculateMonthsSinceLastService(selectedVehicle.lastServiceDate);
+                  const monthsOverdue = maintenanceLevel ? (monthsSinceLastService - (maintenanceLevel * monthsPerMaintenance)) : 0;
+                  const isTimeOverdue = monthsOverdue > 1;
+                  
+                  const isOverdue = isKmOverdue || isTimeOverdue;
+
+                  return (
+                    <div style={{ marginTop: '25px', marginBottom: '20px' }}>
+                      <h3 style={{ fontSize: '16px', color: '#555', marginBottom: '15px', textAlign: 'center' }}>
+                        Lịch sử bảo dưỡng
+                      </h3>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        marginBottom: '20px',
+                        position: 'relative'
+                      }}>
+                        {[1, 2, 3, 4, 5].map((level) => {
+                          const isCompleted = level < maintenanceLevel;
+                          const isCurrent = level === maintenanceLevel;
+                          
+                          const currentColor = isCurrent && isOverdue ? '#F44336' : '#FF9800';
+                          const currentShadow = isCurrent && isOverdue 
+                            ? '0 4px 8px rgba(244, 67, 54, 0.3)' 
+                            : '0 4px 8px rgba(255, 152, 0, 0.3)';
+                          
+                          return (
+                            <div key={level} style={{ 
+                              flex: 1, 
+                              textAlign: 'center',
+                              position: 'relative',
+                              zIndex: 2
+                            }}>
+                              <div style={{
+                                display: 'inline-block',
+                                padding: '10px 20px',
+                                backgroundColor: isCompleted ? '#4CAF50' : isCurrent ? currentColor : '#E0E0E0',
+                                color: isCompleted || isCurrent ? '#fff' : '#999',
+                                borderRadius: '25px',
+                                fontWeight: '700',
+                                fontSize: '15px',
+                                boxShadow: isCurrent ? currentShadow : 'none',
+                                position: 'relative',
+                                zIndex: 3
+                              }}>
+                                Lần {level}
+                              </div>
+                              {level < 5 && (
+                                <div style={{
+                                  position: 'absolute',
+                                  top: '50%',
+                                  left: '60%',
+                                  right: '-40%',
+                                  height: '4px',
+                                  backgroundColor: isCompleted ? '#4CAF50' : '#E0E0E0',
+                                  zIndex: 1,
+                                  transform: 'translateY(-50%)'
+                                }} />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Legend */}
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        gap: '20px',
+                        fontSize: '13px',
+                        color: '#666',
+                        marginBottom: '20px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ 
+                            width: '14px', 
+                            height: '14px', 
+                            backgroundColor: '#4CAF50', 
+                            borderRadius: '50%',
+                            display: 'inline-block'
+                          }} />
+                          <span>Đúng hạn</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ 
+                            width: '14px', 
+                            height: '14px', 
+                            backgroundColor: '#FF9800', 
+                            borderRadius: '50%',
+                            display: 'inline-block'
+                          }} />
+                          <span>Cần bảo dưỡng</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ 
+                            width: '14px', 
+                            height: '14px', 
+                            backgroundColor: '#F44336', 
+                            borderRadius: '50%',
+                            display: 'inline-block'
+                          }} />
+                          <span>Quá hạn</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ 
+                            width: '14px', 
+                            height: '14px', 
+                            backgroundColor: '#E0E0E0', 
+                            borderRadius: '50%',
+                            display: 'inline-block'
+                          }} />
+                          <span>Lần kế tiếp</span>
+                        </div>
+                      </div>
+
+                      {/* Thông tin bảo dưỡng hiện tại */}
+                      <div style={{
+                        padding: '15px',
+                        backgroundColor: isOverdue ? '#FFEBEE' : '#fff8e1',
+                        border: isOverdue ? '2px solid #EF5350' : '2px solid #FFC107',
+                        borderRadius: '8px',
+                        marginBottom: '15px'
+                      }}>
+                        <div style={{ fontWeight: '600', color: isOverdue ? '#D32F2F' : '#F57C00', marginBottom: '8px', fontSize: '15px' }}>
+                          {isOverdue ? '⚠️' : '⚙️'} Lần bảo dưỡng thứ {maintenanceLevel}
+                        </div>
+                        {(() => {
+                          const monthsSinceLastService = calculateMonthsSinceLastService(selectedVehicle.lastServiceDate);
+                          const levelByKm = selectedVehicle.currentMileage ? Math.floor(selectedVehicle.currentMileage / 1000) : 0;
+                          const levelByTime = Math.floor(monthsSinceLastService / 3);
+                          const isTimeTriggered = levelByTime > levelByKm;
+                          
+                          return (
+                            <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                              {isTimeTriggered 
+                                ? `🕒 ${monthsSinceLastService} tháng kể từ lần cuối`
+                                : `🛣️ Đã chạy ${selectedVehicle.currentMileage.toLocaleString()} km`}
+                            </div>
+                          );
+                        })()}
+                        {isOverdue && (
+                          <div style={{ 
+                            fontSize: '13px', 
+                            color: '#D32F2F', 
+                            fontWeight: '600',
+                            marginBottom: '8px'
+                          }}>
+                            {isKmOverdue && isTimeOverdue ? (
+                              <>Quá {kmOverdue.toLocaleString()} km và {monthsOverdue} tháng</>
+                            ) : isKmOverdue ? (
+                              <>Quá {kmOverdue.toLocaleString()} km so với kỳ bảo dưỡng</>
+                            ) : (
+                              <>Quá {monthsOverdue} tháng so với kỳ bảo dưỡng</>
+                            )}
+                          </div>
+                        )}
+                        <div style={{ 
+                          fontSize: '13px', 
+                          color: isOverdue ? '#D32F2F' : '#F57C00', 
+                          fontWeight: '600',
+                          marginTop: '8px',
+                          padding: '8px 12px',
+                          backgroundColor: isOverdue ? '#FFCDD2' : '#FFF3E0',
+                          borderRadius: '4px',
+                          display: 'inline-block'
+                        }}>
+                          {isOverdue ? '⚠️ Quá hạn bảo dưỡng' : '⏰ Đã đến kỳ bảo dưỡng'}
+                        </div>
+                      </div>
+
+                      {/* Bảo dưỡng tiếp theo */}
+                      {(() => {
+                        const nextMaintenance = calculateNextMaintenance(
+                          selectedVehicle.currentMileage || 0, 
+                          selectedVehicle.lastServiceDate
+                        );
+                        
+                        if (!nextMaintenance.kmRemaining && !nextMaintenance.monthsRemaining) return null;
+                        
+                        const isKmSooner = !nextMaintenance.monthsRemaining || 
+                                          (nextMaintenance.kmRemaining && nextMaintenance.kmRemaining < nextMaintenance.monthsRemaining * 333);
+                        
+                        return (
+                          <div style={{
+                            backgroundColor: '#f0f7ff',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            border: '2px solid #2196F3'
+                          }}>
+                            <div style={{ fontWeight: '600', color: '#1976d2', fontSize: '14px', marginBottom: '8px' }}>
+                              📅 Bảo dưỡng tiếp theo
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#666' }}>
+                              {isKmSooner ? (
+                                <>
+                                  ⏰ Còn {nextMaintenance.kmRemaining.toLocaleString()} km
+                                  <div style={{ fontSize: '12px', marginTop: '5px' }}>
+                                    (Khi đạt {nextMaintenance.nextKmMilestone.toLocaleString()} km)
+                                  </div>
+                                </>
+                              ) : nextMaintenance.nextMaintenanceDate ? (
+                                <>
+                                  📅 {nextMaintenance.nextMaintenanceDate.toLocaleDateString('vi-VN')}
+                                  <div style={{ fontSize: '12px', marginTop: '5px' }}>
+                                    (Còn khoảng {nextMaintenance.monthsRemaining} tháng)
+                                  </div>
+                                </>
+                              ) : 'Chưa xác định'}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -640,6 +1027,35 @@ export default function MyVehiclesPage() {
                       value={newVehicle.currentMileage}
                       onChange={(e) => handleFormChange('currentMileage', e.target.value)}
                     />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>
+                      Ngày bảo dưỡng cuối cùng: 
+                      <span style={{ fontSize: '12px', color: '#999', marginLeft: '5px' }}>(Không bắt buộc)</span>
+                    </label>
+                    <input 
+                      type="date" 
+                      value={newVehicle.lastServiceDate}
+                      onChange={(e) => handleFormChange('lastServiceDate', e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      style={{ 
+                        padding: '10px', 
+                        fontSize: '14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }}
+                    />
+                    <small style={{ 
+                      display: 'block', 
+                      marginTop: '5px', 
+                      color: '#666', 
+                      fontSize: '12px' 
+                    }}>
+                      💡 Giúp tính toán lần bảo dưỡng tiếp theo dựa trên thời gian (mỗi 3 tháng)
+                    </small>
                   </div>
                 </div>
                 
