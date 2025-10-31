@@ -1,11 +1,15 @@
 import axios from "axios";
 
+// Use relative '/api' base so Vite dev server proxy can forward requests to backend.
+// You can override with VITE_API_BASE_URL in .env for direct backend calls.
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const axiosClient = axios.create({
-    baseURL: "http://localhost:8080/api", 
+    baseURL,
     headers: {
         "Content-Type": "application/json",
     },
-    withCredentials: false, // Tắt credentials để tránh lỗi CSRF
+    withCredentials: false,
 });
 
 // Request interceptor - Tự động thêm token vào header
