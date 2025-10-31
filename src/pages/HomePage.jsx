@@ -100,7 +100,7 @@ export default function HomePage() {
       <main className="hf-hero">
         <div className="hero-content">
           <div className="hero-text">
-            <h1 className="hero-title">Dịch Vụ Sửa Chữa Xe Điện</h1>
+            <h1 className="hero-title">Dịch Vụ Bảo Dưỡng Xe Điện</h1>
             <h2 className="hero-subtitle">Toàn Diện - An Tâm Trên Mọi Hành Trình</h2>
             <p className="hero-description">
               Chuyên nghiệp, nhanh chóng, tin cậy - Đội ngũ kỹ thuật viên giàu kinh nghiệm 
@@ -150,7 +150,7 @@ export default function HomePage() {
               </div>
               <h3 className="feature-title">Thiết Bị Hiện Đại</h3>
               <p className="feature-description">
-                Trang bị máy móc, thiết bị kiểm tra và sửa chữa tiên tiến nhất hiện nay
+                Trang bị máy móc, thiết bị kiểm tra và bảo dưỡng tiên tiến nhất hiện nay
               </p>
             </div>
 
@@ -175,7 +175,7 @@ export default function HomePage() {
               </div>
               <h3 className="feature-title">Nhanh Chóng</h3>
               <p className="feature-description">
-                Thời gian sửa chữa nhanh chóng, đúng hẹn. Không để khách hàng chờ đợi lâu
+                Thời gian bảo dưỡng nhanh chóng, đúng hẹn. Không để khách hàng chờ đợi lâu
               </p>
             </div>
 
@@ -223,9 +223,9 @@ export default function HomePage() {
             </div>
             <div className="service-card">
               <div className="service-number">02</div>
-              <h3 className="service-title">Sửa Chữa Pin</h3>
+              <h3 className="service-title">Bảo Dưỡng Pin</h3>
               <p className="service-description">
-                Chẩn đoán và sửa chữa hệ thống pin, tăng tuổi thọ pin
+                Chẩn đoán và bảo dưỡng hệ thống pin, tăng tuổi thọ pin
               </p>
             </div>
             <div className="service-card">
@@ -268,7 +268,7 @@ export default function HomePage() {
             <div className="footer-section">
               <img src={logoImage} alt="VOLTFIX Logo" className="footer-logo" />
               <p className="footer-description">
-                Trung tâm sửa chữa xe điện hàng đầu, mang đến dịch vụ chuyên nghiệp và tin cậy.
+                Trung tâm bảo dưỡng xe điện hàng đầu, mang đến dịch vụ chuyên nghiệp và tin cậy.
               </p>
             </div>
             <div className="footer-section">

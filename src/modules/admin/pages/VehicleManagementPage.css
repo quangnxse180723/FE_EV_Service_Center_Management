@@ -14,9 +14,10 @@
 /* Vehicle Stats Overview */
 .vehicle-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: 1fr; /* only one card (total) */
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 420px; /* keep the total box compact */
 }
 
 .stat-box {
@@ -136,20 +137,61 @@
   border-collapse: collapse;
 }
 
+/* Ensure this table uses native table layout so rows/cells do not stack vertically.
+   Some other page styles may force table elements to become block/flex; enforce
+   table/row/cell display here with sufficient specificity. */
+.vehicles-table {
+  display: table !important;
+  table-layout: fixed; /* keep columns stable */
+}
+
+.vehicles-table thead,
+.vehicles-table tbody {
+  display: table-header-group;
+}
+
+.vehicles-table tbody {
+  display: table-row-group;
+}
+
+.vehicles-table tr {
+  display: table-row !important;
+}
+
+.vehicles-table th,
+.vehicles-table td {
+  display: table-cell !important;
+  vertical-align: middle; /* align contents vertically */
+  white-space: nowrap; /* keep each field on a single line */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .vehicles-table thead {
-  background: linear-gradient(to bottom, #f8f9fb, #f1f3f5);
+  /* Use a clean white header for better readability */
+  background: #ffffff;
 }
 
 .vehicles-table thead th {
   padding: 1rem 0.75rem;
-  text-align: left;
+  text-align: center;
   font-weight: 700;
-  color: #202124;
+  color: #000000; /* black header text for contrast */
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  border-bottom: 2px solid #dadce0;
+  border-bottom: 1px solid #e6e6e6;
   white-space: nowrap;
+}
+
+/* Scoped override: some other pages define a global .vehicles-table thead background.
+   Make sure this admin page's table header is white and text is black. */
+.vehicles-table-container .vehicles-table thead {
+  background: #ffffff !important;
+}
+
+.vehicles-table-container .vehicles-table thead th {
+  color: #000000 !important;
 }
 
 .vehicles-table tbody tr {
@@ -168,10 +210,12 @@
 }
 
 .vehicles-table tbody td {
-  padding: 1rem 0.75rem;
+  padding: 0.6rem 0.5rem;
   color: #3c4043;
   font-size: 0.9rem;
   white-space: nowrap;
+  text-align: center; /* center data to match headers */
+  vertical-align: middle;
 }
 
 .license-plate {
@@ -179,6 +223,139 @@
   font-weight: 700;
   color: #1976d2;
   font-size: 1rem;
+}
+
+/* compact pill for license plate to keep it visually distinct and vertically centered */
+.plate-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.12rem 0.45rem; /* compact vertical padding */
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e8f0fe, #f1f6ff);
+  color: #0b63c7;
+  font-weight: 700;
+  line-height: 1;
+  font-size: 0.92rem;
+  height: 26px; /* keep pill short and not tall */
+  min-width: 52px;
+}
+
+/* Highlight a selected row */
+.vehicles-table tbody tr.selected {
+  background: linear-gradient(90deg, #eef6ff, #ffffff);
+  box-shadow: inset 4px 0 0 #1976d2;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+}
+
+.table-actions .btn-add-vehicle,
+.table-actions .btn-edit-plain,
+.table-actions .btn-delete-plain {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.table-actions .btn-add-vehicle {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.table-actions .btn-edit-plain {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+}
+
+.table-actions .btn-delete-plain {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+}
+
+.table-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Equal-width columns: distribute space evenly (9 columns after removing action column) */
+.vehicles-table thead th { /* fallback */
+  width: auto;
+}
+
+/* Column sizing: fixed widths for plate & year, min-widths for maintenance columns,
+   and evenly distribute remaining space among the other columns. */
+.vehicles-table thead th:nth-child(1),
+.vehicles-table tbody td:nth-child(1) {
+  /* Biển số - tăng chiều rộng để biển số luôn rõ ràng */
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.vehicles-table thead th:nth-child(3),
+.vehicles-table tbody td:nth-child(3) {
+  /* Năm - đảm bảo đủ chỗ để hiển thị năm (4 chữ số) */
+  width: 64px;
+  min-width: 64px;
+  max-width: 80px;
+}
+
+.vehicles-table thead th:nth-child(8),
+.vehicles-table tbody td:nth-child(8),
+.vehicles-table thead th:nth-child(9),
+.vehicles-table tbody td:nth-child(9) {
+  /* Bảo dưỡng gần nhất / tiếp theo */
+  min-width: 180px;
+}
+
+/* Color column: giảm chiều rộng để nhường không gian cho cột quan trọng khác */
+.vehicles-table thead th:nth-child(4),
+.vehicles-table tbody td:nth-child(4) {
+  /* Color column: tăng min-width để không bị mất chữ khi tên màu dài */
+  width: 120px;
+  min-width: 108px;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Remaining columns (2,4,5,6,7) share the leftover space equally. We calculate
+   leftover as 100% minus fixed pixel widths; use calc for layout: fixed table-layout
+   ensures predictable widths. */
+.vehicles-table thead th:nth-child(2),
+.vehicles-table tbody td:nth-child(2),
+.vehicles-table thead th:nth-child(5),
+.vehicles-table tbody td:nth-child(5),
+.vehicles-table thead th:nth-child(6),
+.vehicles-table tbody td:nth-child(6),
+.vehicles-table thead th:nth-child(7),
+.vehicles-table tbody td:nth-child(7) {
+  /* Distribute leftover space among these 4 columns */
+  width: calc((100% - 652px) / 4); /* 652 = 120 + 64 + 108 + 180 + 180 */
+  min-width: 110px; /* avoid being too narrow */
+}
+
+/* Slightly reduce the Chủ xe column to free space */
+.vehicles-table thead th:nth-child(5),
+.vehicles-table tbody td:nth-child(5) {
+  min-width: 100px;
+  max-width: 220px;
+}
+
+/* Ensure header and body cells remain centered and aligned */
+.vehicles-table thead th,
+.vehicles-table tbody td {
+  text-align: center;
+  vertical-align: middle;
 }
 
 /* Status Badges */
@@ -214,7 +391,19 @@
 .action-buttons {
   display: flex;
   gap: 0.5rem;
-  justify-content: center;
+  justify-content: flex-start; /* align buttons to the left to match cells/headers */
+}
+
+/* Give action column a bit more room so the buttons don't crowd */
+.vehicles-table thead th:last-child,
+.vehicles-table tbody td:last-child {
+  /* remove per-row action column sizing; keep last column compact */
+  padding-right: 1.5rem;
+}
+
+/* Align action buttons to the right inside their cell for visual separation */
+.vehicles-table tbody td:last-child .action-buttons {
+  justify-content: flex-end;
 }
 
 .btn-icon {
