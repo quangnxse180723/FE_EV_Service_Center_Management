@@ -8,6 +8,7 @@ const SystemSettingsPage = () => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('settings');
   const [activeTab, setActiveTab] = useState('general');
+  const [lastBackupDate, setLastBackupDate] = useState(null);
 
   // General settings state
   const [centerName, setCenterName] = useState('EV Service Center');

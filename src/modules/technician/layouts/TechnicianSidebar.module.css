@@ -1,0 +1,91 @@
+.sidebar {
+  width: 260px;
+  background: #0b1220;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  border-right: 6px solid #0ea5e9;
+}
+
+.logo {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logoContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.brand {
+  letter-spacing: 0.5px;
+  color: #8be5ff;
+  font-size: 1.2rem;
+}
+
+.menu {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #e5e7eb;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.menuItem:hover {
+  background: #0e1a31;
+}
+
+.menuItem.active {
+  background: #1f2937;
+  color: #fff;
+}
+
+.menuItem.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menuIcon {
+  width: 24px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.logoutWrap {
+  margin-top: auto;
+  padding: 12px;
+}
+
+.logoutBtn {
+  width: 100%;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logoutBtn:hover {
+  background: #dc2626;
+}
