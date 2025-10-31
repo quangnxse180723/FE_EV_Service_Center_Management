@@ -1,29 +1,28 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import paymentApi from '../../../api/paymentApi';
 import './PaymentManagementPage.css';
-import InvoiceDetailModal from './InvoiceDetailModal';
 
 const PaymentManagementPage = () => {
-  const [invoices, setInvoices] = useState([]);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchInvoices();
+    fetchPayments();
   }, []);
 
-  const fetchInvoices = async () => {
+  const fetchPayments = async () => {
     try {
-      const data = await paymentApi.getAllInvoices();
-      setInvoices(data);
+      const data = await paymentApi.getAllPaymentsForManagement();
+      setPayments(data);
     } catch (err) {
-      alert('Không thể tải danh sách hóa đơn');
+      console.error('Failed to fetch payments:', err);
+      alert('Không thể tải danh sách thanh toán');
     }
   };
 
-  const handleShowInvoice = (invoice) => {
-    setSelectedInvoice(invoice);
-    setShowModal(true);
+  const handleShowInvoice = (scheduleId) => {
+    navigate(`/staff/payments/${scheduleId}`);
   };
 
   return (
@@ -41,41 +40,28 @@ const PaymentManagementPage = () => {
           </tr>
         </thead>
         <tbody>
-          {invoices.map((inv) => (
-            <tr key={inv.id}>
-              <td>{inv.customerName}</td>
-              <td>{inv.vehicleName}</td>
-              <td>{inv.licensePlate}</td>
-              <td>{inv.appointmentTime}</td>
+          {payments.map((payment, index) => (
+            <tr key={index}>
+              <td>{payment.customerName}</td>
+              <td>{payment.vehicleName}</td>
+              <td>{payment.licensePlate}</td>
+              <td>{payment.scheduledDate}</td>
               <td>
-                {inv.status === 'PAID' ? (
+                {payment.status === 'PAID' ? (
                   <span className="status-paid">Đã thanh toán</span>
                 ) : (
                   <span className="status-waiting">Chờ thanh toán</span>
                 )}
               </td>
               <td>
-                {inv.status === 'PAID' ? (
-                  <button className="btn-view" onClick={() => handleShowInvoice(inv)}>
-                    Xem hóa đơn
-                  </button>
-                ) : (
-                  <button className="btn-print" onClick={() => handleShowInvoice(inv)}>
-                    In hóa đơn
-                  </button>
-                )}
+                <button className="btn-view" onClick={() => handleShowInvoice(payment.scheduleId)}>
+                  Xem hóa đơn
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {showModal && selectedInvoice && (
-        <InvoiceDetailModal
-          invoice={selectedInvoice}
-          onClose={() => setShowModal(false)}
-          onPaid={fetchInvoices}
-        />
-      )}
     </div>
   );
 };

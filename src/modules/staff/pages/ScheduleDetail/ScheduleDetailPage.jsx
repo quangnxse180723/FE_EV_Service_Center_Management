@@ -5,7 +5,7 @@ import technicianApi from '../../../../api/technicianApi';
 import './ScheduleDetailPage.css';
 
 const ScheduleDetailPage = () => {
-  const { id } = useParams();
+  const { scheduleId: id} = useParams();
   const navigate = useNavigate();
   const [schedule, setSchedule] = useState(null);
   const [technicians, setTechnicians] = useState([]);

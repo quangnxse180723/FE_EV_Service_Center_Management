@@ -844,6 +844,9 @@
   font-weight: 600;
   margin-bottom: 1rem;
   color: #333;
+  width: 100%;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .vehicle-image {
@@ -1116,19 +1119,70 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 2.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.booking-summary h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.edit-profile-btn {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.edit-profile-btn:hover {
+  background: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+}
+
+.customer-info-section,
+.booking-info-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
   background: #f9f9f9;
   border-radius: 8px;
 }
 
-.booking-summary h3 {
-  margin-bottom: 1.5rem;
-  color: #333;
-  text-align: center;
+.customer-info-section h4,
+.booking-info-section h4 {
+  margin: 0 0 1rem 0;
+  color: #1976d2;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #1976d2;
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   padding: 0.75rem 0;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -1139,10 +1193,15 @@
 
 .summary-item span {
   color: #666;
+  font-weight: 500;
+  flex: 0 0 140px;
 }
 
 .summary-item strong {
   color: #333;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
 }
 
 .price-highlight {

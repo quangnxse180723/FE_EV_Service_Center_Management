@@ -23,7 +23,7 @@ const ScheduleManagementPage = () => {
   const fetchAppointments = async (keyword = '') => {
     setLoading(true);
     try {
-      const res = await scheduleApi.getAppointments(keyword);
+      const res = await scheduleApi.getAllSchedules(keyword);
       console.log('Dữ liệu API trả về:', res);
       setAppointments(Array.isArray(res) ? res : []);
     } catch (err) {
@@ -90,17 +90,16 @@ const ScheduleManagementPage = () => {
               <tr><td colSpan={6}>Không có dữ liệu</td></tr>
             ) : (
               appointments.map(a => (
-                <tr key={a.id}>
-                  <td>{a.id}</td>
-                  <td>{a.dateTime}</td>
+                <tr key={a.scheduleId}>
+                  <td>{a.scheduleId}</td>
+                  <td>{a.scheduledDate}</td>
                   <td>{a.licensePlate}</td>
                   <td>{a.customerName}</td>
                   <td>{a.status}</td>
                   <td>
-                    {a.action && (
-                      <button className="btn-checkin" onClick={() => handleAction(a.id, a.action)}>{a.action}</button>
-                    )}
-                    <button className="btn-detail" onClick={() => navigate(`/staff/schedules/${a.id.replace('lh', '')}`)}>Chi tiết</button>
+                    {
+                      <button className="btn-detail" onClick={() => navigate(`/staff/schedules/${a.scheduleId}`)}>Chi tiết</button>
+                    }
                   </td>
                 </tr>
               ))

@@ -2,34 +2,38 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import './BookingPage.css';
-import XE01 from '/src/assets/img/XE01.png';
-import XE02 from '/src/assets/img/XE02.png';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
 import logoImage from '/src/assets/img/logo.png';
-import avtAdmin from '/src/assets/img/avtAdmin.jpg';
+import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
 import vehicleApi from '../../../api/vehicleApi';
 import serviceApi from '../../../api/serviceApi';
 import centerApi from '../../../api/centerApi';
+import customerApi from '../../../api/customerApi';
 
 export default function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isLoggedIn } = useAuth();
   
-  // User info từ AuthContext
-  const userInfo = user ? {
-    id: user.accountId,
-    name: user.fullName || user.email?.split('@')[0] || 'Khách hàng',
-    phone: user.phone || 'Chưa cập nhật',
-    email: user.email || 'Chưa cập nhật',
-    avatar: user.avatar || null
+  // State cho customer data từ database
+  const [customerData, setCustomerData] = useState(null);
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  
+  // User info - sẽ cập nhật từ customerData
+  const userInfo = customerData ? {
+    id: customerData.customerId,
+    name: customerData.fullName || 'Khách hàng',
+    phone: customerData.phone || 'Chưa cập nhật',
+    email: customerData.email || 'Chưa cập nhật',
+    avatar: defaultAvatar // Sử dụng avatar mặc định
   } : {
-    name: 'Khách hàng',
-    phone: 'Chưa cập nhật',
-    email: 'Chưa cập nhật',
-    avatar: null
+    name: user?.fullName || 'Khách hàng',
+    phone: user?.phone || 'Chưa cập nhật',
+    email: user?.email || 'Chưa cập nhật',
+    avatar: defaultAvatar // Sử dụng avatar mặc định
   };
 
   // Mobile menu state
@@ -53,34 +57,10 @@ export default function BookingPage() {
   const [userVehicles, setUserVehicles] = useState([]);
   const [serviceCenters, setServiceCenters] = useState([]);
   const [services, setServices] = useState([]);
+  const [timeSlots, setTimeSlots] = useState({ morning: [], afternoon: [] });
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Danh sách slot thời gian với trạng thái (mock - có thể fetch từ API sau)
-  const morningSlots = [
-    { id: 1, time: '8:00', available: 0, total: 12, status: 'full' },
-    { id: 2, time: '8:30', available: 8, total: 12, status: 'available' },
-    { id: 3, time: '9:00', available: 9, total: 12, status: 'available' },
-    { id: 4, time: '9:30', available: 9, total: 12, status: 'available' },
-    { id: 5, time: '10:00', available: 0, total: 12, status: 'full' },
-    { id: 6, time: '10:30', available: 8, total: 12, status: 'available' },
-    { id: 7, time: '11:00', available: 9, total: 12, status: 'available' },
-    { id: 8, time: '11:30', available: 9, total: 12, status: 'available' }
-  ];
-
-  const afternoonSlots = [
-    { id: 9, time: '12:00', available: 0, total: 12, status: 'full' },
-    { id: 10, time: '12:30', available: 9, total: 12, status: 'available' },
-    { id: 11, time: '13:00', available: 10, total: 12, status: 'few' },
-    { id: 12, time: '13:30', available: 10, total: 12, status: 'few' },
-    { id: 13, time: '14:00', available: 0, total: 12, status: 'full' },
-    { id: 14, time: '14:30', available: 9, total: 12, status: 'available' },
-    { id: 15, time: '15:00', available: 10, total: 12, status: 'few' },
-    { id: 16, time: '15:30', available: 10, total: 12, status: 'few' },
-    { id: 17, time: '16:00', available: 0, total: 12, status: 'full' },
-    { id: 18, time: '16:30', available: 9, total: 12, status: 'available' },
-    { id: 19, time: '17:00', available: 10, total: 12, status: 'few' }
-  ];
 
   // Fetch data từ API khi component mount
   useEffect(() => {
@@ -89,11 +69,18 @@ export default function BookingPage() {
       setError(null);
       
       try {
+        // Lấy customerId từ localStorage
+        const customerId = localStorage.getItem('customerId');
+        
+        if (!customerId || customerId === 'null' || customerId === 'undefined') {
+          throw new Error('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+        }
+
         // Fetch tất cả data song song
-        const [vehiclesRes, centersRes, servicesRes] = await Promise.all([
-          vehicleApi.getAllVehicles().catch(err => {
-            console.error('Error fetching vehicles:', err);
-            return [];
+        const [vehiclesRes, centersRes, servicesRes, customerRes] = await Promise.all([
+          vehicleApi.getCustomerVehicles(customerId).catch(err => {
+            console.error('Error fetching customer vehicles:', err);
+            throw err;
           }),
           centerApi.getAllCenters().catch(err => {
             console.error('Error fetching centers:', err);
@@ -102,22 +89,36 @@ export default function BookingPage() {
           serviceApi.getAllServices().catch(err => {
             console.error('Error fetching services:', err);
             return [];
+          }),
+          customerApi.getCustomerById(customerId).catch(err => {
+            console.error('Error fetching customer data:', err);
+            return null;
           })
         ]);
 
         // Set data (backend trả về trực tiếp array hoặc object với data field)
-        setUserVehicles(Array.isArray(vehiclesRes) ? vehiclesRes : vehiclesRes?.data || []);
-        setServiceCenters(Array.isArray(centersRes) ? centersRes : centersRes?.data || []);
-        setServices(Array.isArray(servicesRes) ? servicesRes : servicesRes?.data || []);
+        const vehicles = Array.isArray(vehiclesRes) ? vehiclesRes : vehiclesRes?.data || [];
+        const centers = Array.isArray(centersRes) ? centersRes : centersRes?.data || [];
+        const services = Array.isArray(servicesRes) ? servicesRes : servicesRes?.data || [];
+        
+        setUserVehicles(vehicles);
+        setServiceCenters(centers);
+        setServices(services);
+        setCustomerData(customerRes); // Set customer data
 
         console.log('✅ Data loaded:', {
-          vehicles: vehiclesRes,
-          centers: centersRes,
-          services: servicesRes
+          customerId,
+          vehicles: vehicles,
+          vehicleCount: vehicles.length,
+          centers: centers,
+          centerCount: centers.length,
+          services: services,
+          serviceCount: services.length,
+          customer: customerRes
         });
       } catch (err) {
         console.error('❌ Error fetching initial data:', err);
-        setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
+        setError(err.message || 'Không thể tải dữ liệu. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
       }
@@ -126,6 +127,39 @@ export default function BookingPage() {
     fetchInitialData();
   }, []);
 
+  const handleUpdatePhone = async () => {
+    try {
+      // Validate phone number
+      const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+      if (!phoneRegex.test(editPhone)) {
+        alert('Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng!');
+        return;
+      }
+
+      setLoading(true);
+      const customerId = localStorage.getItem('customerId');
+      
+      const updateData = {
+        ...customerData,
+        phone: editPhone.trim()
+      };
+      
+      console.log('📤 Updating customer phone:', editPhone);
+      const response = await customerApi.updateCustomer(customerId, updateData);
+      
+      console.log('✅ Phone updated successfully:', response);
+      setCustomerData(response);
+      setIsEditingPhone(false);
+      alert('✅ Cập nhật số điện thoại thành công!');
+      
+    } catch (err) {
+      console.error('❌ Error updating phone:', err);
+      alert('Không thể cập nhật số điện thoại. Vui lòng thử lại!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVehicleSelect = (vehicle) => {
     setSelectedVehicle(vehicle);
   };
@@ -133,6 +167,106 @@ export default function BookingPage() {
   const handleCenterSelect = (center) => {
     setSelectedCenter(center);
   };
+
+  // Fetch time slots khi thay đổi ngày hoặc trung tâm
+  const fetchTimeSlots = async () => {
+    if (!selectedCenter || !bookingDate) {
+      console.log('⏭️ Skipping time slots fetch - missing center or date');
+      setTimeSlots({ morning: [], afternoon: [] });
+      return;
+    }
+
+    // Clear selected time slot khi thay đổi ngày hoặc trung tâm
+    setSelectedTimeSlot(null);
+    setLoadingSlots(true);
+    setError(null);
+
+    try {
+      console.log('🔍 Fetching time slots for:', {
+        centerId: selectedCenter.centerId,
+        date: bookingDate
+      });
+
+      const response = await scheduleApi.getAvailableTimeSlots(
+        selectedCenter.centerId,
+        bookingDate
+      );
+
+      console.log('✅ Time slots response:', response);
+
+      // Transform API response to match UI format
+      const slots = response.data || response;
+      
+      // Check if slots is an array
+      if (!Array.isArray(slots)) {
+        console.error('❌ Invalid response format:', slots);
+        throw new Error('Định dạng dữ liệu không hợp lệ');
+      }
+
+      // Separate morning (8:00-11:30) and afternoon (12:00-17:00) slots
+      const morning = [];
+      const afternoon = [];
+
+      slots.forEach((slot) => {
+        const hour = parseInt(slot.time.split(':')[0]);
+        
+        // Determine status based on available count
+        let status = 'available';
+        if (slot.available === 0) {
+          status = 'full';
+        } else if (slot.available <= 3) {
+          status = 'few';
+        }
+
+        const formattedSlot = {
+          id: slot.slotId || slot.id,
+          time: slot.time,
+          available: slot.available,
+          total: slot.total || 12,
+          status: status
+        };
+
+        if (hour < 12) {
+          morning.push(formattedSlot);
+        } else {
+          afternoon.push(formattedSlot);
+        }
+      });
+
+      setTimeSlots({ morning, afternoon });
+      console.log('✅ Time slots loaded:', { 
+        morning: morning.length, 
+        afternoon: afternoon.length,
+        total: slots.length 
+      });
+
+    } catch (err) {
+      console.error('❌ Error fetching time slots:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể tải danh sách thời gian';
+      setError(errorMsg);
+      alert(`Lỗi: ${errorMsg}`);
+      
+      // Use empty arrays on error
+      setTimeSlots({ morning: [], afternoon: [] });
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // Fetch time slots when center or date changes
+  useEffect(() => {
+    if (currentStep === 3) {
+      fetchTimeSlots();
+    }
+  }, [selectedCenter, bookingDate, currentStep]);
+
+  // Set default date to today when entering Step 3
+  useEffect(() => {
+    if (currentStep === 3 && !bookingDate) {
+      const today = new Date().toISOString().split('T')[0];
+      setBookingDate(today);
+    }
+  }, [currentStep]);
 
   const handleNextStep = () => {
     if (currentStep < 4) {
@@ -183,31 +317,97 @@ export default function BookingPage() {
 
   const handleSubmit = async () => {
     try {
-      // Validation
-      if (!selectedVehicle?.id || !selectedCenter?.id || !selectedTimeSlot?.id) {
-        alert('Vui lòng chọn đầy đủ thông tin!');
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        alert('Vui lòng đăng nhập để đặt lịch!');
+        navigate('/login');
+        return;
+      }
+
+      // Get customerId from localStorage
+      const customerId = localStorage.getItem('customerId');
+      
+      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+        alert('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+        navigate('/login');
+        return;
+      }
+
+      // Get IDs với fallback
+      const vehicleId = selectedVehicle?.vehicleId || selectedVehicle?.id;
+      const centerId = selectedCenter?.centerId || selectedCenter?.id;
+
+      console.log('🔍 DEBUG - Extracted IDs:', {
+        vehicleId,
+        centerId,
+        selectedTimeSlot: selectedTimeSlot
+      });
+
+      // Validation - CHỈ CẦN vehicle, center và time slot (không cần slotId)
+      if (!vehicleId || !centerId || !selectedTimeSlot) {
+        const missingFields = [];
+        if (!vehicleId) missingFields.push('Vehicle');
+        if (!centerId) missingFields.push('Center');
+        if (!selectedTimeSlot) missingFields.push('Time Slot');
+        
+        alert(`Vui lòng chọn đầy đủ thông tin!\nThiếu: ${missingFields.join(', ')}`);
+        console.error('❌ Missing data:', { 
+          vehicleId, 
+          centerId, 
+          selectedTimeSlot,
+          selectedVehicle,
+          selectedCenter
+        });
         return;
       }
 
       // Lấy ngày hiện tại nếu bookingDate rỗng
       const dateToUse = bookingDate || new Date().toISOString().split('T')[0];
       
+      // Format time to HH:mm:ss (ensure proper format)
+      let timeFormatted = selectedTimeSlot.time;
+      // Ensure time is in HH:mm format
+      if (timeFormatted.length === 4) {
+        // "9:00" -> "09:00"
+        timeFormatted = '0' + timeFormatted;
+      }
+      
+      // Create full ISO datetime string (without timezone)
+      const scheduledDateTime = `${dateToUse}T${timeFormatted}:00`;
+      
       // Chuẩn bị dữ liệu theo format BookScheduleRequest của Backend
+      // KHÔNG GỬI slotId - Backend sẽ tự tạo TimeSlot
       const bookingData = {
-        vehicleId: selectedVehicle.id,
-        centerId: selectedCenter.id,
-        slotId: selectedTimeSlot.id, // Backend yêu cầu slotId (Integer)
-        scheduledDate: `${dateToUse}T${selectedTimeSlot.time}:00`, // LocalDateTime format: "2025-10-20T14:30:00"
-        packageId: null, // Optional - có thể thêm sau
-        notes: customerNote || '',
+        customerId: parseInt(customerId),
+        vehicleId: parseInt(vehicleId),
+        centerId: parseInt(centerId),
+        scheduledDate: dateToUse, // Date: YYYY-MM-DD
+        scheduledTime: timeFormatted, // Time: HH:mm
+        serviceId: selectedService?.serviceId || null,
+        notes: customerNote || ''
       };
 
-      console.log('Sending booking data:', bookingData);
+      console.log('═══════════════════════════════════════');
+      console.log('📤 SENDING BOOKING DATA');
+      console.log('═══════════════════════════════════════');
+      console.log(JSON.stringify(bookingData, null, 2));
+      console.log('═══════════════════════════════════════');
+      console.log('📅 VALIDATION CHECK:', {
+        'customerId (number)': typeof bookingData.customerId === 'number' ? `✅ ${bookingData.customerId}` : `❌ ${bookingData.customerId}`,
+        'vehicleId (number)': typeof bookingData.vehicleId === 'number' ? `✅ ${bookingData.vehicleId}` : `❌ ${bookingData.vehicleId}`,
+        'centerId (number)': typeof bookingData.centerId === 'number' ? `✅ ${bookingData.centerId}` : `❌ ${bookingData.centerId}`,
+        'scheduledDate': bookingData.scheduledDate,
+        'scheduledTime': bookingData.scheduledTime
+      });
+      console.log('═══════════════════════════════════════');
 
-      // Gọi API
+      // Gọi API (Backend sẽ tự tạo TimeSlot)
       const response = await scheduleApi.bookSchedule(bookingData);
       
-      console.log('Booking response:', response);
+      console.log('✅ Booking response:', response);
       
       // Hiển thị thông báo thành công
       alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
@@ -216,12 +416,22 @@ export default function BookingPage() {
       navigate('/booking-history');
       
     } catch (error) {
-      console.error('Booking error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
+      console.error('❌ Booking error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Full error:', JSON.stringify(error.response, null, 2));
       
-      // Hiển thị thông báo lỗi
-      const errorMessage = error.response?.data?.message || error.message || 'Đặt lịch thất bại. Vui lòng thử lại!';
+      // Hiển thị thông báo lỗi chi tiết
+      let errorMessage = 'Đặt lịch thất bại. Vui lòng thử lại!';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        // Backend có thể trả về nhiều format khác nhau
+        errorMessage = data.message || data.error || data.errors?.[0]?.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       alert(errorMessage);
     }
   };
@@ -262,13 +472,7 @@ export default function BookingPage() {
                     <>
                     <div className="user-dropdown-header">
                       <div className="user-avatar-small">
-                        {userInfo.avatar ? (
-                          <img src={userInfo.avatar} alt="User Avatar" onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }} />
-                        ) : null}
-                        <div className="avatar-placeholder" style={{ display: userInfo.avatar ? 'none' : 'flex' }}>👤</div>
+                        <img src={userInfo.avatar || defaultAvatar} alt="User Avatar" />
                       </div>
                       <div className="user-info-dropdown">
                         <div className="user-name">{userInfo.name}</div>
@@ -404,27 +608,29 @@ export default function BookingPage() {
                 <div className="vehicle-grid">
                   {userVehicles.map((vehicle) => (
                     <div 
-                      key={vehicle.id}
-                      className={`vehicle-card ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
+                      key={vehicle.vehicleId || vehicle.id}
+                      className={`vehicle-card ${selectedVehicle?.vehicleId === vehicle.vehicleId || selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
                       onClick={() => handleVehicleSelect(vehicle)}
                     >
-                      <div className="vehicle-header">Xe máy điện {vehicle.id}</div>
+                      <div className="vehicle-header">Xe máy điện</div>
                       <div className="vehicle-image">
                         <img 
-                          src={vehicle.image || vehicle.imageUrl || XE01} 
-                          alt={vehicle.name || vehicle.model}
-                          onError={(e) => { e.target.src = XE01; }}
+                          src={vehicle.imageUrl || 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle'} 
+                          alt={vehicle.model || 'Xe điện'}
+                          onError={(e) => { 
+                            e.target.src = 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle';
+                          }}
                         />
                       </div>
                       <div className="vehicle-info">
                         <div className="vehicle-name">
-                          {vehicle.name || vehicle.model || 'Xe điện'}
+                          {vehicle.model || 'Xe điện'}
                         </div>
                         <div className="vehicle-plate">
-                          Biển số: {vehicle.plate || vehicle.licensePlate || 'N/A'}
+                          Biển số: {vehicle.licensePlate || 'N/A'}
                         </div>
                         <div className="vehicle-vin">
-                          Số VIN: {vehicle.vin || vehicle.vinNumber || '...'}
+                          Số VIN: {vehicle.vin || 'Chưa cập nhật'}
                         </div>
                       </div>
                       <button className="btn-select-vehicle">Chọn</button>
@@ -443,12 +649,20 @@ export default function BookingPage() {
                 <div className="selected-vehicle-info">
                   <h3>Xe đã chọn:</h3>
                   <div className="vehicle-summary">
-                    <img src={selectedVehicle.image} alt={selectedVehicle.model} className="vehicle-thumb" />
+                    <img 
+                      src={selectedVehicle.imageUrl || 'https://via.placeholder.com/100x75/4CAF50/ffffff?text=EV'} 
+                      alt={selectedVehicle.model} 
+                      className="vehicle-thumb" 
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/100x75/4CAF50/ffffff?text=EV';
+                      }}
+                    />
                     <div className="vehicle-details">
                       <div className="vehicle-name">{selectedVehicle.model}</div>
                       <div className="vehicle-license">{selectedVehicle.licensePlate}</div>
                       <div className="vehicle-specs">
-                        {selectedVehicle.year} • {selectedVehicle.color} • {selectedVehicle.batteryCapacity}
+                        {selectedVehicle.vin ? `VIN: ${selectedVehicle.vin}` : 'Xe điện'}
+                        {selectedVehicle.currentMileage ? ` • ${selectedVehicle.currentMileage.toLocaleString()} km` : ''}
                       </div>
                     </div>
                     <button 
@@ -480,35 +694,43 @@ export default function BookingPage() {
                     {loading ? (
                       <div style={{ padding: '2rem', textAlign: 'center' }}>Đang tải...</div>
                     ) : serviceCenters.length === 0 ? (
-                      <div style={{ padding: '2rem', textAlign: 'center' }}>
-                        Không tìm thấy trung tâm dịch vụ
+                      <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                        <p>Không tìm thấy trung tâm dịch vụ</p>
+                        <small>Vui lòng liên hệ admin để được hỗ trợ</small>
                       </div>
                     ) : (
                       serviceCenters
-                        .filter(center => 
-                          !searchCenter || 
-                          (center.name || '').toLowerCase().includes(searchCenter.toLowerCase()) ||
-                          (center.address || '').toLowerCase().includes(searchCenter.toLowerCase())
-                        )
-                        .map((center) => (
-                          <div 
-                            key={center.id}
-                            className={`center-item ${selectedCenter?.id === center.id ? 'selected' : ''}`}
-                          >
-                            <div className="center-info">
-                              <div className="center-name">{center.name || center.centerName}</div>
-                              <div className="center-distance">
-                                | {center.distance || center.address || 'Khoảng cách: N/A'}
-                              </div>
-                            </div>
-                            <button 
-                              className="btn-select-center"
-                              onClick={() => handleCenterSelect(center)}
+                        .filter(center => {
+                          if (!searchCenter) return true;
+                          const searchLower = searchCenter.toLowerCase();
+                          const name = (center.name || center.centerName || '').toLowerCase();
+                          const address = (center.address || '').toLowerCase();
+                          return name.includes(searchLower) || address.includes(searchLower);
+                        })
+                        .map((center, index) => {
+                          const centerId = center.centerId || center.id || index;
+                          return (
+                            <div 
+                              key={centerId}
+                              className={`center-item ${(selectedCenter?.centerId === center.centerId || selectedCenter?.id === center.id) ? 'selected' : ''}`}
                             >
-                              Chọn
-                            </button>
-                          </div>
-                        ))
+                              <div className="center-info">
+                                <div className="center-name">
+                                  {center.name || center.centerName || 'Trung tâm dịch vụ'}
+                                </div>
+                                <div className="center-distance">
+                                  {center.address || center.location || 'Địa chỉ chưa cập nhật'}
+                                </div>
+                              </div>
+                              <button 
+                                className="btn-select-center"
+                                onClick={() => handleCenterSelect(center)}
+                              >
+                                Chọn
+                              </button>
+                            </div>
+                          );
+                        })
                     )}
                   </div>
                 </div>
@@ -553,40 +775,58 @@ export default function BookingPage() {
                     />
                   </div>
                   
-                  <div className="timeslots-container">
-                    <div className="timeslot-period">
-                      <h4>Sáng</h4>
-                      <div className="timeslot-grid">
-                        {morningSlots.map((slot) => (
-                          <button
-                            key={slot.time}
-                            className={`timeslot-btn ${slot.status} ${selectedTimeSlot?.id === slot.id ? 'selected' : ''}`}
-                            onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot)}
-                            disabled={slot.status === 'full'}
-                          >
-                            {slot.time}<br />
-                            <span className="slot-available">({slot.total - slot.available}/{slot.total})</span>
-                          </button>
-                        ))}
-                      </div>
+                  {loadingSlots ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                      <p>Đang tải danh sách thời gian...</p>
                     </div>
-                    <div className="timeslot-period">
-                      <h4>Chiều</h4>
-                      <div className="timeslot-grid">
-                        {afternoonSlots.map((slot) => (
-                          <button
-                            key={slot.time}
-                            className={`timeslot-btn ${slot.status} ${selectedTimeSlot?.id === slot.id ? 'selected' : ''}`}
-                            onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot)}
-                            disabled={slot.status === 'full'}
-                          >
-                            {slot.time}<br />
-                            <span className="slot-available">({slot.total - slot.available}/{slot.total})</span>
-                          </button>
-                        ))}
-                      </div>
+                  ) : !bookingDate ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
+                      <p>Vui lòng chọn ngày để xem các khung giờ có sẵn</p>
                     </div>
-                  </div>
+                  ) : timeSlots.morning.length === 0 && timeSlots.afternoon.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#ff6b6b' }}>
+                      <p>Không có khung giờ nào khả dụng cho ngày này</p>
+                    </div>
+                  ) : (
+                    <div className="timeslots-container">
+                      {timeSlots.morning.length > 0 && (
+                        <div className="timeslot-period">
+                          <h4>Sáng</h4>
+                          <div className="timeslot-grid">
+                            {timeSlots.morning.map((slot) => (
+                              <button
+                                key={slot.id}
+                                className={`timeslot-btn ${slot.status} ${selectedTimeSlot?.id === slot.id ? 'selected' : ''}`}
+                                onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot)}
+                                disabled={slot.status === 'full'}
+                              >
+                                {slot.time}<br />
+                                <span className="slot-available">({slot.total - slot.available}/{slot.total})</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {timeSlots.afternoon.length > 0 && (
+                        <div className="timeslot-period">
+                          <h4>Chiều</h4>
+                          <div className="timeslot-grid">
+                            {timeSlots.afternoon.map((slot) => (
+                              <button
+                                key={slot.id}
+                                className={`timeslot-btn ${slot.status} ${selectedTimeSlot?.id === slot.id ? 'selected' : ''}`}
+                                onClick={() => slot.status !== 'full' && setSelectedTimeSlot(slot)}
+                                disabled={slot.status === 'full'}
+                              >
+                                {slot.time}<br />
+                                <span className="slot-available">({slot.total - slot.available}/{slot.total})</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -596,34 +836,65 @@ export default function BookingPage() {
           {currentStep === 4 && (
             <div className="step-content">
               <div className="booking-summary">
-                <h3>Thông tin đặt lịch</h3>
-                <div className="summary-item">
-                  <span>Khách hàng:</span>
-                  <strong>{userInfo.name}</strong>
+                <div className="summary-header">
+                  <h3>Thông tin đặt lịch</h3>
+                  <button 
+                    className="edit-profile-btn"
+                    onClick={() => navigate('/customer-profile')}
+                    type="button"
+                  >
+                    ✏️ Chỉnh sửa thông tin
+                  </button>
                 </div>
-                <div className="summary-item">
-                  <span>Số điện thoại:</span>
-                  <strong>{userInfo.phone}</strong>
+
+                <div className="customer-info-section">
+                  <h4>Thông tin khách hàng</h4>
+                  <div className="summary-item">
+                    <span>Mã khách hàng:</span>
+                    <strong>KH{String(customerData?.customerId || '').padStart(3, '0')}</strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Họ và tên:</span>
+                    <strong>{userInfo.name}</strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Số điện thoại:</span>
+                    <strong>{userInfo.phone}</strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Email:</span>
+                    <strong>{userInfo.email}</strong>
+                  </div>
+                  {customerData?.address && (
+                    <div className="summary-item">
+                      <span>Địa chỉ:</span>
+                      <strong>{customerData.address}</strong>
+                    </div>
+                  )}
                 </div>
-                <div className="summary-item">
-                  <span>Xe:</span>
-                  <strong>
-                    <span>{selectedVehicle?.name}</span>
-                    <span> - </span>
-                    <span>{selectedVehicle?.plate}</span>
-                  </strong>
-                </div>
-                <div className="summary-item">
-                  <span>Trung tâm:</span>
-                  <strong>{selectedCenter?.name}</strong>
-                </div>
-                <div className="summary-item">
-                  <span>Ngày:</span>
-                  <strong>{bookingDate || new Date().toISOString().split('T')[0]}</strong>
-                </div>
-                <div className="summary-item">
-                  <span>Giờ:</span>
-                  <strong>{selectedTimeSlot?.time}</strong>
+
+                <div className="booking-info-section">
+                  <h4>Chi tiết đặt lịch</h4>
+                  <div className="summary-item">
+                    <span>Xe:</span>
+                    <strong>
+                      <span>{selectedVehicle?.model || 'N/A'}</span>
+                      <span> - </span>
+                      <span>{selectedVehicle?.licensePlate || 'N/A'}</span>
+                    </strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Trung tâm:</span>
+                    <strong>{selectedCenter?.name || selectedCenter?.centerName || 'N/A'}</strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Ngày:</span>
+                    <strong>{new Date(bookingDate || new Date().toISOString().split('T')[0]).toLocaleDateString('vi-VN')}</strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Giờ:</span>
+                    <strong>{selectedTimeSlot?.time}</strong>
+                  </div>
                 </div>
               </div>
               

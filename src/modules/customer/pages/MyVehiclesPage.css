@@ -61,52 +61,92 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .back-btn {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  padding: 10px 20px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .back-btn:hover {
-  background: #e9ecef;
-  transform: translateX(-2px);
+  background: #667eea;
+  color: white;
+  transform: translateX(-5px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+.header-center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header-center h1 {
+  margin: 0;
+  color: #000000 !important;
+  font-size: 2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.5);
+  letter-spacing: -0.5px;
+}
+
+.header-center .customer-name {
+  margin: 0;
+  color: #333333 !important;
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+/* Legacy support */
 .header-info h1 {
   margin: 0 0 5px 0;
-  color: #333;
+  color: white;
   font-size: 24px;
 }
 
 .header-info p {
   margin: 0;
-  color: #666;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
 
 .add-vehicle-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
+  background: white;
+  color: #667eea;
+  border: 2px solid white;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .add-vehicle-btn:hover {
+  background: #764ba2;
+  color: white;
+  border-color: #764ba2;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
 }
 
 /* Loading and Error States */

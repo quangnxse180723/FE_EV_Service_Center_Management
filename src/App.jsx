@@ -25,6 +25,7 @@ import BookingPage from "./modules/customer/pages/BookingPage";
 import BookingHistoryPage from "./modules/customer/pages/BookingHistoryPage";
 import MyVehiclesPage from "./modules/customer/pages/MyVehiclesPage";
 import PaymentHistoryPage from "./modules/customer/pages/PaymentHistoryPage";
+import CustomerProfilePage from "./modules/customer/pages/CustomerProfilePage";
 
 // ===== Staff Layout & Pages =====
 import StaffLayout from "./modules/staff/layout/StaffLayout";
@@ -35,6 +36,7 @@ import VehicleDetailPage from "./modules/staff/pages/VehicleDetailPage";
 import ScheduleManagementPage from "./modules/staff/ScheduleManagement/ScheduleManagementPage";
 import ScheduleDetailPage from "./modules/staff/pages/ScheduleDetail/ScheduleDetailPage";
 import PaymentManagementPage from "./modules/staff/pages/PaymentManagementPage";
+import InvoiceDetailPage from "./modules/staff/pages/InvoiceDetailPage";
 import CheckinPage from "./modules/staff/pages/CheckinPage";
 import PartInventoryPage from "./modules/staff/pages/PartInventoryPage";
 
@@ -72,6 +74,7 @@ function App() {
           <Route path="/booking-history" element={<BookingHistoryPage />} />
           <Route path="/my-vehicles" element={<MyVehiclesPage />} />
           <Route path="/payment-history" element={<PaymentHistoryPage />} />
+          <Route path="/customer-profile" element={<CustomerProfilePage />} />
 
           {/* ===== Staff Routes ===== */}
           <Route
@@ -82,14 +85,15 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/staff/customers" replace />} />
+            <Route index element={<Navigate to="/staff/dashboard" replace />} />
             <Route path="dashboard" element={<StaffDashboard />} />
             <Route path="customers" element={<CustomerManagement />} />
             <Route path="vehicles" element={<VehicleManagement />} />
             <Route path="vehicles/:id" element={<VehicleDetailPage />} />
             <Route path="schedules" element={<ScheduleManagementPage />} />
-            <Route path="schedules/:id" element={<ScheduleDetailPage />} />
+            <Route path="schedules/:scheduleId" element={<ScheduleDetailPage />} />
             <Route path="payments" element={<PaymentManagementPage />} />
+            <Route path="payments/:scheduleId" element={<InvoiceDetailPage />} />
             <Route path="checkin" element={<CheckinPage />} />
             <Route path="inventory" element={<PartInventoryPage />} />
             <Route
