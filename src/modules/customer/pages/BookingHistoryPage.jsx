@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../../hooks/useNotifications';
 import './BookingHistoryPage.css';
 import logoImage from '/src/assets/img/logo.png';
 import defaultAvatar from '/src/assets/img/user-avatar.jpg'; // Ảnh của bạn
 import scheduleApi from '../../../api/scheduleApi';
 import centerApi from '../../../api/centerApi';
 import customerApi from '../../../api/customerApi';
+import NotificationModal from '../../../components/shared/NotificationModal';
 
 export default function BookingHistoryPage() {
   const navigate = useNavigate();
   
   // Lấy customerId từ localStorage
   const customerId = localStorage.getItem('customerId');
+  const { unreadCount } = useNotifications(customerId || 'guest');
   
   // User info state
   const [userInfo, setUserInfo] = useState({
@@ -30,6 +33,7 @@ export default function BookingHistoryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCustomerInfoModalOpen, setIsCustomerInfoModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false); // Chế độ chỉnh sửa
   const [editedUserInfo, setEditedUserInfo] = useState({}); // Data đang chỉnh sửa
   const [centersCache, setCentersCache] = useState(null); // Cache centers để tránh gọi API nhiều lần
@@ -442,12 +446,22 @@ export default function BookingHistoryPage() {
           <nav className="hf-nav">
             <a className="nav-item" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
             <a className="nav-item" onClick={() => navigate('/booking')} style={{ cursor: 'pointer' }}>Đặt lịch</a>
-            <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
+            <a className="nav-item" onClick={() => navigate('/price-list')} style={{ cursor: 'pointer' }}>Bảng giá</a>
             <a className="nav-item active" style={{ cursor: 'pointer' }}>Lịch sử</a>
           </nav>
 
           <div className="hf-actions">
-            <div className="icon-circle bell" title="Thông báo" />
+            <div className="notification-bell-wrapper">
+              <div 
+                className="icon-circle bell" 
+                title="Thông báo" 
+                onClick={() => setIsNotificationModalOpen(true)}
+                style={{ cursor: 'pointer' }}
+              />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+            </div>
             <div className="user-menu-container">
               <div 
                 className="icon-circle avatar" 
@@ -514,7 +528,7 @@ export default function BookingHistoryPage() {
               <a className="mobile-nav-item" onClick={() => { navigate('/booking'); setIsMobileMenuOpen(false); }}>
                 📅 Đặt lịch
               </a>
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+              <a className="mobile-nav-item" onClick={() => { navigate('/price-list'); setIsMobileMenuOpen(false); }}>
                 💰 Bảng giá
               </a>
               <a className="mobile-nav-item active">
@@ -766,6 +780,13 @@ export default function BookingHistoryPage() {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal 
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        customerId={customerId}
+      />
     </div>
   );
 }

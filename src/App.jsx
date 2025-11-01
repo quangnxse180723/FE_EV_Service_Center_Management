@@ -8,6 +8,7 @@ import {
 
 // ===== Contexts =====
 import { AuthProvider } from "./contexts/AuthContext";
+import { PartsPriceProvider } from "./contexts/PartsPriceContext";
 
 // ===== Components =====
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -15,6 +16,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // ===== Public Pages =====
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import PriceListPage from "./pages/PriceListPage";
 
 // ===== Auth Pages =====
 import LoginPage from "./modules/auth/LoginPage";
@@ -61,12 +63,14 @@ import "./App.css";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* ===== Public Routes ===== */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+      <PartsPriceProvider>
+        <Router>
+          <Routes>
+            {/* ===== Public Routes ===== */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          <Route path="/price-list" element={<PriceListPage />} />
 
           {/* ===== Customer Routes ===== */}
           <Route path="/booking" element={<BookingPage />} />
@@ -172,6 +176,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
+      </PartsPriceProvider>
     </AuthProvider>
   );
 }

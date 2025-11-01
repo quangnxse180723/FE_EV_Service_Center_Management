@@ -15,14 +15,14 @@
 
 .notification-modal {
   background: white;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
+  border-radius: 16px;
+  max-width: 900px !important;
+  width: 95% !important;
+  max-height: 85vh !important;
   display: flex;
   flex-direction: column;
   animation: modalSlideIn 0.3s ease;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes modalSlideIn {
@@ -41,11 +41,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 24px 28px;
   border-bottom: 1px solid #eee;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-radius: 12px 12px 0 0;
+  border-radius: 16px 16px 0 0;
 }
 
 .header-title {
@@ -56,7 +56,8 @@
 
 .header-title h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .unread-badge {
@@ -144,7 +145,7 @@
 .notification-content {
   flex: 1;
   overflow-y: auto;
-  max-height: 60vh;
+  max-height: 65vh;
 }
 
 .loading-container {
@@ -195,23 +196,31 @@
 
 /* Notifications List */
 .notifications-list {
-  padding: 20px;
+  padding: 24px 28px;
 }
 
 .notification-item {
   display: flex;
-  gap: 15px;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  border: 1px solid #eee;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border: 2px solid #f0f0f0;
   transition: all 0.3s ease;
   position: relative;
+  background: white;
 }
 
 .notification-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: #e0e0e0;
+}
+
+.notification-item.clickable:hover {
+  background: #f0f4ff;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
 }
 
 .notification-item.unread {
@@ -248,10 +257,10 @@
 }
 
 .notification-icon {
-  font-size: 24px;
+  font-size: 28px;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,17 +274,17 @@
 }
 
 .notification-main h4 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
+  margin: 0 0 10px 0;
+  font-size: 17px;
   color: #333;
   font-weight: 600;
 }
 
 .notification-main p {
-  margin: 0 0 10px 0;
-  font-size: 14px;
+  margin: 0 0 12px 0;
+  font-size: 15px;
   color: #555;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .vehicle-tag {
@@ -285,6 +294,19 @@
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 12px;
+  font-weight: 500;
+}
+
+.parts-preview {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #e8f5e9;
+  border-left: 3px solid #4caf50;
+  border-radius: 4px;
+}
+
+.parts-preview small {
+  color: #2e7d32;
   font-weight: 500;
 }
 

@@ -1,14 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 import './HomePage.css';
 import heroImg from '../assets/img/hero_img.png';
 import logoImage from '../assets/img/logo.png';
+import NotificationModal from '../components/shared/NotificationModal';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { isLoggedIn, user, logout } = useAuth();
+  const { unreadCount } = useNotifications(user?.id || 'guest');
   const [showAuthDropdown, setShowAuthDropdown] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const avatarRef = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -58,12 +62,22 @@ export default function HomePage() {
           <nav className="hf-nav">
             <a className="nav-item active" onClick={() => navigate('/')}>Trang chủ</a>
             <a className="nav-item" onClick={() => navigate('/booking')}>Đặt lịch</a>
-            <a className="nav-item">Bảng giá</a>
+            <a className="nav-item" onClick={() => navigate('/price-list')}>Bảng giá</a>
             <a className="nav-item" onClick={() => navigate('/booking-history')}>Lịch sử</a>
           </nav>
 
           <div className="hf-actions">
-            <div className="icon-circle bell" title="Thông báo" />
+            <div className="notification-bell-wrapper">
+              <div 
+                className="icon-circle bell" 
+                title="Thông báo" 
+                onClick={() => setShowNotificationModal(true)} 
+                style={{ cursor: 'pointer' }} 
+              />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+            </div>
             <div
               className="icon-circle avatar"
               title="Tài khoản"
@@ -289,6 +303,13 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Notification Modal */}
+      <NotificationModal 
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        customerId={user?.id}
+      />
     </div>
   );
 }

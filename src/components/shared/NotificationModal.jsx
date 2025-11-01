@@ -1,70 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './NotificationModal.css';
-import notificationApi from '../../../api/notificationApi';
+import notificationApi from '../../api/notificationApi';
+import { usePartsPriceContext } from '../../contexts/PartsPriceContext';
+import { MOCK_NOTIFICATIONS } from '../../utils/mockNotifications';
 
 export default function NotificationModal({ isOpen, onClose, customerId }) {
+  const navigate = useNavigate();
+  const { setProposalParts } = usePartsPriceContext();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all'); // all, unread, maintenance
-
-  // Mock data cho demo
-  const mockNotifications = [
-    {
-      id: 1,
-      type: 'maintenance_due',
-      title: 'Lịch bảo dưỡng định kỳ',
-      message: 'Xe VinFast Feliz S (29A-123.45) sắp đến hạn bảo dưỡng định kỳ vào ngày 15/11/2024',
-      vehicleLicense: '29A-123.45',
-      dueDate: '2024-11-15',
-      isRead: false,
-      createdAt: '2024-10-18T10:00:00Z',
-      priority: 'high'
-    },
-    {
-      id: 2,
-      type: 'maintenance_overdue',
-      title: 'Quá hạn bảo dưỡng',
-      message: 'Xe Yadea Ulike (30B-456.78) đã quá hạn bảo dưỡng từ ngày 10/10/2024. Vui lòng đặt lịch ngay!',
-      vehicleLicense: '30B-456.78',
-      dueDate: '2024-10-10',
-      isRead: false,
-      createdAt: '2024-10-17T14:30:00Z',
-      priority: 'urgent'
-    },
-    {
-      id: 3,
-      type: 'maintenance_reminder',
-      title: 'Nhắc nhở bảo dưỡng',
-      message: 'Xe VinFast Feliz S (29A-123.45) sẽ đến hạn bảo dưỡng trong 7 ngày tới',
-      vehicleLicense: '29A-123.45',
-      dueDate: '2024-11-15',
-      isRead: true,
-      createdAt: '2024-10-16T09:15:00Z',
-      priority: 'medium'
-    },
-    {
-      id: 4,
-      type: 'service_completed',
-      title: 'Hoàn thành bảo dưỡng',
-      message: 'Xe VinFast Feliz S (29A-123.45) đã hoàn thành bảo dưỡng định kỳ. Lần bảo dưỡng tiếp theo: 15/05/2025',
-      vehicleLicense: '29A-123.45',
-      dueDate: '2025-05-15',
-      isRead: true,
-      createdAt: '2024-10-15T16:45:00Z',
-      priority: 'low'
-    },
-    {
-      id: 5,
-      type: 'appointment_confirmed',
-      title: 'Xác nhận lịch hẹn',
-      message: 'Lịch hẹn bảo dưỡng xe Yadea Ulike (30B-456.78) đã được xác nhận vào 20/10/2024 lúc 9:00',
-      vehicleLicense: '30B-456.78',
-      dueDate: '2024-10-20',
-      isRead: false,
-      createdAt: '2024-10-14T11:20:00Z',
-      priority: 'medium'
-    }
-  ];
 
   useEffect(() => {
     if (isOpen) {
@@ -81,7 +27,7 @@ export default function NotificationModal({ isOpen, onClose, customerId }) {
       
       // Demo với mock data
       setTimeout(() => {
-        setNotifications(mockNotifications);
+        setNotifications(MOCK_NOTIFICATIONS);
         setLoading(false);
       }, 500);
     } catch (error) {
@@ -125,6 +71,23 @@ export default function NotificationModal({ isOpen, onClose, customerId }) {
     }
   };
 
+  const handleNotificationClick = (notification) => {
+    // Đánh dấu đã đọc
+    if (!notification.isRead) {
+      handleMarkAsRead(notification.id);
+    }
+
+    // Nếu là thông báo đề xuất phụ tùng
+    if (notification.type === 'parts_proposal' && notification.proposedParts) {
+      // Set parts vào context
+      setProposalParts(notification.proposedParts, notification.id);
+      // Đóng modal
+      onClose();
+      // Navigate đến trang bảng giá
+      navigate('/price-list');
+    }
+  };
+
   const getFilteredNotifications = () => {
     switch (filter) {
       case 'unread':
@@ -140,9 +103,10 @@ export default function NotificationModal({ isOpen, onClose, customerId }) {
 
   const getNotificationIcon = (type) => {
     const iconMap = {
-      'maintenance_due': '🔧',
+      'parts_proposal': '🔧',
+      'maintenance_due': '⏰',
       'maintenance_overdue': '⚠️',
-      'maintenance_reminder': '⏰',
+      'maintenance_reminder': '🔔',
       'service_completed': '✅',
       'appointment_confirmed': '📅'
     };
@@ -232,7 +196,9 @@ export default function NotificationModal({ isOpen, onClose, customerId }) {
               {filteredNotifications.map(notification => (
                 <div 
                   key={notification.id} 
-                  className={`notification-item ${!notification.isRead ? 'unread' : ''} ${getPriorityClass(notification.priority)}`}
+                  className={`notification-item ${!notification.isRead ? 'unread' : ''} ${getPriorityClass(notification.priority)} ${notification.type === 'parts_proposal' ? 'clickable' : ''}`}
+                  onClick={() => notification.type === 'parts_proposal' && handleNotificationClick(notification)}
+                  style={notification.type === 'parts_proposal' ? { cursor: 'pointer' } : {}}
                 >
                   <div className="notification-icon">
                     {getNotificationIcon(notification.type)}
@@ -245,6 +211,11 @@ export default function NotificationModal({ isOpen, onClose, customerId }) {
                       {notification.vehicleLicense && (
                         <div className="vehicle-tag">
                           🚗 {notification.vehicleLicense}
+                        </div>
+                      )}
+                      {notification.type === 'parts_proposal' && notification.proposedParts && (
+                        <div className="parts-preview">
+                          <small>📋 {notification.proposedParts.length} phụ tùng được đề xuất</small>
                         </div>
                       )}
                     </div>

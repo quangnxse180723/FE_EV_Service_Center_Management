@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useNotifications } from '../../../hooks/useNotifications';
 import './BookingPage.css';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
@@ -11,11 +12,13 @@ import vehicleApi from '../../../api/vehicleApi';
 import serviceApi from '../../../api/serviceApi';
 import centerApi from '../../../api/centerApi';
 import customerApi from '../../../api/customerApi';
+import NotificationModal from '../../../components/shared/NotificationModal';
 
 export default function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isLoggedIn } = useAuth();
+  const { unreadCount } = useNotifications(user?.id || 'guest');
   
   // State cho customer data từ database
   const [customerData, setCustomerData] = useState(null);
@@ -619,18 +622,21 @@ export default function BookingPage() {
           <nav className="hf-nav">
             <a className="nav-item" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
             <a className="nav-item active">Đặt lịch</a>
-            <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
+            <a className="nav-item" onClick={() => navigate('/price-list')} style={{ cursor: 'pointer' }}>Bảng giá</a>
             <a className="nav-item" onClick={() => navigate('/booking-history')} style={{ cursor: 'pointer' }}>Lịch sử</a>
           </nav>
 
           <div className="hf-actions">
-            <div 
-              className="icon-circle bell" 
-              title="Thông báo"
-              onClick={() => setIsNotificationModalOpen(true)}
-            >
-              🔔
-              <span className="notification-badge">3</span>
+            <div className="notification-bell-wrapper">
+              <div 
+                className="icon-circle bell" 
+                title="Thông báo"
+                onClick={() => setIsNotificationModalOpen(true)}
+                style={{ cursor: 'pointer' }}
+              />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
             </div>
             <div className="user-menu-container">
               <div 
@@ -714,7 +720,7 @@ export default function BookingPage() {
               <a className="mobile-nav-item active">
                 📅 Đặt lịch
               </a>
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+              <a className="mobile-nav-item" onClick={() => { navigate('/price-list'); setIsMobileMenuOpen(false); }}>
                 💰 Bảng giá
               </a>
               <a className="mobile-nav-item" onClick={() => { navigate('/booking-history'); setIsMobileMenuOpen(false); }}>
@@ -1391,45 +1397,11 @@ export default function BookingPage() {
       )}
 
       {/* Notification Modal */}
-      {isNotificationModalOpen && (
-        <div className="notification-modal-overlay" onClick={() => setIsNotificationModalOpen(false)}>
-          <div className="notification-modal" onClick={e => e.stopPropagation()}>
-            <div className="notification-header">
-              <h2>Thông báo bảo dưỡng</h2>
-              <button onClick={() => setIsNotificationModalOpen(false)} className="close-btn">×</button>
-            </div>
-            
-            <div className="notification-content">
-              <div className="notification-item">
-                <div className="notification-icon">⚠️</div>
-                <div className="notification-body">
-                  <h4>Quá hạn bảo dưỡng</h4>
-                  <p>Xe Yadea Ulike (30B-456.78) đã quá hạn bảo dưỡng từ ngày 10/10/2024. Vui lòng đặt lịch ngay!</p>
-                  <span className="notification-time">2 ngày trước</span>
-                </div>
-              </div>
-              
-              <div className="notification-item">
-                <div className="notification-icon">🔧</div>
-                <div className="notification-body">
-                  <h4>Sắp đến hạn bảo dưỡng</h4>
-                  <p>Xe VinFast Feliz S (29A-123.45) sắp đến hạn bảo dưỡng vào ngày 15/11/2024</p>
-                  <span className="notification-time">1 ngày trước</span>
-                </div>
-              </div>
-              
-              <div className="notification-item">
-                <div className="notification-icon">📅</div>
-                <div className="notification-body">
-                  <h4>Xác nhận lịch hẹn</h4>
-                  <p>Lịch hẹn bảo dưỡng xe Yadea Ulike (30B-456.78) đã được xác nhận vào 20/10/2024 lúc 9:00</p>
-                  <span className="notification-time">5 ngày trước</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <NotificationModal 
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        customerId={user?.id}
+      />
 
       {/* Maintenance Progress Modal */}
       {showMaintenanceModal && pendingVehicle && (
