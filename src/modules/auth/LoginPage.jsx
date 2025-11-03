@@ -38,14 +38,21 @@ const LoginPage = () => {
       
       // Response từ backend có format:
       // { token, email, role, accountId, fullName, customerId (nếu là CUSTOMER) }
-      const { token, email, role, accountId, fullName, customerId } = response;
+      const { 
+        token, email, role, 
+        accountId, fullName, 
+        customerId, staffId, technicianId // Lấy ID mới
+      } = response;
       
       // Tạo userData object
       const userData = {
         accountId: accountId,
         email: email,
-        fullName: fullName || email.split('@')[0], // Fallback nếu không có fullName
-        role: role
+        fullName: fullName || email.split('@')[0], 
+        role: role,
+        customerId: customerId,     // Thêm
+        staffId: staffId,         // Thêm
+        technicianId: technicianId  // Thêm
       };
       
       // Nếu là customer, thêm customerId
@@ -61,6 +68,17 @@ const LoginPage = () => {
       localStorage.setItem('role', role);
       localStorage.setItem('accountId', accountId);
       localStorage.setItem('isAuthenticated', 'true');
+      
+      // Lưu các ID theo vai trò
+      if (role === 'CUSTOMER') {
+        localStorage.setItem('customerId', customerId);
+      }
+      if (role === 'STAFF') {
+        localStorage.setItem('staffId', staffId);
+      }
+      if (role === 'TECHNICIAN') {
+        localStorage.setItem('technicianId', technicianId); // ID của technician
+      }
       
       // Chuyển hướng theo role
       if (role === 'ADMIN') {

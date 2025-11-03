@@ -13,7 +13,7 @@ export default function AssignedJobsPage() {
     
     try {
       // Không truyền technicianId, để service tự lấy
-      const data = await fetchAssignedJobs(null, "ALL");
+      const data = await fetchAssignedJobs("ALL");
       console.log('✅ Loaded jobs:', data);
       setJobs(data);
     } catch (error) {

@@ -23,7 +23,12 @@ export default function InspectionPage() {
   }, [scheduleId]);
 
   const totals = useMemo(() => {
-    const part = items.reduce((s,i)=>s+(+i.partCost||0),0);
+    // Tính giá vật tư = partCost + 10%
+    const part = items.reduce((s,i)=>{
+      const partCost = +i.partCost || 0;
+      const partPrice = partCost * 1.1; // Tăng 10%
+      return s + partPrice;
+    }, 0);
     const labor= items.reduce((s,i)=>s+(+i.laborCost||0),0);
     return { part, labor, all: part+labor };
   }, [items]);

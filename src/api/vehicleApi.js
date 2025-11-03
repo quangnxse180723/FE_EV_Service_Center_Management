@@ -39,10 +39,26 @@ const vehicleApi = {
       params: { name }
     });
   },
-  
+
   // Legacy: Lấy danh sách xe của khách hàng (giữ lại để tương thích)
   getCustomerVehicles: (customerId) => {
     return axiosClient.get(`/vehicles/customer/${customerId}`);
+  },
+
+  // === API MỚI: LẤY GÓI BẢO DƯỠNG PHÙ HỢP ===
+  // TODO: Backend cần implement API này
+  // GET /api/vehicles/{vehicleId}/suggested-package?currentMileage={km}&lastServiceDate={date}
+  getSuggestedPackage: (vehicleId, currentMileage, lastServiceDate) => {
+    const params = { currentMileage };
+    if (lastServiceDate) {
+      params.lastServiceDate = lastServiceDate;
+    }
+    return axiosClient.get(`/vehicles/${vehicleId}/suggested-package`, { params });
+  },
+
+  // Lấy lịch sử bảo dưỡng của xe
+  getMaintenanceHistory: (vehicleId) => {
+    return axiosClient.get(`/vehicles/${vehicleId}/maintenance-history`);
   },
 };
 

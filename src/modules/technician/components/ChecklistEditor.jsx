@@ -17,6 +17,11 @@ export default function ChecklistEditor({ items=[], onChange }) {
           }
         }
         
+        // Khi nhập partPrice (đã +10%), chuyển về partCost (giá gốc)
+        if(key === "partPrice") {
+          updated.partCost = value / 1.1; // Lưu giá gốc (trước khi +10%)
+        }
+        
         return updated;
       }
       return it;
@@ -54,35 +59,40 @@ export default function ChecklistEditor({ items=[], onChange }) {
           </tr>
         </thead>
         <tbody>
-          {items.map((it,idx)=>(
-            <tr key={it.id}>
-              <td className="center">{idx+1}</td>
-              <td className="part-name">{it.name}</td>
-              <td>
-                <select className="ipt" value={it.status} onChange={e=>update(it.id,"status",e.target.value)}>
-                  <option>Thay thế</option>
-                  <option>Kiểm tra</option>
-                  <option>Bôi trơn</option>
-                </select>
-              </td>
-              <td>
-                <input 
-                  type="text" 
-                  className="ipt" 
-                  value={formatNumber(it.partCost)} 
-                  onChange={e=>update(it.id,"partCost",parseNumber(e.target.value))} 
-                />
-              </td>
-              <td>
-                <input 
-                  type="text" 
-                  className="ipt" 
-                  value={formatNumber(it.laborCost)} 
-                  onChange={e=>update(it.id,"laborCost",parseNumber(e.target.value))} 
-                />
-              </td>
-            </tr>
-          ))}
+          {items.map((it,idx)=>{
+            // Tính giá vật tư hiển thị = partCost + 10%
+            const partPrice = (it.partCost || 0) * 1.1;
+            
+            return (
+              <tr key={it.id}>
+                <td className="center">{idx+1}</td>
+                <td className="part-name">{it.name}</td>
+                <td>
+                  <select className="ipt" value={it.status} onChange={e=>update(it.id,"status",e.target.value)}>
+                    <option>Thay thế</option>
+                    <option>Kiểm tra</option>
+                    <option>Bôi trơn</option>
+                  </select>
+                </td>
+                <td>
+                  <input 
+                    type="text" 
+                    className="ipt" 
+                    value={formatNumber(Math.round(partPrice))} 
+                    onChange={e=>update(it.id,"partPrice",parseNumber(e.target.value))} 
+                  />
+                </td>
+                <td>
+                  <input 
+                    type="text" 
+                    className="ipt" 
+                    value={formatNumber(it.laborCost)} 
+                    onChange={e=>update(it.id,"laborCost",parseNumber(e.target.value))} 
+                  />
+                </td>
+              </tr>
+            );
+          })}
           {items.length<6 && new Array(6-items.length).fill(0).map((_,i)=>(
             <tr key={`e-${i}`} className="empty"><td colSpan={5}>&nbsp;</td></tr>
           ))}

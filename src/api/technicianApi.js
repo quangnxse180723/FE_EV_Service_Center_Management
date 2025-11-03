@@ -3,8 +3,8 @@ import axiosClient from './axiosClient';
 const technicianApi = {
   // Lấy tất cả kỹ thuật viên
   getAllTechnicians: async () => {
-    const response = await axiosClient.get('/technician');
-    return response;
+    const response = await axiosClient.get('/admin/technicians'); // Lấy từ Admin controller
+    return response;
   },
 
   // Lấy danh sách xe được phân công cho kỹ thuật viên

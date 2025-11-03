@@ -17,10 +17,14 @@ export default function ServiceTicketDetailPage() {
         setError(null);
         
         // Gọi API lấy chi tiết phiếu dịch vụ
+        console.log('🔍 Fetching ticket detail for ID:', ticketId);
         const data = await getServiceTicketDetail(ticketId);
+        console.log('✅ Received ticket data:', data);
+        console.log('📋 Items in ticket:', data.items);
+        console.log('📊 Items length:', data.items?.length || 0);
         setTicket(data);
       } catch (err) {
-        console.error('Failed to fetch service ticket detail:', err);
+        console.error('❌ Failed to fetch service ticket detail:', err);
         setError('Không thể tải thông tin phiếu dịch vụ. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
@@ -99,7 +103,10 @@ export default function ServiceTicketDetailPage() {
             <thead>
               <tr>
                 <th>STT</th>
+                <th>Mã vật tư</th>
                 <th>Tên phụ tùng</th>
+                <th>Giá vật tư (₫)</th>
+                <th>Nhân công (₫)</th>
                 <th>Trạng thái xử lý</th>
                 <th>Tiến trình</th>
                 <th>Hành động</th>
@@ -107,31 +114,51 @@ export default function ServiceTicketDetailPage() {
             </thead>
             <tbody>
               {ticket.items && ticket.items.length > 0 ? (
-                ticket.items.map((item, index) => (
-                  <tr key={item.stt || index}>
-                    <td>{item.stt}</td>
-                    <td>{item.partName}</td>
-                    <td>
-                      <span className={styles['action-status']}>
-                        {item.actionStatus || 'Chưa xác định'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`${styles['status-badge']} ${item.processStatus === 'Hoàn thành' ? styles['status-approved'] : styles['status-pending']}`}>
-                        {item.processStatus || 'Chưa xử lý'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles['confirm-action']}>
-                        {item.confirmAction || '-'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                ticket.items.map((item, index) => {
+                  // Tính giá vật tư = partCost + 10%
+                  const partPrice = item.partCost ? item.partCost * 1.1 : 0;
+                  
+                  return (
+                    <tr key={item.stt || index}>
+                      <td>{item.stt}</td>
+                      <td>
+                        <span className={styles['part-code']}>
+                          {item.partCode || 'N/A'}
+                        </span>
+                      </td>
+                      <td>{item.partName}</td>
+                      <td className={styles['price-cell']}>
+                        <span className={styles['price-value']}>
+                          {partPrice ? partPrice.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) : '0'}
+                        </span>
+                      </td>
+                      <td className={styles['price-cell']}>
+                        <span className={styles['price-value']}>
+                          {item.laborCost ? item.laborCost.toLocaleString('vi-VN') : '0'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={styles['action-status']}>
+                          {item.actionStatus || 'Chưa xác định'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`${styles['status-badge']} ${item.processStatus === 'DONE' || item.processStatus === 'Hoàn thành' ? styles['status-approved'] : styles['status-pending']}`}>
+                          {item.processStatus || 'Chưa xử lý'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={styles['confirm-action']}>
+                          {item.confirmAction || '-'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
-                    Chưa có hạng mục nào
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                    ⚠️ Chưa có hạng mục kiểm tra nào. Vui lòng kiểm tra xem lịch hẹn này đã được gán gói bảo dưỡng chưa.
                   </td>
                 </tr>
               )}

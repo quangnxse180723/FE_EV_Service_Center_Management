@@ -1,55 +1,76 @@
-import axiosClient from '../../../api/axiosClient';
+import axiosClient from '../../../api/axiosClient'; // Đảm bảo đường dẫn này đúng
 
-// Lấy technicianId từ localStorage (được lưu khi login)
+// Lấy technicianId từ localStorage
 const getTechnicianId = () => {
-  // Thử lấy từ accountId
-  let id = localStorage.getItem('accountId');
-  
-  // Nếu accountId là "undefined" (string) hoặc null, thử parse user object
-  if (!id || id === 'undefined') {
-    try {
-      const userJson = localStorage.getItem('user');
-      if (userJson) {
-        const user = JSON.parse(userJson);
-        id = user.id || user.accountId || user.userId || user.technicianId;
-      }
-    } catch (e) {
-      console.error('Error parsing user from localStorage:', e);
-    }
+  let id = null;
+
+  // CÁCH 1: Lấy trực tiếp 'technicianId' (được lưu ở Bước 4)
+  id = localStorage.getItem('technicianId');
+  if (id && id !== 'undefined' && id !== 'null') {
+    console.log('✅ (Cách 1) Lấy ID từ "technicianId":', id);
+    return id;
   }
-  
-  console.log('📌 TechnicianId from localStorage:', id);
-  console.log('⚠️ User object không có ID! Backend cần trả về ID khi login.');
-  
-  // TEMPORARY FIX: Hardcode ID = 1 vì backend chưa trả về ID
-  // TODO: Sửa backend để trả về technicianId trong response khi login
-  const finalId = (id && id !== 'undefined') ? id : 1;
-  console.log('✅ Using technician ID:', finalId);
-  
-  return finalId;
+
+  // CÁCH 2: Lấy từ 'user' object (cũng được lưu ở Bước 4)
+  try {
+    const userJson = localStorage.getItem('user');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      // Ưu tiên technicianId, sau đó mới đến các ID khác
+      id = user.technicianId || user.id || user.accountId || user.userId; 
+      if (id && id !== 'undefined' && id !== 'null') {
+        console.log('✅ (Cách 2) Lấy ID từ "user" object:', id);
+        return id;
+      }
+    }
+  } catch (e) {
+    console.error('Lỗi parse user từ localStorage:', e);
+  }
+
+  // CÁCH 3: (Dự phòng) Lấy từ 'accountId'
+  id = localStorage.getItem('accountId');
+  if (id && id !== 'undefined' && id !== 'null') {
+    console.warn('⚠️ (Cách 3) Không tìm thấy "technicianId", dùng "accountId" dự phòng:', id);
+    return id;
+  }
+
+  // Nếu cả 3 cách đều thất bại
+  console.error('❌ LỖI: Không tìm thấy technicianId trong localStorage.');
+  console.log('   Đã kiểm tra "technicianId", "user.technicianId", và "accountId".');
+  console.log('   Đảm bảo backend trả về "technicianId" khi đăng nhập.');
+  return null; // Trả về null để API call thất bại rõ ràng
 };
 
 /**
  * Lấy danh sách xe được phân công cho kỹ thuật viên
- * @param {number} technicianId - ID của kỹ thuật viên (optional, mặc định lấy từ localStorage)
  * @param {string} status - Trạng thái lọc: "ALL", "ASSIGNED", "IN_PROGRESS"
  * @returns {Promise<Array>} Danh sách xe được phân công
  */
-export async function fetchAssignedJobs(technicianId = null, status = "ALL") {
+export async function fetchAssignedJobs(status = "ALL") {
   try {
-    const id = technicianId || getTechnicianId();
+    const id = getTechnicianId(); // Tự động lấy ID
     
+    if (!id) {
+      // Nếu không có ID, không gọi API
+      throw new Error("Không thể lấy ID kỹ thuật viên từ localStorage.");
+    }
+    
+    let response;
     if (status === "ALL") {
       // Gọi API lấy tất cả xe được phân công
-      const response = await axiosClient.get(`/technician/${id}/assigned-vehicles`);
-      return mapVehicleResponse(response);
+      console.log(`🔵 Gọi API: /technician/${id}/assigned-vehicles`);
+      response = await axiosClient.get(`/technician/${id}/assigned-vehicles`);
     } else {
       // Gọi API lọc theo trạng thái
-      const response = await axiosClient.get(`/technician/${id}/assigned-vehicles/filter`, {
+      console.log(`🔵 Gọi API: /technician/${id}/assigned-vehicles/filter?status=${status}`);
+      response = await axiosClient.get(`/technician/${id}/assigned-vehicles/filter`, {
         params: { status }
       });
-      return mapVehicleResponse(response);
     }
+    
+    // Áp dụng mapping từ response backend sang frontend
+    return mapVehicleResponse(response);
+
   } catch (error) {
     console.error('Error fetching assigned jobs:', error);
     throw error;
@@ -58,30 +79,57 @@ export async function fetchAssignedJobs(technicianId = null, status = "ALL") {
 
 /**
  * Mapping response từ backend sang format của frontend
- * Backend format: scheduleId, customerName, vehicleModel, licensePlate, ownerName, status, action, scheduledDate
- * Frontend format: record_id, customer_name, vehicle_model, license_plate, appointment_time, status
+ * Backend (VehicleAssignmentResponse): scheduleId, customerName, vehicleModel, licensePlate, status, scheduledDate
+ * Frontend (AssignedJobsPage): record_id, customer_name, vehicle_model, license_plate, appointment_time, status
  */
 function mapVehicleResponse(vehicles) {
-  if (!Array.isArray(vehicles)) return [];
+  if (!Array.isArray(vehicles)) {
+    console.warn('⚠️ Dữ liệu trả về không phải là một mảng:', vehicles);
+    return [];
+  }
   
   return vehicles.map(v => ({
     record_id: v.scheduleId,
     customer_name: v.customerName,
     vehicle_model: v.vehicleModel,
     license_plate: v.licensePlate,
-    appointment_time: v.scheduledDate || v.appointmentTime,
-    status: v.status
+    appointment_time: v.scheduledDate || v.appointmentTime, // Dùng scheduledDate từ backend
+    status: mapStatus(v.status) // Mapping trạng thái
   }));
 }
+
+// Helper map trạng thái từ tiếng Anh (backend) sang tiếng Việt (frontend)
+function mapStatus(status) {
+  const statusUpper = (status || '').toUpperCase();
+  switch (statusUpper) {
+    case 'PENDING':
+      return 'Chờ nhận';
+    case 'IN_PROGRESS':
+      return 'Đang kiểm tra';
+    case 'COMPLETED':
+      return 'Hoàn thành';
+    default:
+      return status;
+  }
+}
+
 
 /**
  * Check-in xe (Xác nhận nhận xe)
  */
 export async function checkInRecord(scheduleId) {
   try {
-    console.log('🔵 Calling check-in API:', `/technician/check-in/${scheduleId}`);
-    const response = await axiosClient.post(`/technician/check-in/${scheduleId}`);
-    return response;
+    console.log('🔵 Gọi check-in API:', `/technician/check-in/${scheduleId}`);
+    // TODO: Backend cần API này, ví dụ:
+    // const response = await axiosClient.post(`/technician/check-in/${scheduleId}`);
+    // return response;
+    
+    // ---- GIẢ LẬP ----
+    await new Promise(r => setTimeout(r, 100)); // Giả lập gọi API
+    console.log('✅ (Giả lập) Check-in thành công cho:', scheduleId);
+    return { success: true };
+    // ---- HẾT GIẢ LẬP ----
+
   } catch (error) {
     console.error('❌ Error checking in record:', error);
     throw error;
@@ -92,52 +140,49 @@ export async function checkInRecord(scheduleId) {
  * Lấy hoặc tạo checklist cho xe
  */
 export async function getOrCreateChecklist(scheduleId) {
-  try {
-    console.log('🔵 Calling checklist API:', `/technician/checklist/${scheduleId}`);
-    const response = await axiosClient.get(`/technician/checklist/${scheduleId}`);
-    console.log('✅ Checklist response:', response);
+  try {
+    console.log('🔵 Gọi API thật:', `/service-ticket/${scheduleId}/detail`);
     
-    // Map backend fields to frontend format
-    if (response && response.items) {
-      console.log('🔍 Raw items from backend:', response.items);
-      
-      const mappedItems = response.items.map((item, index) => {
-        console.log(`Item ${index + 1}:`, {
-          name: item.name,
-          description: item.description,
-          status: item.status,
-          actionStatus: item.actionStatus,
-          originalPartCost: item.originalPartCost,
-          originalLaborCost: item.originalLaborCost,
-          mapped_name: item.name || item.partName || '',
-          mapped_status: item.description || item.actionStatus || 'Kiểm tra'
-        });
-        
-        return {
-          id: item.id || item.itemId || index + 1,
-          name: item.name || item.partName || '',
-          status: item.description || item.actionStatus || 'Kiểm tra',  // Ưu tiên description (Kiểm tra/Thay thế/Bôi trơn)
-          partCost: item.partCost || item.materialCost || 0,
-          laborCost: item.laborCost || 0,
-          originalPartCost: item.originalPartCost || 0,  // Giá gốc vật tư từ kho
-          originalLaborCost: item.originalLaborCost || 0  // Giá gốc nhân công
-        };
-      });
-      
-      console.log('🔄 Mapped items:', mappedItems);
-      
-      return {
-        header: response.header,
-        items: mappedItems
-      };
-    }
+    // BƯỚC 1: GỌI API THẬT (thay vì mock data)
+    const response = await axiosClient.get(`/service-ticket/${scheduleId}/detail`);
     
-    return response;
-  } catch (error) {
-    console.error('❌ Error getting checklist:', error);
-    console.error('❌ API endpoint tried:', `/technician/checklist/${scheduleId}`);
-    throw error;
-  }
+    console.log('✅ Lấy checklist thật thành công:', response);
+    // response bây giờ có dạng:
+    // { customerName, vehicleName, licensePlate, appointmentDateTime, items: [...] }
+
+    // BƯỚC 2: Map dữ liệu backend sang format frontend (header, items)
+    const header = {
+      owner: response.customerName,
+      vehicle: response.vehicleName,
+      license: response.licensePlate,
+      dateTime: response.appointmentDateTime
+    };
+
+    const items = response.items.map((item, index) => ({
+      id: item.stt || index + 1, // Dùng stt (số thứ tự) làm ID
+      name: item.partName || '',
+      status: item.actionStatus || 'Kiểm tra', // actionStatus là "Thay thế", "Bôi trơn", ...
+      
+      // Lấy chi phí thật từ backend
+      // partCost: Giá gốc từ backend (sẽ được frontend tính +10% khi hiển thị)
+      partCost: item.materialCost || 0,
+      laborCost: item.laborCost || 0,
+      
+      // Lưu giá gốc để khôi phục khi cần (khi đổi status về "Thay thế")
+      originalPartCost: item.materialCost || 0, 
+      originalLaborCost: item.laborCost || 0 
+    }));
+    
+    console.log('🔄 Đã map dữ liệu:', { header, items });
+
+    return { header, items };
+
+  } catch (error) {
+    console.error('❌ Error getting real checklist:', error);
+    console.error('❌ API endpoint tried:', `/service-ticket/${scheduleId}/detail`);
+    // Fallback về dữ liệu rỗng nếu lỗi
+    return { header: { owner: "Lỗi tải dữ liệu", vehicle: "Vui lòng thử lại" }, items: [] };
+  }
 }
 
 /**
@@ -145,14 +190,25 @@ export async function getOrCreateChecklist(scheduleId) {
  */
 export async function submitForApproval(scheduleId) {
   try {
-    console.log('🔵 Calling submit approval API:', `/technician/submit-for-approval/${scheduleId}`);
-    const response = await axiosClient.post(`/technician/submit-for-approval/${scheduleId}`);
-    return response;
+    console.log('🔵 Gọi submit approval API:', `/technician/submit-for-approval/${scheduleId}`);
+    
+    // TODO: Backend cần API này
+    // const response = await axiosClient.post(`/technician/submit-for-approval/${scheduleId}`);
+    // return response;
+
+    // ---- GIẢ LẬP ----
+    await new Promise(r => setTimeout(r, 100));
+    console.log('✅ (Giả lập) Gửi duyệt thành công cho:', scheduleId);
+    return { success: true };
+    // ---- HẾT GIẢ LẬP ----
+
   } catch (error) {
     console.error('❌ Error submitting for approval:', error);
     throw error;
   }
 }
+
+// Các hàm khác (fetchServiceTickets, getServiceTicketDetail) giữ nguyên...
 
 /**
  * Lấy danh sách phiếu dịch vụ cho kỹ thuật viên
@@ -177,10 +233,23 @@ export async function fetchServiceTickets(technicianId = null) {
  */
 export async function getServiceTicketDetail(scheduleId) {
   try {
+    console.log('🔍 Calling API: /service-ticket/' + scheduleId + '/detail');
     const response = await axiosClient.get(`/service-ticket/${scheduleId}/detail`);
+    console.log('✅ API Response:', response);
+    console.log('📋 Items count:', response.items?.length || 0);
+    
+    // Kiểm tra nếu items rỗng
+    if (!response.items || response.items.length === 0) {
+      console.warn('⚠️ Backend trả về items rỗng. Có thể do:');
+      console.warn('   1. Schedule này chưa được gán gói bảo dưỡng (maintenancePackage = null)');
+      console.warn('   2. Gói bảo dưỡng không có hạng mục mẫu trong bảng PackageChecklistItem');
+      console.warn('   3. Cần kiểm tra database: SELECT * FROM maintenanceschedule WHERE schedule_id = ' + scheduleId);
+    }
+    
     return response;
   } catch (error) {
-    console.error('Error fetching service ticket detail:', error);
+    console.error('❌ Error fetching service ticket detail:', error);
+    console.error('   API endpoint:', `/service-ticket/${scheduleId}/detail`);
     throw error;
   }
 }

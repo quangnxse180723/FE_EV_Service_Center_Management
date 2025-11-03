@@ -47,6 +47,7 @@ export default function BookingPage() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
+  const [suggestedPackage, setSuggestedPackage] = useState(null); // Gói bảo dưỡng được gợi ý
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
@@ -234,7 +235,7 @@ export default function BookingPage() {
     }
   };
 
-  const handleVehicleSelect = (vehicle) => {
+  const handleVehicleSelect = async (vehicle) => {
     const vehicleId = vehicle.vehicleId || vehicle.id;
     // Ưu tiên lấy km từ input, nếu không có thì lấy từ database
     const inputKm = vehicleKm[vehicleId];
@@ -271,7 +272,7 @@ export default function BookingPage() {
       }
     }
     
-    // Lưu thông tin xe tạm thời và hiển thị modal
+    // Lưu thông tin xe tạm thời
     const vehicleWithMaintenance = {
       ...vehicle,
       inputKm: km,
@@ -287,12 +288,59 @@ export default function BookingPage() {
     };
     
     setPendingVehicle(vehicleWithMaintenance);
+    
+    // === BƯỚC MỚI: GỌI API LẤY GÓI BẢO DƯỠNG PHÙ HỢP ===
+    try {
+      if (maintenanceLevel && maintenanceLevel > 0) {
+        console.log('🔍 Đang kiểm tra gói bảo dưỡng phù hợp...');
+        
+        // TODO: Bỏ comment dòng dưới khi backend đã implement API
+        // const response = await vehicleApi.getSuggestedPackage(vehicleId, km, vehicle.lastServiceDate);
+        // if (response && response.packageId) {
+        //   setSuggestedPackage(response);
+        //   console.log('✅ Gói bảo dưỡng gợi ý từ backend:', response);
+        // }
+        
+        // ===== MOCK DATA TẠM THỜI (XÓA KHI BACKEND SẴN SÀNG) =====
+        const mockPackage = {
+          packageId: maintenanceLevel, // VD: 1, 2, 3...
+          packageName: `Gói bảo dưỡng ${maintenanceLevel * 1000}km`,
+          description: `Bảo dưỡng định kỳ lần ${maintenanceLevel}`,
+          price: 500000 + (maintenanceLevel - 1) * 200000,
+          estimatedDuration: 60 + (maintenanceLevel - 1) * 30,
+          reason: maintenanceReason
+        };
+        
+        console.log('✅ Gói bảo dưỡng gợi ý (MOCK):', mockPackage);
+        setSuggestedPackage(mockPackage);
+        // ===== HẾT PHẦN MOCK =====
+      } else {
+        setSuggestedPackage(null);
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy gói bảo dưỡng:', error);
+      setSuggestedPackage(null);
+    }
+    
     setShowMaintenanceModal(true);
   };
 
   const handleConfirmVehicle = () => {
     setSelectedVehicle(pendingVehicle);
     setShowMaintenanceModal(false);
+    
+    // Lưu packageId nếu có gói được gợi ý
+    if (suggestedPackage) {
+      // Lưu dưới dạng object để đồng nhất với flow chọn dịch vụ thủ công
+      setSelectedService({
+        serviceId: suggestedPackage.packageId,
+        packageId: suggestedPackage.packageId,
+        name: suggestedPackage.packageName,
+        price: suggestedPackage.price
+      });
+      console.log('✅ Gói bảo dưỡng được chọn:', suggestedPackage);
+    }
+    
     handleNextStep();
     
     console.log('✅ Xe đã chọn:', {
@@ -301,13 +349,15 @@ export default function BookingPage() {
       km: pendingVehicle.inputKm,
       monthsSinceLastService: pendingVehicle.monthsSinceLastService,
       maintenanceLevel: pendingVehicle.maintenanceLevel,
-      reason: pendingVehicle.maintenanceReason
+      reason: pendingVehicle.maintenanceReason,
+      suggestedPackageId: suggestedPackage?.packageId || null
     });
   };
 
   const handleCancelVehicle = () => {
     setShowMaintenanceModal(false);
     setPendingVehicle(null);
+    setSuggestedPackage(null); // Reset gói gợi ý
   };
 
   const handleCenterSelect = (center) => {
@@ -1625,6 +1675,82 @@ export default function BookingPage() {
                     display: 'inline-block'
                   }}>
                     {pendingVehicle.isOverdue ? '⚠️ Quá hạn bảo dưỡng' : '⏰ Đã đến kỳ bảo dưỡng'}
+                  </div>
+                </div>
+              )}
+
+              {/* Gói bảo dưỡng được gợi ý */}
+              {suggestedPackage && (
+                <div style={{
+                  padding: '20px',
+                  backgroundColor: '#E3F2FD',
+                  border: '2px solid #2196F3',
+                  borderRadius: '8px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    marginBottom: '12px',
+                    gap: '10px'
+                  }}>
+                    <span style={{ fontSize: '24px' }}>📦</span>
+                    <div>
+                      <div style={{ 
+                        fontWeight: '700', 
+                        color: '#1565C0', 
+                        fontSize: '17px',
+                        marginBottom: '4px'
+                      }}>
+                        {suggestedPackage.packageName}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666' }}>
+                        {suggestedPackage.description}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '12px',
+                    marginTop: '15px'
+                  }}>
+                    <div style={{ 
+                      padding: '10px',
+                      backgroundColor: '#fff',
+                      borderRadius: '6px'
+                    }}>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                        💰 Chi phí dự kiến
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: '#1565C0' }}>
+                        {suggestedPackage.price?.toLocaleString()} đ
+                      </div>
+                    </div>
+                    <div style={{ 
+                      padding: '10px',
+                      backgroundColor: '#fff',
+                      borderRadius: '6px'
+                    }}>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                        ⏱️ Thời gian dự kiến
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: '#1565C0' }}>
+                        ~{suggestedPackage.estimatedDuration} phút
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ 
+                    marginTop: '12px',
+                    padding: '10px',
+                    backgroundColor: '#FFF9C4',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    color: '#F57F17'
+                  }}>
+                    💡 <strong>Gợi ý:</strong> Gói này phù hợp với tình trạng xe của bạn {suggestedPackage.reason}
                   </div>
                 </div>
               )}
