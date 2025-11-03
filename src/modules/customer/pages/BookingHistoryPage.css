@@ -330,6 +330,10 @@
 .customer-info-modal {
   width: 800px;
   max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -338,6 +342,7 @@
   align-items: center;
   padding: 2rem 2.5rem 1rem;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -365,6 +370,9 @@
 
 .modal-body {
   padding: 2rem 2.5rem;
+  padding-bottom: 1rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .customer-info-grid {
@@ -464,6 +472,7 @@
   background: linear-gradient(135deg, #f7fafc, #edf2f7);
   border-radius: 12px;
   margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .stat-item {
@@ -487,8 +496,11 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding: 1.5rem 2.5rem 2rem;
+  padding: 1.5rem 2.5rem;
+  padding-bottom: 2rem;
   border-top: 1px solid #e2e8f0;
+  background: white;
+  flex-shrink: 0;
 }
 
 .modal-footer .btn-primary,

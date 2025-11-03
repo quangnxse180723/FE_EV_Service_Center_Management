@@ -473,6 +473,10 @@
 .customer-info-modal {
   width: 800px;
   max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -508,6 +512,9 @@
 
 .modal-body {
   padding: 2rem 2.5rem;
+  padding-bottom: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .customer-info-grid {
@@ -584,6 +591,23 @@
   border: 1px solid #e2e8f0;
 }
 
+.info-group .edit-input {
+  color: #2d3748;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #667eea;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.info-group .edit-input:focus {
+  outline: none;
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .customer-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -592,6 +616,7 @@
   background: linear-gradient(135deg, #f7fafc, #edf2f7);
   border-radius: 12px;
   margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .stat-item {
@@ -615,8 +640,13 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding: 1.5rem 2.5rem 2rem;
+  padding: 1.5rem 2.5rem;
+  padding-bottom: 2rem;
   border-top: 1px solid #e2e8f0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .modal-footer .btn-primary,

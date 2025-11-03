@@ -13,6 +13,9 @@ export default function MyVehiclesPage() {
   const [error, setError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [newImagePreview, setNewImagePreview] = useState(null);
+  const [newImageBase64, setNewImageBase64] = useState(null);
   
   // State cho customer data
   const [customerData, setCustomerData] = useState(null);
@@ -81,7 +84,8 @@ export default function MyVehiclesPage() {
     currentMileage: '',
     lastServiceDate: '',
     imageFile: null,
-    imagePreview: null
+    imagePreview: null,
+    imageBase64: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -204,8 +208,10 @@ export default function MyVehiclesPage() {
       model: '',
       vin: '',
       currentMileage: '',
+      lastServiceDate: '',
       imageFile: null,
-      imagePreview: null
+      imagePreview: null,
+      imageBase64: null
     });
     setShowAddModal(true);
   };
@@ -278,6 +284,107 @@ export default function MyVehiclesPage() {
     }
   };
 
+  // Handle image update for existing vehicle
+  const handleUpdateVehicleImage = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file ảnh!');
+        return;
+      }
+      
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Kích thước file không được vượt quá 2MB!');
+        return;
+      }
+
+      // Compress and convert to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Resize image to max 800x600
+          const maxWidth = 800;
+          const maxHeight = 600;
+          let { width, height } = img;
+          
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          
+          setNewImagePreview(compressedBase64);
+          setNewImageBase64(compressedBase64);
+          setIsEditingImage(true);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Save updated vehicle image
+  const handleSaveVehicleImage = async () => {
+    if (!newImageBase64 || !selectedVehicle) {
+      return;
+    }
+
+    try {
+      const vehicleId = selectedVehicle.vehicleId || selectedVehicle.id;
+      
+      // Update vehicle with new image
+      const updateData = {
+        ...selectedVehicle,
+        imageUrl: newImageBase64
+      };
+
+      const response = await vehicleApi.updateVehicle(vehicleId, updateData);
+      
+      // Update local state
+      setVehicles(prev => prev.map(v => 
+        (v.vehicleId || v.id) === vehicleId 
+          ? { ...v, imageUrl: newImageBase64 } 
+          : v
+      ));
+      
+      setSelectedVehicle({ ...selectedVehicle, imageUrl: newImageBase64 });
+      setIsEditingImage(false);
+      setNewImagePreview(null);
+      setNewImageBase64(null);
+      
+      alert('Cập nhật ảnh xe thành công!');
+    } catch (error) {
+      console.error('Error updating vehicle image:', error);
+      alert('Có lỗi xảy ra khi cập nhật ảnh xe. Vui lòng thử lại!');
+    }
+  };
+
+  // Cancel image editing
+  const handleCancelImageEdit = () => {
+    setIsEditingImage(false);
+    setNewImagePreview(null);
+    setNewImageBase64(null);
+  };
+
   const handleSubmitVehicle = async (e) => {
     e.preventDefault();
     
@@ -307,18 +414,18 @@ export default function MyVehiclesPage() {
         model: newVehicle.model.trim(),
         vin: newVehicle.vin.trim(),
         currentMileage: newVehicle.currentMileage ? parseInt(newVehicle.currentMileage) : 0,
-        imageUrl: null, // ✅ TẠM THỜI BỎ ẢNH - Backend cần fix database column
+        imageUrl: newVehicle.imageBase64 || null, // ✅ Gửi ảnh base64 nếu có
         lastServiceDate: newVehicle.lastServiceDate ? newVehicle.lastServiceDate : null
       };
 
-      console.log('📤 Adding vehicle (WITHOUT IMAGE):');
+      console.log('📤 Adding vehicle:');
       console.log('  - customerId:', vehicleData.customerId);
       console.log('  - licensePlate:', vehicleData.licensePlate);
       console.log('  - model:', vehicleData.model);
       console.log('  - vin:', vehicleData.vin);
       console.log('  - currentMileage:', vehicleData.currentMileage);
       console.log('  - lastServiceDate:', vehicleData.lastServiceDate);
-      console.log('⚠️ Image upload disabled temporarily');
+      console.log('  - hasImage:', !!vehicleData.imageUrl);
       
       // Gọi API để lưu vào database - Gửi JSON object trực tiếp
       const response = await vehicleApi.createVehicle(vehicleData);
@@ -335,8 +442,10 @@ export default function MyVehiclesPage() {
         model: '',
         vin: '',
         currentMileage: '',
+        lastServiceDate: '',
         imageFile: null,
-        imagePreview: null
+        imagePreview: null,
+        imageBase64: null
       });
       
       // Hiển thị thông báo thành công
@@ -353,6 +462,17 @@ export default function MyVehiclesPage() {
 
   const handleViewDetail = (vehicle) => {
     setSelectedVehicle(vehicle);
+    // Reset image editing state
+    setIsEditingImage(false);
+    setNewImagePreview(null);
+    setNewImageBase64(null);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedVehicle(null);
+    setIsEditingImage(false);
+    setNewImagePreview(null);
+    setNewImageBase64(null);
   };
 
   const handleDeleteVehicle = async (vehicleId) => {
@@ -661,16 +781,44 @@ export default function MyVehiclesPage() {
 
       {/* Vehicle Detail Modal */}
       {selectedVehicle && (
-        <div className="modal-overlay" onClick={() => setSelectedVehicle(null)}>
+        <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="vehicle-detail-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Chi tiết xe</h2>
-              <button onClick={() => setSelectedVehicle(null)} className="close-btn">×</button>
+              <button onClick={handleCloseModal} className="close-btn">×</button>
             </div>
             
             <div className="modal-content">
               <div className="vehicle-image-large">
-                <img src={getVehicleImage(selectedVehicle)} alt={selectedVehicle.model} />
+                <img 
+                  src={isEditingImage ? newImagePreview : getVehicleImage(selectedVehicle)} 
+                  alt={selectedVehicle.model} 
+                />
+                <div className="image-edit-controls">
+                  {!isEditingImage ? (
+                    <>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleUpdateVehicleImage}
+                        style={{ display: 'none' }}
+                        id="update-vehicle-image"
+                      />
+                      <label htmlFor="update-vehicle-image" className="btn-change-image">
+                        📷 Thay đổi ảnh
+                      </label>
+                    </>
+                  ) : (
+                    <div className="image-edit-actions">
+                      <button onClick={handleSaveVehicleImage} className="btn-save-image">
+                        ✓ Lưu ảnh
+                      </button>
+                      <button onClick={handleCancelImageEdit} className="btn-cancel-image">
+                        ✕ Hủy
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="vehicle-full-info">

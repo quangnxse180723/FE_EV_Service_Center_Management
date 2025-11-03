@@ -41,6 +41,8 @@ export default function BookingPage() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCustomerInfoModalOpen, setIsCustomerInfoModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedUserInfo, setEditedUserInfo] = useState({});
 
   // State cho các bước
   const [currentStep, setCurrentStep] = useState(1);
@@ -510,6 +512,60 @@ export default function BookingPage() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // Xử lý edit customer info
+  const handleEditMode = () => {
+    setIsEditMode(true);
+    setEditedUserInfo({
+      name: customerData?.fullName || userInfo.name || '',
+      phone: customerData?.phone || userInfo.phone || '',
+      email: customerData?.email || userInfo.email || '',
+      address: customerData?.address || '123 Đường ABC, Quận 1, TP.HCM'
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditedUserInfo({});
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedUserInfo(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const customerId = localStorage.getItem('customerId');
+      
+      if (!customerId || customerId === 'null') {
+        alert('Không tìm thấy thông tin khách hàng');
+        return;
+      }
+
+      const updateData = {
+        fullName: editedUserInfo.name?.trim(),
+        phone: editedUserInfo.phone?.trim(),
+        email: editedUserInfo.email?.trim(),
+        address: editedUserInfo.address?.trim()
+      };
+
+      console.log('💾 Updating customer info:', updateData);
+      const response = await customerApi.updateCustomer(customerId, updateData);
+      console.log('✅ Customer updated:', response);
+
+      // Update local state
+      setCustomerData(response);
+      setIsEditMode(false);
+      alert('✅ Cập nhật thông tin thành công!');
+      
+    } catch (error) {
+      console.error('❌ Error updating customer:', error);
+      alert('Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại.');
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -1380,23 +1436,59 @@ export default function BookingPage() {
                 <div className="customer-details-section">
                   <div className="info-group">
                     <label>Họ và tên:</label>
-                    <span>{userInfo.name}</span>
+                    {isEditMode ? (
+                      <input 
+                        type="text" 
+                        value={editedUserInfo.name || ''} 
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        className="edit-input"
+                      />
+                    ) : (
+                      <span>{userInfo.name}</span>
+                    )}
                   </div>
                   <div className="info-group">
                     <label>Mã khách hàng:</label>
-                    <span>KH00{userInfo.id || 1}</span>
+                    <span>KH{String(userInfo.id || '006').padStart(3, '0')}</span>
                   </div>
                   <div className="info-group">
                     <label>Số điện thoại:</label>
-                    <span>{userInfo.phone}</span>
+                    {isEditMode ? (
+                      <input 
+                        type="tel" 
+                        value={editedUserInfo.phone || ''} 
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="edit-input"
+                      />
+                    ) : (
+                      <span>{userInfo.phone}</span>
+                    )}
                   </div>
                   <div className="info-group">
                     <label>Email:</label>
-                    <span>{userInfo.email}</span>
+                    {isEditMode ? (
+                      <input 
+                        type="email" 
+                        value={editedUserInfo.email || ''} 
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className="edit-input"
+                      />
+                    ) : (
+                      <span>{userInfo.email}</span>
+                    )}
                   </div>
                   <div className="info-group">
                     <label>Địa chỉ:</label>
-                    <span>123 Đường ABC, Quận 1, TP.HCM</span>
+                    {isEditMode ? (
+                      <input 
+                        type="text" 
+                        value={editedUserInfo.address || ''} 
+                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        className="edit-input"
+                      />
+                    ) : (
+                      <span>{customerData?.address || '123 Đường ABC, Quận 1, TP.HCM'}</span>
+                    )}
                   </div>
                   <div className="info-group">
                     <label>Ngày đăng ký:</label>
@@ -1404,7 +1496,7 @@ export default function BookingPage() {
                   </div>
                   <div className="info-group">
                     <label>Loại tài khoản:</label>
-                    <span>Khách hàng VIP</span>
+                    <span>VIP</span>
                   </div>
                 </div>
               </div>
@@ -1415,7 +1507,7 @@ export default function BookingPage() {
                   <div className="stat-label">Lần bảo dưỡng</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">3</div>
+                  <div className="stat-number">{userVehicles.length}</div>
                   <div className="stat-label">Xe đang sở hữu</div>
                 </div>
                 <div className="stat-item">
@@ -1429,12 +1521,28 @@ export default function BookingPage() {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setIsCustomerInfoModalOpen(false)}>
-                Đóng
-              </button>
-              <button className="btn-primary">
-                Chỉnh sửa thông tin
-              </button>
+              {isEditMode ? (
+                <>
+                  <button className="btn-secondary" onClick={handleCancelEdit}>
+                    ❌ Hủy
+                  </button>
+                  <button className="btn-primary" onClick={handleSaveEdit}>
+                    💾 Lưu thay đổi
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-secondary" onClick={() => {
+                    setIsCustomerInfoModalOpen(false);
+                    setIsEditMode(false);
+                  }}>
+                    Đóng
+                  </button>
+                  <button className="btn-primary" onClick={handleEditMode}>
+                    ✏️ Chỉnh sửa thông tin
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1484,8 +1592,19 @@ export default function BookingPage() {
       {/* Maintenance Progress Modal */}
       {showMaintenanceModal && pendingVehicle && (
         <div className="modal-overlay" onClick={handleCancelVehicle}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', padding: '30px' }}>
-            <div className="modal-header" style={{ borderBottom: '2px solid #f0f0f0', paddingBottom: '15px', marginBottom: '25px' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ 
+            maxWidth: '700px', 
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            padding: '0'
+          }}>
+            <div className="modal-header" style={{ 
+              borderBottom: '2px solid #f0f0f0', 
+              padding: '20px 30px 15px',
+              flexShrink: 0
+            }}>
               <h2 style={{ fontSize: '24px', color: '#333', margin: 0 }}>
                 Thông tin bảo dưỡng xe
               </h2>
@@ -1494,7 +1613,11 @@ export default function BookingPage() {
               </button>
             </div>
             
-            <div className="modal-body">
+            <div className="modal-body" style={{
+              padding: '25px 30px',
+              overflowY: 'auto',
+              flex: 1
+            }}>
               {/* Thông tin xe */}
               <div style={{ 
                 marginBottom: '25px', 
@@ -1760,8 +1883,10 @@ export default function BookingPage() {
               display: 'flex', 
               gap: '15px', 
               justifyContent: 'flex-end',
-              paddingTop: '20px',
-              borderTop: '2px solid #f0f0f0'
+              padding: '20px 30px',
+              borderTop: '2px solid #f0f0f0',
+              flexShrink: 0,
+              background: 'white'
             }}>
               <button 
                 className="btn-secondary" 

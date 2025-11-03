@@ -6,6 +6,7 @@ import defaultAvatar from '/src/assets/img/user-avatar.jpg'; // Ảnh của bạ
 import scheduleApi from '../../../api/scheduleApi';
 import centerApi from '../../../api/centerApi';
 import customerApi from '../../../api/customerApi';
+import vehicleApi from '../../../api/vehicleApi';
 
 export default function BookingHistoryPage() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function BookingHistoryPage() {
   });
 
   const [bookingHistory, setBookingHistory] = useState([]);
+  const [userVehicles, setUserVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,6 +40,7 @@ export default function BookingHistoryPage() {
   useEffect(() => {
     fetchBookingHistory();
     fetchCustomerInfo();
+    fetchUserVehicles();
   }, []);
 
   // Fetch customer info từ API
@@ -78,6 +81,21 @@ export default function BookingHistoryPage() {
           console.error('Error parsing localStorage user:', e);
         }
       }
+    }
+  };
+
+  // Fetch user vehicles từ API
+  const fetchUserVehicles = async () => {
+    if (!customerId) return;
+    
+    try {
+      console.log('📥 Fetching vehicles for customer ID:', customerId);
+      const response = await vehicleApi.getCustomerVehicles(customerId);
+      console.log('✅ User vehicles:', response);
+      setUserVehicles(Array.isArray(response) ? response : []);
+    } catch (error) {
+      console.error('❌ Error fetching vehicles:', error);
+      setUserVehicles([]);
     }
   };
 
@@ -729,7 +747,7 @@ export default function BookingHistoryPage() {
                   <div className="stat-label">Lần bảo dưỡng</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">3</div>
+                  <div className="stat-number">{userVehicles.length}</div>
                   <div className="stat-label">Xe đang sở hữu</div>
                 </div>
                 <div className="stat-item">
