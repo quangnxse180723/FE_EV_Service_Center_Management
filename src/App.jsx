@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 // ===== Components =====
 import ProtectedRoute from "./components/ProtectedRoute";
+import ChatWidget from "./components/chat-widget/ChatWidget";
 
 // ===== Public Pages =====
 import HomePage from "./pages/HomePage";
@@ -57,25 +58,40 @@ import InspectionPage from "./modules/technician/pages/InspectionPage";
 import ServiceTicketsPage from "./modules/technician/pages/ServiceTicketsPage";
 import ServiceTicketDetailPage from "./modules/technician/pages/ServiceTicketDetailPage";
 
+// ===== Chat Pages =====
+import CustomerChatPage from "./modules/chat/pages/CustomerChatPage";
+import StaffChatPage from "./modules/chat/pages/StaffChatPage";
+
 // ===== Styles =====
 import "./App.css";
+import { useAuth } from "./hooks/useAuth";
 
-function App() {
+/**
+ * AppContent component với ChatWidget
+ */
+function AppContent() {
+  const { user } = useAuth();
+  const isCustomer = user?.role === 'CUSTOMER';
+
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* ===== Public Routes ===== */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <>
+      <Routes>
+        {/* ===== Public Routes ===== */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-          {/* ===== Customer Routes ===== */}
-          <Route path="/booking" element={<BookingPage />} />
-          <Route path="/booking-history" element={<BookingHistoryPage />} />
-          <Route path="/my-vehicles" element={<MyVehiclesPage />} />
-          <Route path="/payment-history" element={<PaymentHistoryPage />} />
-          <Route path="/customer-profile" element={<CustomerProfilePage />} />
+        {/* ===== Customer Routes ===== */}
+        <Route path="/booking" element={<BookingPage />} />
+        <Route path="/booking-history" element={<BookingHistoryPage />} />
+        <Route path="/my-vehicles" element={<MyVehiclesPage />} />
+        <Route path="/payment-history" element={<PaymentHistoryPage />} />
+        <Route path="/customer-profile" element={<CustomerProfilePage />} />
+          <Route path="/customer/chat" element={
+            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+              <CustomerChatPage />
+            </ProtectedRoute>
+          } />
 
           {/* ===== Staff Routes ===== */}
           <Route
@@ -97,14 +113,7 @@ function App() {
             <Route path="payments/:scheduleId" element={<InvoiceDetailPage />} />
             <Route path="checkin" element={<CheckinPage />} />
             <Route path="inventory" element={<PartInventoryPage />} />
-            <Route
-              path="chat"
-              element={
-                <div style={{ padding: "2rem" }}>
-                  Chat khách hàng - Coming soon
-                </div>
-              }
-            />
+            <Route path="chat" element={<StaffChatPage />} />
           </Route>
 
           {/* ===== Admin Routes ===== */}
@@ -174,6 +183,18 @@ function App() {
           {/* ===== 404 Not Found ===== */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+
+        {/* Chat Widget - Chỉ hiện cho CUSTOMER */}
+        {isCustomer && <ChatWidget user={user} />}
+      </>
+    );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
       </Router>
     </AuthProvider>
   );
