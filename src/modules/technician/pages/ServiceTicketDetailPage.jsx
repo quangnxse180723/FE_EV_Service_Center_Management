@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getServiceTicketDetail } from '../services/technicianService';
+import { getServiceTicketDetail, confirmItemCompletion, completeSchedule } from '../services/technicianService';
 import styles from './ServiceTicketDetailPage.module.css';
 
 export default function ServiceTicketDetailPage() {
@@ -10,29 +10,58 @@ export default function ServiceTicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchTicketDetail = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Gọi API lấy chi tiết phiếu dịch vụ
-        console.log('🔍 Fetching ticket detail for ID:', ticketId);
-        const data = await getServiceTicketDetail(ticketId);
-        console.log('✅ Received ticket data:', data);
-        console.log('📋 Items in ticket:', data.items);
-        console.log('📊 Items length:', data.items?.length || 0);
-        setTicket(data);
-      } catch (err) {
-        console.error('❌ Failed to fetch service ticket detail:', err);
-        setError('Không thể tải thông tin phiếu dịch vụ. Vui lòng thử lại sau.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTicketDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Gọi API lấy chi tiết phiếu dịch vụ
+      console.log('🔍 Fetching ticket detail for ID:', ticketId);
+      const data = await getServiceTicketDetail(ticketId);
+      console.log('✅ Received ticket data:', data);
+      console.log('📋 Items in ticket:', data.items);
+      console.log('📊 Items length:', data.items?.length || 0);
+      setTicket(data);
+    } catch (err) {
+      console.error('❌ Failed to fetch service ticket detail:', err);
+      setError('Không thể tải thông tin phiếu dịch vụ. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTicketDetail();
   }, [ticketId]);
+  
+  // Xác nhận hoàn thành một item
+  const handleConfirmItem = async (itemId) => {
+    try {
+      await confirmItemCompletion(itemId);
+      alert('Đã xác nhận hoàn thành hạng mục!');
+      // Reload data
+      await fetchTicketDetail();
+    } catch (err) {
+      console.error('Error confirming item:', err);
+      alert('Lỗi khi xác nhận: ' + (err.response?.data?.message || err.message));
+    }
+  };
+  
+  // Xác nhận hoàn thành toàn bộ lịch hẹn
+  const handleCompleteSchedule = async () => {
+    if (!window.confirm('Bạn chắc chắn đã hoàn thành tất cả công việc?')) return;
+    
+    try {
+      await completeSchedule(ticketId);
+      alert('Đã xác nhận hoàn thành lịch hẹn!');
+      // Chuyển về trang danh sách phiếu dịch vụ
+      navigate('/technician/services');
+    } catch (err) {
+      console.error('Error completing schedule:', err);
+      alert('Lỗi khi xác nhận: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
 
   if (loading) {
     return <div className={styles['loading']}>Đang tải...</div>;
@@ -102,7 +131,6 @@ export default function ServiceTicketDetailPage() {
           <table className={styles['detail-table']}>
             <thead>
               <tr>
-                <th>STT</th>
                 <th>Mã vật tư</th>
                 <th>Tên phụ tùng</th>
                 <th>Giá vật tư (₫)</th>
@@ -120,7 +148,6 @@ export default function ServiceTicketDetailPage() {
                   
                   return (
                     <tr key={item.stt || index}>
-                      <td>{item.stt}</td>
                       <td>
                         <span className={styles['part-code']}>
                           {item.partCode || 'N/A'}
@@ -148,16 +175,23 @@ export default function ServiceTicketDetailPage() {
                         </span>
                       </td>
                       <td>
-                        <span className={styles['confirm-action']}>
-                          {item.confirmAction || '-'}
-                        </span>
+                        {item.processStatus !== 'DONE' && item.processStatus !== 'Hoàn thành' ? (
+                          <button 
+                            className={styles['confirm-btn']}
+                            onClick={() => handleConfirmItem(item.stt)}
+                          >
+                            Xác nhận
+                          </button>
+                        ) : (
+                          <span className={styles['completed-text']}>✓ Đã hoàn thành</span>
+                        )}
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
                     ⚠️ Chưa có hạng mục kiểm tra nào. Vui lòng kiểm tra xem lịch hẹn này đã được gán gói bảo dưỡng chưa.
                   </td>
                 </tr>
@@ -165,6 +199,16 @@ export default function ServiceTicketDetailPage() {
             </tbody>
           </table>
         </div>
+      </div>
+      
+      {/* Complete Schedule Button */}
+      <div className={styles['complete-section']}>
+        <button 
+          className={styles['complete-btn']}
+          onClick={handleCompleteSchedule}
+        >
+          Xác nhận hoàn tất bảo dưỡng
+        </button>
       </div>
     </div>
   );

@@ -147,29 +147,41 @@ export async function getOrCreateChecklist(scheduleId) {
     const response = await axiosClient.get(`/service-ticket/${scheduleId}/detail`);
     
     console.log('✅ Lấy checklist thật thành công:', response);
+    console.log('🔍 DEBUG: response.checklistId =', response.checklistId);
+    console.log('🔍 DEBUG: Full response keys:', Object.keys(response));
+    
     // response bây giờ có dạng:
-    // { customerName, vehicleName, licensePlate, appointmentDateTime, items: [...] }
+    // { checklistId, customerName, vehicleName, licensePlate, appointmentDateTime, items: [...] }
 
     // BƯỚC 2: Map dữ liệu backend sang format frontend (header, items)
     const header = {
+      checklistId: response.checklistId || null, // Lưu checklistId để gửi duyệt
+      scheduleId: scheduleId, // Fallback: lưu scheduleId nếu backend chưa trả checklistId
       owner: response.customerName,
       vehicle: response.vehicleName,
       license: response.licensePlate,
       dateTime: response.appointmentDateTime
     };
+    
+    // Log warning nếu không có checklistId
+    if (!response.checklistId) {
+      console.warn('⚠️ Backend chưa trả về checklistId! Cần thêm field này vào ServiceTicketDetailResponse');
+      console.warn('⚠️ Tạm thời sẽ dùng scheduleId để gửi duyệt (cần backend hỗ trợ)');
+    }
 
     const items = response.items.map((item, index) => ({
-      id: item.stt || index + 1, // Dùng stt (số thứ tự) làm ID
+      id: item.stt || index + 1, // Dùng stt (số thứ tự) làm ID hiển thị
+      itemId: item.itemId || null, // ✅ Lưu itemId để update
       name: item.partName || '',
       status: item.actionStatus || 'Kiểm tra', // actionStatus là "Thay thế", "Bôi trơn", ...
       
       // Lấy chi phí thật từ backend
-      // partCost: Giá gốc từ backend (sẽ được frontend tính +10% khi hiển thị)
-      partCost: item.materialCost || 0,
+      // partCost đã bao gồm +10% từ backend
+      partCost: item.partCost || 0,
       laborCost: item.laborCost || 0,
       
       // Lưu giá gốc để khôi phục khi cần (khi đổi status về "Thay thế")
-      originalPartCost: item.materialCost || 0, 
+      originalPartCost: item.partCost || 0, 
       originalLaborCost: item.laborCost || 0 
     }));
     
@@ -186,24 +198,77 @@ export async function getOrCreateChecklist(scheduleId) {
 }
 
 /**
+ * Cập nhật checklist items (lưu thay đổi giá, status)
+ * @param {number} scheduleId - ID của MaintenanceSchedule
+ * @param {Array} items - Danh sách items đã chỉnh sửa
+ */
+export async function updateChecklist(scheduleId, items) {
+  try {
+    console.log('🔵 Gọi update checklist API:', `/technician/checklist/${scheduleId}`);
+    console.log('🔍 DEBUG: items TRƯỚC KHI GỬI:', items);
+    
+    // Map items từ frontend sang format backend (UpdateChecklistRequest)
+    const payload = {
+      items: items.map(item => {
+        const mapped = {
+          itemId: item.itemId || null, // null nếu là item mới
+          partName: item.name,
+          status: item.status, // "Thay thế", "Kiểm tra", "Bôi trơn"
+          materialCost: item.partCost || 0, // Giá vật tư
+          laborCost: item.laborCost || 0 // Giá nhân công
+        };
+        
+        console.log(`🔍 Item "${item.name}":`, {
+          status: item.status,
+          partCost: item.partCost,
+          laborCost: item.laborCost,
+          '→ Gửi lên': mapped
+        });
+        
+        return mapped;
+      })
+    };
+    
+    console.log('🔍 DEBUG: payload GỬI LÊN BACKEND:', JSON.stringify(payload, null, 2));
+    
+    const response = await axiosClient.put(`/technician/checklist/${scheduleId}`, payload);
+    console.log('✅ Cập nhật checklist thành công:', response);
+    return response;
+
+  } catch (error) {
+    console.error('❌ Error updating checklist:', error);
+    console.error('❌ Error response:', error.response?.data);
+    throw error;
+  }
+}
+
+/**
  * Gửi biên bản cho khách hàng duyệt
+ * @param {number} scheduleId - ID của MaintenanceSchedule
  */
 export async function submitForApproval(scheduleId) {
   try {
     console.log('🔵 Gọi submit approval API:', `/technician/submit-for-approval/${scheduleId}`);
     
-    // TODO: Backend cần API này
-    // const response = await axiosClient.post(`/technician/submit-for-approval/${scheduleId}`);
-    // return response;
-
-    // ---- GIẢ LẬP ----
-    await new Promise(r => setTimeout(r, 100));
-    console.log('✅ (Giả lập) Gửi duyệt thành công cho:', scheduleId);
-    return { success: true };
-    // ---- HẾT GIẢ LẬP ----
+    const response = await axiosClient.post(`/technician/submit-for-approval/${scheduleId}`);
+    console.log('✅ Gửi duyệt thành công:', response);
+    return response;
 
   } catch (error) {
     console.error('❌ Error submitting for approval:', error);
+    console.error('❌ Error response:', error.response);
+    console.error('❌ Error data:', error.response?.data);
+    console.error('❌ Error status:', error.response?.status);
+    console.error('❌ Error message:', error.response?.data?.message || error.message);
+    
+    // Log thêm để debug
+    if (error.response?.status === 500) {
+      console.error('🔍 Backend Error 500 - Kiểm tra:');
+      console.error('   1. checklistId có tồn tại trong DB không?');
+      console.error('   2. Backend log có stack trace gì?');
+      console.error('   3. Checklist có đầy đủ dữ liệu (customer, items) không?');
+    }
+    
     throw error;
   }
 }
@@ -250,6 +315,38 @@ export async function getServiceTicketDetail(scheduleId) {
   } catch (error) {
     console.error('❌ Error fetching service ticket detail:', error);
     console.error('   API endpoint:', `/service-ticket/${scheduleId}/detail`);
+    throw error;
+  }
+}
+
+/**
+ * Xác nhận hoàn thành một hạng mục (set status = DONE)
+ * @param {number} itemId - ID của item
+ * @returns {Promise<void>}
+ */
+export async function confirmItemCompletion(itemId) {
+  try {
+    console.log('🔍 Confirming item completion:', itemId);
+    await axiosClient.put(`/service-ticket/item/${itemId}/confirm`);
+    console.log('✅ Item confirmed successfully');
+  } catch (error) {
+    console.error('❌ Error confirming item:', error);
+    throw error;
+  }
+}
+
+/**
+ * Xác nhận hoàn thành toàn bộ lịch hẹn (set status = COMPLETED)
+ * @param {number} scheduleId - ID của schedule
+ * @returns {Promise<void>}
+ */
+export async function completeSchedule(scheduleId) {
+  try {
+    console.log('🔍 Completing schedule:', scheduleId);
+    await axiosClient.put(`/service-ticket/${scheduleId}/complete`);
+    console.log('✅ Schedule completed successfully');
+  } catch (error) {
+    console.error('❌ Error completing schedule:', error);
     throw error;
   }
 }

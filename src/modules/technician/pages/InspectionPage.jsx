@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChecklistEditor from "../components/ChecklistEditor";
-import { getOrCreateChecklist, submitForApproval } from "../../technician/services/technicianService";
+import { getOrCreateChecklist, updateChecklist, submitForApproval } from "../../technician/services/technicianService";
 
 export default function InspectionPage() {
   const { recordId: paramId } = useParams();
@@ -12,6 +12,7 @@ export default function InspectionPage() {
 
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
+  const [checklistId, setChecklistId] = useState(null); // Lưu checklistId để gửi duyệt
 
   useEffect(() => {
     if (!scheduleId) return; // không có id thì chưa load
@@ -19,23 +20,58 @@ export default function InspectionPage() {
       const { header, items } = await getOrCreateChecklist(scheduleId);
       setHeader(header); 
       setItems(items);
+      setChecklistId(header.checklistId); // Lưu checklistId từ response
     })();
   }, [scheduleId]);
 
   const totals = useMemo(() => {
-    // Tính giá vật tư = partCost + 10%
+    // partCost đã bao gồm +10% từ backend
     const part = items.reduce((s,i)=>{
       const partCost = +i.partCost || 0;
-      const partPrice = partCost * 1.1; // Tăng 10%
-      return s + partPrice;
+      return s + partCost;
     }, 0);
     const labor= items.reduce((s,i)=>s+(+i.laborCost||0),0);
     return { part, labor, all: part+labor };
   }, [items]);
 
   const onSubmitApproval = async () => {
-    await submitForApproval(scheduleId);
-    alert("Đã gửi khách hàng duyệt!");
+    // Backend cần scheduleId, không phải checklistId
+    if (!scheduleId) {
+      alert("Không tìm thấy ID lịch hẹn!");
+      console.error('❌ Không có scheduleId');
+      return;
+    }
+    
+    console.log('🔍 DEBUG: Đang gửi duyệt với scheduleId:', scheduleId);
+    console.log('🔍 DEBUG: checklistId:', checklistId, '(chỉ để tham khảo)');
+    console.log('🔍 DEBUG: items hiện tại:', items);
+    
+    try {
+      // BƯỚC 1: Lưu thay đổi checklist trước (giá, status)
+      console.log('📝 BƯỚC 1: Lưu thay đổi checklist...');
+      await updateChecklist(scheduleId, items);
+      console.log('✅ BƯỚC 1: Đã lưu checklist thành công');
+      
+      // BƯỚC 2: Gửi duyệt cho khách hàng
+      console.log('📤 BƯỚC 2: Gửi duyệt cho khách hàng...');
+      await submitForApproval(scheduleId);
+      console.log('✅ BƯỚC 2: Đã gửi duyệt thành công');
+      
+      alert("Đã gửi khách hàng duyệt!");
+      navigate('/technician/services'); // Quay về danh sách
+    } catch (error) {
+      console.error('❌ Error submitting:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error data:', error.response?.data);
+      console.error('❌ Error message:', error.response?.data?.message);
+      
+      const errorMsg = error.response?.data?.message 
+        || error.response?.data?.error 
+        || error.message 
+        || 'Lỗi không xác định';
+      
+      alert("Lỗi khi gửi duyệt:\n" + errorMsg + "\n\nVui lòng kiểm tra log backend để biết chi tiết.");
+    }
   };
 
   // ⛳️ Trường hợp chưa có scheduleId → hiển thị hướng dẫn

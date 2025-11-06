@@ -1,32 +1,14 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import HeaderHome from '../components/layout/HeaderHome';
 import './HomePage.css';
 import heroImg from '../assets/img/hero_img.png';
 import logoImage from '../assets/img/logo.png';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { isLoggedIn, user, logout } = useAuth();
-  const [showAuthDropdown, setShowAuthDropdown] = useState(false);
-  const avatarRef = useRef(null);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    if (!showAuthDropdown) return;
-    function handleClickOutside(e) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target) &&
-        avatarRef.current &&
-        !avatarRef.current.contains(e.target)
-      ) {
-        setShowAuthDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showAuthDropdown]);
+  const { isLoggedIn } = useAuth();
 
   // Hàm xử lý khi click "Quản lý xe"
   const handleManageVehicles = () => {
@@ -49,52 +31,7 @@ export default function HomePage() {
   return (
     <div className="homepage-root">
       {/* Header */}
-      <header className="hf-header">
-        <div className="hf-header-inner">
-          <div className="hf-logo"> 
-            <img src={logoImage} alt="VOLTFIX Logo" className="logo-image" onClick={() => navigate('/')} />
-          </div>
-
-          <nav className="hf-nav">
-            <a className="nav-item active" onClick={() => navigate('/')}>Trang chủ</a>
-            <a className="nav-item" onClick={() => navigate('/booking')}>Đặt lịch</a>
-            <a className="nav-item">Bảng giá</a>
-            <a className="nav-item" onClick={() => navigate('/booking-history')}>Lịch sử</a>
-          </nav>
-
-          <div className="hf-actions">
-            <div className="icon-circle bell" title="Thông báo" />
-            <div
-              className="icon-circle avatar"
-              title="Tài khoản"
-              ref={avatarRef}
-              onClick={() => setShowAuthDropdown((v) => !v)}
-            />
-            <div className="icon-circle menu" title="Menu" />
-            {showAuthDropdown && (
-              <div className="auth-dropdown-root" ref={dropdownRef}>
-                <div className="auth-dropdown-menu">
-                  {isLoggedIn ? (
-                    <>
-                      <div className="auth-dropdown-item user-info">
-                        <strong>{user?.name || 'Người dùng'}</strong>
-                      </div>
-                      <a onClick={() => navigate('/my-vehicles')} className="auth-dropdown-item">Quản lý xe</a>
-                      <a onClick={() => navigate('/booking-history')} className="auth-dropdown-item">Lịch sử</a>
-                      <a onClick={logout} className="auth-dropdown-item">Đăng xuất</a>
-                    </>
-                  ) : (
-                    <>
-                      <a href="/login" className="auth-dropdown-item">Đăng nhập</a>
-                      <a href="/register" className="auth-dropdown-item">Đăng ký</a>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      <HeaderHome activeMenu="home" />
 
       {/* Hero Section */}
       <main className="hf-hero">

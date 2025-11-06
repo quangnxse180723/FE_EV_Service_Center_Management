@@ -21,11 +21,17 @@ import LoginPage from "./modules/auth/LoginPage";
 import RegisterPage from "./modules/auth/RegisterPage";
 
 // ===== Customer Pages =====
+import CustomerLayout from "./routes/CustomerLayout";
 import BookingPage from "./modules/customer/pages/BookingPage";
 import BookingHistoryPage from "./modules/customer/pages/BookingHistoryPage";
 import MyVehiclesPage from "./modules/customer/pages/MyVehiclesPage";
 import PaymentHistoryPage from "./modules/customer/pages/PaymentHistoryPage";
 import CustomerProfilePage from "./modules/customer/pages/CustomerProfilePage";
+import CustomerVehiclesPage from "./modules/customer/pages/CustomerVehiclesPage";
+import ApprovalPage from "./modules/customer/pages/ApprovalPage";
+import NotificationsPage from "./modules/customer/pages/NotificationsPage";
+import CustomerPaymentPage from "./modules/customer/pages/CustomerPaymentPage";
+import VNPayReturnPage from "./modules/customer/pages/VNPayReturnPage";
 
 // ===== Staff Layout & Pages =====
 import StaffLayout from "./modules/staff/layout/StaffLayout";
@@ -56,6 +62,7 @@ import AssignedJobsPage from "./modules/technician/pages/AssignedJobsPage";
 import InspectionPage from "./modules/technician/pages/InspectionPage";
 import ServiceTicketsPage from "./modules/technician/pages/ServiceTicketsPage";
 import ServiceTicketDetailPage from "./modules/technician/pages/ServiceTicketDetailPage";
+import TechnicianNotificationsPage from "./modules/technician/pages/TechnicianNotificationsPage";
 
 // ===== Styles =====
 import "./App.css";
@@ -71,11 +78,25 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* ===== Customer Routes ===== */}
+          <Route path="/customer" element={<CustomerLayout />}>
+            <Route path="dashboard" element={<BookingPage />} />
+            <Route path="booking" element={<BookingPage />} />
+            <Route path="booking-history" element={<BookingHistoryPage />} />
+            <Route path="payment-history" element={<PaymentHistoryPage />} />
+            <Route path="profile" element={<CustomerProfilePage />} />
+            <Route path="vehicles" element={<CustomerVehiclesPage />} />
+            <Route path="approvals/:scheduleId" element={<ApprovalPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+          </Route>
+          
+          {/* Customer standalone routes (không dùng layout) */}
           <Route path="/booking" element={<BookingPage />} />
           <Route path="/booking-history" element={<BookingHistoryPage />} />
           <Route path="/my-vehicles" element={<MyVehiclesPage />} />
           <Route path="/payment-history" element={<PaymentHistoryPage />} />
           <Route path="/customer-profile" element={<CustomerProfilePage />} />
+          <Route path="/customer/payment/:scheduleId" element={<CustomerPaymentPage />} />
+          <Route path="/customer/payment/vnpay-return" element={<VNPayReturnPage />} />
 
           {/* ===== Staff Routes ===== */}
           <Route
@@ -168,6 +189,7 @@ function App() {
             <Route path="inspection/:recordId" element={<InspectionPage />} />
             <Route path="services" element={<ServiceTicketsPage />} />
             <Route path="services/:ticketId" element={<ServiceTicketDetailPage />} />
+            <Route path="notifications" element={<TechnicianNotificationsPage />} />
             <Route path="maintenance-list" element={<div style={{ padding: '2rem' }}>Danh sách bảo dưỡng - Coming soon</div>} />
           </Route>
 

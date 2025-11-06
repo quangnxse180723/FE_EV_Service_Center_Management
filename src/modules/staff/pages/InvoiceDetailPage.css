@@ -1,86 +1,313 @@
+/* Xóa bỏ CSS cũ, thay thế bằng CSS mới này */
 .invoice-detail-page {
   padding: 2rem;
   background: #f4f6f8;
   min-height: 100vh;
+  font-family: Arial, sans-serif;
 }
 
-.invoice-detail-content {
-  background: #fff;
-  padding: 32px 40px;
-  border-radius: 12px;
+.invoice-detail-loading,
+.invoice-detail-page .error-message {
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 3rem;
+  color: #555;
+}
+
+.invoice-detail-page .error-message {
+  color: #d9534f;
+}
+
+.btn-back-main {
+  background: #f0e68c; /* Màu vàng nhạt của nút "Trở lại" */
+  color: #333;
+  border: 1px solid #ddd673;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  position: absolute;
+  top: 90px; /* Điều chỉnh vị trí */
+  right: 4rem;
+}
+
+.btn-back-main:hover {
+  background: #e9de7a;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.main-title {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.invoice-error-message,
+.invoice-success-message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.invoice-error-message {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.invoice-success-message {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.invoice-summary-card {
+  background: #e9ecef; /* Màu nền xám nhạt của card */
+  padding: 2rem 2.5rem;
+  border-radius: 8px;
   max-width: 800px;
-  margin: 0 auto;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  /* margin: 0 auto; */ /* Bỏ auto để căn lề trái */
+  margin-left: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #dee2e6;
 }
 
-.invoice-detail-content h3 {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 2rem;
-    color: #333;
+.info-group {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: #212529;
 }
 
-.invoice-info {
-  margin-bottom: 24px;
-  font-size: 1.1em;
-  line-height: 2;
+.info-label {
+  font-weight: 600;
+  width: 180px; /* Cố định chiều rộng label */
+  flex-shrink: 0;
 }
 
-.btn-detail {
-  background: #2979ff;
-  color: #fff;
+.info-value {
+  font-weight: 500;
+}
+
+.info-total {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #adb5bd;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #0056b3;
+}
+
+.btn-detail-inline {
+  background: #007bff;
+  color: white;
   border: none;
-  padding: 4px 16px;
+  padding: 0.3rem 1rem;
   border-radius: 4px;
-  margin-left: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-detail-inline:hover {
+  background: #0056b3;
+}
+
+.payment-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-payment-method {
+  background: #007bff; /* Màu xanh của nút */
+  color: white;
+  border: 2px solid #007bff;
+  padding: 0.3rem 1rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
 }
 
-.btn-method {
-  background: #3d5afe;
-  color: #fff;
-  border: none;
-  padding: 4px 16px;
-  border-radius: 4px;
-  margin: 0 8px;
-  cursor: pointer;
+.btn-payment-method:not(.selected) {
+  background: #f8f9fa;
+  color: #007bff;
+  border-color: #007bff;
 }
 
-.btn-method.selected {
-  background: #1a237e;
+.btn-payment-method:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-payment-method.selected {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #007bff;
+}
+
+.status-tag {
+  font-weight: 700;
+  padding: 0.3rem 1rem;
+  border-radius: 4px;
+}
+
+.status-paid {
+  background: #28a745;
+  color: white;
+}
+
+.status-waiting {
+  background: #ffc107;
+  color: #333;
+}
+
+.invoice-actions {
+  margin-top: 2rem;
+}
+
+.btn-action {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-send {
-  background: #2979ff;
-  color: #fff;
-  border: none;
-  padding: 12px 32px;
-  border-radius: 4px;
-  font-size: 1.1em;
-  margin-top: 18px;
-  cursor: pointer;
+  background: #007bff;
+  color: white;
+}
+.btn-send:hover:not(:disabled) {
+  background: #0056b3;
+}
+.btn-send:disabled {
+  background: #6c757d;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-confirm-payment {
+  background: #ffc107;
+  color: #333;
+}
+.btn-confirm-payment:hover {
+  background: #e0a800;
+}
+
+.btn-print {
+  background: #28a745;
+  color: white;
+}
+.btn-print:hover {
+  background: #218838;
+}
+
+/* Modal Styles */
+.invoice-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.invoice-modal-content {
+  background: white;
+  border-radius: 8px;
   width: 100%;
+  max-width: 900px; /* Rộng hơn để chứa bảng */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  animation: modal-fade-in 0.3s ease;
 }
 
-.btn-print-green {
-  background: #00c853;
-  color: #fff;
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.invoice-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.invoice-modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.invoice-modal-close {
+  background: none;
   border: none;
-  padding: 10px 32px;
-  border-radius: 4px;
-  font-size: 1.1em;
-  margin-top: 18px;
+  font-size: 2rem;
+  color: #6c757d;
   cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
 }
 
-.btn-back {
-    background: #6c757d;
-    color: #fff;
-    border: none;
-    padding: 10px 32px;
-    border-radius: 4px;
-    font-size: 1.1em;
-    margin-top: 18px;
-    cursor: pointer;
-    margin-left: 1rem;
+.invoice-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Checklist Table (Hình 2) */
+.checklist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.checklist-table th,
+.checklist-table td {
+  border: 1px solid #adb5bd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.checklist-table th {
+  background: #f4f6f8;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.checklist-table td {
+  background: #fff;
+  color: #212529;
+}
+
+.checklist-table td:nth-child(1),
+.checklist-table td:nth-child(3),
+.checklist-table td:nth-child(4),
+.checklist-table td:nth-child(5) {
+  text-align: center;
+}
+
+.checklist-table td:nth-child(3),
+.checklist-table td:nth-child(4) {
+  text-align: right;
+  font-family: 'Courier New', Courier, monospace;
 }

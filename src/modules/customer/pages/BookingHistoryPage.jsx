@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import HeaderHome from '../../../components/layout/HeaderHome';
+import MaintenanceReportModal from '../components/MaintenanceReportModal';
 import './BookingHistoryPage.css';
-import logoImage from '/src/assets/img/logo.png';
-import defaultAvatar from '/src/assets/img/user-avatar.jpg'; // Ảnh của bạn
+import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
 import centerApi from '../../../api/centerApi';
 import customerApi from '../../../api/customerApi';
@@ -33,6 +34,10 @@ export default function BookingHistoryPage() {
   const [isEditMode, setIsEditMode] = useState(false); // Chế độ chỉnh sửa
   const [editedUserInfo, setEditedUserInfo] = useState({}); // Data đang chỉnh sửa
   const [centersCache, setCentersCache] = useState(null); // Cache centers để tránh gọi API nhiều lần
+  
+  // ✅ State cho Maintenance Report Modal
+  const [selectedScheduleId, setSelectedScheduleId] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Fetch booking history khi component mount
   useEffect(() => {
@@ -433,104 +438,7 @@ export default function BookingHistoryPage() {
 
   return (
     <div className="booking-history-page">
-      <header className="hf-header">
-        <div className="hf-header-inner">
-          <div className="hf-logo"> 
-            <img src={logoImage} alt="VOLTFIX Logo" className="logo-image" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} />
-          </div>
-
-          <nav className="hf-nav">
-            <a className="nav-item" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
-            <a className="nav-item" onClick={() => navigate('/booking')} style={{ cursor: 'pointer' }}>Đặt lịch</a>
-            <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
-            <a className="nav-item active" style={{ cursor: 'pointer' }}>Lịch sử</a>
-          </nav>
-
-          <div className="hf-actions">
-            <div className="icon-circle bell" title="Thông báo" />
-            <div className="user-menu-container">
-              <div 
-                className="icon-circle avatar" 
-                title="Tài khoản" 
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              />
-              {isUserMenuOpen && (
-                <div className="user-dropdown">
-                  <div className="user-dropdown-header">
-                    <div className="user-avatar-small">
-                      <img src={userInfo.avatar} alt="Avatar" />
-                    </div>
-                    <div className="user-info-dropdown">
-                      <div className="user-name">{userInfo.name}</div>
-                      <div className="user-id-small">KH00{userInfo.id}</div>
-                    </div>
-                  </div>
-                  <div className="user-dropdown-divider"></div>
-                  <div className="user-dropdown-menu">
-                    <a className="user-dropdown-item" onClick={() => { setIsCustomerInfoModalOpen(true); setIsUserMenuOpen(false); }}>
-                      <span className="dropdown-icon">👤</span>
-                      Thông tin khách hàng
-                    </a>
-                    <a className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
-                      <span className="dropdown-icon">🔧</span>
-                      Kiểm tra định kỳ
-                    </a>
-                    <a className="user-dropdown-item" onClick={() => { navigate('/my-vehicles'); setIsUserMenuOpen(false); }}>
-                      <span className="dropdown-icon">🚗</span>
-                      Quản lý xe
-                    </a>
-                    <a className="user-dropdown-item" onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate('/payment-history');
-                    }}>
-                      <span className="dropdown-icon">💳</span>
-                      Lịch sử thanh toán
-                    </a>
-                    <div className="user-dropdown-divider"></div>
-                    <a className="user-dropdown-item logout" onClick={() => setIsUserMenuOpen(false)}>
-                      <span className="dropdown-icon">🚪</span>
-                      Đăng xuất
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div 
-              className="icon-circle menu mobile-menu-toggle" 
-              title="Menu" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="mobile-menu">
-            <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)} />
-            <div className="mobile-menu-content">
-              <a className="mobile-nav-item" onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}>
-                🏠 Trang chủ
-              </a>
-              <a className="mobile-nav-item" onClick={() => { navigate('/booking'); setIsMobileMenuOpen(false); }}>
-                📅 Đặt lịch
-              </a>
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                💰 Bảng giá
-              </a>
-              <a className="mobile-nav-item active">
-                📋 Lịch sử
-              </a>
-              <div className="mobile-menu-divider" />
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                🔔 Thông báo
-              </a>
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                👤 Tài khoản
-              </a>
-            </div>
-          </div>
-        )}
-      </header>
+      <HeaderHome activeMenu="history" />
 
       <main className="booking-history-main">
         <div className="booking-history-container">
@@ -581,6 +489,7 @@ export default function BookingHistoryPage() {
                     <th>Trung tâm đặt lịch</th>
                     <th>Thời gian</th>
                     <th>Trạng thái</th>
+                    <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -611,6 +520,25 @@ export default function BookingHistoryPage() {
                         <span className={`status-badge ${getStatusColor(booking.status)}`}>
                           {getStatusText(booking.status)}
                         </span>
+                      </td>
+                      <td>
+                        {/* ✅ Chỉ hiển thị nút "Chi tiết" cho các trạng thái đã có biên bản */}
+                        {['APPROVED', 'IN_PROGRESS', 'WAITING_APPROVE', 'COMPLETED'].includes(booking.status) ? (
+                          <button 
+                            className="btn-view-report"
+                            onClick={() => {
+                              setSelectedScheduleId(booking.id);
+                              setIsReportModalOpen(true);
+                            }}
+                            title="Xem biên bản sửa chữa"
+                          >
+                            Chi tiết
+                          </button>
+                        ) : (
+                          <span style={{color: '#9ca3af', fontSize: '0.875rem', fontStyle: 'italic'}}>
+                            Chưa có
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -765,6 +693,17 @@ export default function BookingHistoryPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ✅ Maintenance Report Modal */}
+      {isReportModalOpen && selectedScheduleId && (
+        <MaintenanceReportModal
+          scheduleId={selectedScheduleId}
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setSelectedScheduleId(null);
+          }}
+        />
       )}
     </div>
   );

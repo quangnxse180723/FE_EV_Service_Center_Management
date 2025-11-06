@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import HeaderHome from '../../../components/layout/HeaderHome';
 import './BookingPage.css';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
-import logoImage from '/src/assets/img/logo.png';
 import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
 import vehicleApi from '../../../api/vehicleApi';
@@ -660,130 +660,7 @@ export default function BookingPage() {
 
   return (
     <div className="booking-page">
-      <header className="hf-header">
-        <div className="hf-header-inner">
-          <div className="hf-logo"> 
-            <img src={logoImage} alt="VOLTFIX Logo" className="logo-image" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} />
-          </div>
-
-          <nav className="hf-nav">
-            <a className="nav-item" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Trang chủ</a>
-            <a className="nav-item active">Đặt lịch</a>
-            <a className="nav-item" style={{ cursor: 'pointer' }}>Bảng giá</a>
-            <a className="nav-item" onClick={() => navigate('/booking-history')} style={{ cursor: 'pointer' }}>Lịch sử</a>
-          </nav>
-
-          <div className="hf-actions">
-            <div 
-              className="icon-circle bell" 
-              title="Thông báo"
-              onClick={() => setIsNotificationModalOpen(true)}
-            >
-              🔔
-              <span className="notification-badge">3</span>
-            </div>
-            <div className="user-menu-container">
-              <div 
-                className="icon-circle avatar" 
-                title={isLoggedIn ? userInfo.name : "Tài khoản"}
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              />
-              {isUserMenuOpen && (
-                <div className="user-dropdown">
-                  {isLoggedIn ? (
-                    <>
-                    <div className="user-dropdown-header">
-                      <div className="user-avatar-small">
-                        <img src={userInfo.avatar || defaultAvatar} alt="User Avatar" />
-                      </div>
-                      <div className="user-info-dropdown">
-                        <div className="user-name">{userInfo.name}</div>
-                        <div className="user-id-small">{userInfo.phone}</div>
-                      </div>
-                    </div>
-                      <div className="user-dropdown-divider"></div>
-                      <div className="user-dropdown-menu">
-                        <a className="user-dropdown-item" onClick={() => { setIsCustomerInfoModalOpen(true); setIsUserMenuOpen(false); }}>
-                          <span className="dropdown-icon">👤</span>
-                          Thông tin khách hàng
-                        </a>
-                        <a className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
-                          <span className="dropdown-icon">🔧</span>
-                          Kiểm tra định kỳ
-                        </a>
-                        <a className="user-dropdown-item" onClick={() => {
-                          setIsUserMenuOpen(false);
-                          navigate('/my-vehicles');
-                        }}>
-                          <span className="dropdown-icon">🚗</span>
-                          Quản lý xe
-                        </a>
-                        <a className="user-dropdown-item" onClick={() => {
-                          setIsUserMenuOpen(false);
-                          navigate('/payment-history');
-                        }}>
-                          <span className="dropdown-icon">💳</span>
-                          Lịch sử thanh toán
-                        </a>
-                        <div className="user-dropdown-divider"></div>
-                        <a className="user-dropdown-item logout" onClick={() => setIsUserMenuOpen(false)}>
-                          <span className="dropdown-icon">🚪</span>
-                          Đăng xuất
-                        </a>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="auth-dropdown-menu">
-                      <a className="auth-dropdown-item" onClick={() => { navigate('/login'); setIsUserMenuOpen(false); }}>
-                        Đăng nhập
-                      </a>
-                      <a className="auth-dropdown-item" onClick={() => { navigate('/register'); setIsUserMenuOpen(false); }}>
-                        Đăng ký
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div 
-              className="icon-circle menu mobile-menu-toggle" 
-              title="Menu" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="mobile-menu">
-            <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)} />
-            <div className="mobile-menu-content">
-              <a className="mobile-nav-item" onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}>
-                🏠 Trang chủ
-              </a>
-              <a className="mobile-nav-item active">
-                📅 Đặt lịch
-              </a>
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                💰 Bảng giá
-              </a>
-              <a className="mobile-nav-item" onClick={() => { navigate('/booking-history'); setIsMobileMenuOpen(false); }}>
-                📋 Lịch sử
-              </a>
-              <div className="mobile-menu-divider" />
-              <a className="mobile-nav-item" onClick={() => {
-                setIsMobileMenuOpen(false);
-                setIsNotificationModalOpen(true);
-              }}>
-                🔔 Thông báo
-              </a>
-              <a className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                👤 Tài khoản
-              </a>
-            </div>
-          </div>
-        )}
-      </header>
+      <HeaderHome activeMenu="booking" />
 
       <main className="booking-main">
         <div className="booking-container">

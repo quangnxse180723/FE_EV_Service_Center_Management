@@ -6,12 +6,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 0 20px;
+  gap: 12px;
 }
 
 .userInfo {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
 }
 
 .avatar {
@@ -57,4 +59,30 @@
 .bellBtn:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
+}
+
+.viewAllBtn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.viewAllBtn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+@media (max-width: 768px) {
+  .viewAllBtn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
 }

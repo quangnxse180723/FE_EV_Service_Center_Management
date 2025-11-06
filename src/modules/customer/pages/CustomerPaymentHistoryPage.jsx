@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './PaymentHistoryPage.css';
 import paymentApi from '../../../api/paymentApi';
+import './CustomerPaymentHistoryPage.css';
 
-export default function PaymentHistoryPage() {
+const CustomerPaymentHistoryPage = () => {
   const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // User info - lấy customerId từ localStorage (không phải userId!)
-  const customerId = localStorage.getItem('customerId');
 
   useEffect(() => {
     fetchPaymentHistory();
@@ -19,37 +16,25 @@ export default function PaymentHistoryPage() {
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      if (!customerId || customerId === 'null' || customerId === 'undefined') {
+      const customerId = localStorage.getItem('userId');
+      
+      if (!customerId) {
+        setError('Không tìm thấy thông tin người dùng');
         setLoading(false);
-        throw new Error('Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.');
+        return;
       }
 
-      // Gọi API lấy payment history từ database
-      console.log('🔍 Fetching payment history for customerId:', customerId);
       const response = await paymentApi.getCustomerPaymentHistory(customerId);
       
-      console.log('📦 Raw API response:', response);
-      
-      // Response có thể là response.data hoặc response.data.data
-      let paymentsData = [];
-      if (Array.isArray(response)) {
-        paymentsData = response;
-      } else if (Array.isArray(response?.data)) {
-        paymentsData = response.data;
-      } else if (Array.isArray(response?.data?.data)) {
-        paymentsData = response.data.data;
-      }
-      
-      console.log('✅ Payments loaded from database:', paymentsData);
-      
-      setPayments(paymentsData);
-      setLoading(false);
+      // Response trả về data.data hoặc data
+      const paymentData = response.data?.data || response.data || [];
+      setPayments(paymentData);
+      setError(null);
     } catch (err) {
-      console.error('❌ Error loading payment history:', err);
-      setError(err.message || 'Không thể tải lịch sử thanh toán. Vui lòng thử lại.');
+      console.error('Error fetching payment history:', err);
+      setError(err.response?.data?.message || 'Không thể tải lịch sử thanh toán');
       setPayments([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -85,11 +70,11 @@ export default function PaymentHistoryPage() {
   };
 
   const handleViewInvoice = (payment) => {
-    // Điều hướng đến trang chi tiết hóa đơn
-    if (payment.scheduleId) {
+    // Điều hướng đến trang chi tiết hóa đơn hoặc mở modal
+    if (payment.invoiceId) {
+      navigate(`/customer/invoice/${payment.invoiceId}`);
+    } else if (payment.scheduleId) {
       navigate(`/customer/payment/${payment.scheduleId}`);
-    } else if (payment.invoiceId) {
-      navigate(`/customer/payment/${payment.invoiceId}`);
     }
   };
 
@@ -145,12 +130,12 @@ export default function PaymentHistoryPage() {
               </tr>
             </thead>
             <tbody>
-              {payments.map((payment, index) => (
-                <tr key={payment.paymentId || payment.scheduleId || index}>
+              {payments.map((payment) => (
+                <tr key={payment.paymentId}>
                   <td>{payment.customerName || 'Customer'}</td>
-                  <td>{payment.vehicleName || payment.vehicleModel || 'N/A'}</td>
+                  <td>{payment.vehicleModel || payment.vehicleName || 'N/A'}</td>
                   <td>{payment.licensePlate || payment.vehiclePlate || 'N/A'}</td>
-                  <td>{formatDateTime(payment.scheduledDate || payment.appointmentTime || payment.scheduleTime || payment.createdAt)}</td>
+                  <td>{formatDateTime(payment.appointmentTime || payment.scheduleTime || payment.createdAt)}</td>
                   <td>{getStatusBadge(payment.status || payment.paymentStatus)}</td>
                   <td>
                     <button 
@@ -168,4 +153,6 @@ export default function PaymentHistoryPage() {
       )}
     </div>
   );
-}
+};
+
+export default CustomerPaymentHistoryPage;

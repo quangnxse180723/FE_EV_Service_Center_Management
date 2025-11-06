@@ -1,0 +1,437 @@
+/* Modal Overlay - Đè lên trang hiện tại */
+.customer-payment-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* Higher than notification modal (9999) */
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.payment-modal {
+  position: relative;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.btn-close-modal:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.payment-modal h2 {
+  font-size: 20px;
+  margin-bottom: 25px;
+  color: #333;
+  text-align: center;
+  padding-right: 40px;
+}
+
+.payment-info,
+.cost-info {
+  margin: 20px 0;
+}
+
+.info-row,
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  padding: 8px 0;
+}
+
+.info-row .label,
+.cost-row .label {
+  font-weight: 600;
+  color: #666;
+}
+
+.info-row .value,
+.cost-row .value {
+  color: #333;
+  font-weight: 500;
+}
+
+.checklist-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  padding: 12px 0;
+}
+
+.checklist-section .label {
+  font-weight: 600;
+  color: #666;
+}
+
+.btn-view-checklist {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-view-checklist:hover {
+  background: #0056b3;
+}
+
+.payment-method-section {
+  margin: 25px 0;
+}
+
+.payment-method-section .label {
+  display: block;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.payment-methods {
+  display: flex;
+  gap: 15px;
+}
+
+.payment-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid #007bff;
+  background: white;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.payment-btn:hover {
+  background: #e6f2ff;
+}
+
+.payment-btn.selected {
+  background: #007bff;
+  color: white;
+}
+
+.payment-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-confirm-payment {
+  width: 100%;
+  padding: 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background 0.3s;
+}
+
+.btn-confirm-payment:hover {
+  background: #0056b3;
+}
+
+.btn-confirm-payment:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Checklist Modal Inner - Inside payment modal */
+.checklist-modal-inner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.checklist-modal {
+  background: white;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.checklist-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.checklist-table th,
+.checklist-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.checklist-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.checklist-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.checklist-table tbody tr.unchecked-row {
+  opacity: 0.5;
+  background: #f9f9f9;
+  text-decoration: line-through;
+}
+
+.modal-note {
+  padding: 10px;
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #856404;
+}
+
+.cost-row-note {
+  text-align: right;
+  margin-top: 5px;
+  color: #666;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+}
+
+.loading,
+.error-message {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-message {
+  color: #dc3545;
+}
+
+.loading-modal,
+.error-modal {
+  max-width: 400px;
+  padding: 40px;
+  text-align: center;
+}
+
+.btn-back {
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-back:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+/* ===== Modal xem chi tiết biên bản ===== */
+.invoice-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001; /* Higher than other modals */
+  padding: 20px;
+}
+
+.invoice-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.invoice-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 2px solid #e5e7eb;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.invoice-modal-header h3 {
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.invoice-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 32px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.invoice-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.invoice-modal-body {
+  padding: 30px;
+}
+
+.invoice-error-message {
+  color: #ef4444;
+  font-size: 16px;
+  padding: 20px;
+  text-align: center;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
