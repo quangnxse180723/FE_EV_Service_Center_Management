@@ -186,6 +186,42 @@
   cursor: not-allowed;
 }
 
+/* ✅ Payment Method Read-only (Đã thanh toán) */
+.payment-method-readonly {
+  padding: 12px 20px;
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.payment-method-value {
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* ✅ Payment Completed Notice */
+.payment-completed-notice {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 20px;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.payment-completed-notice::before {
+  content: '✓ ';
+  font-size: 20px;
+  margin-right: 8px;
+}
+
 /* Checklist Modal Inner - Inside payment modal */
 .checklist-modal-inner-overlay {
   position: fixed;

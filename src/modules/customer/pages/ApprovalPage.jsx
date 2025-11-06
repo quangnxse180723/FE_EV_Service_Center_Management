@@ -94,7 +94,7 @@ export default function ApprovalPage() {
       await axiosClient.put(`/maintenance-checklists/${checklistId}/approve`, payload);
       
       alert('✅ Đã phê duyệt biên bản kiểm tra!');
-      navigate('/customer/bookings'); // Quay về lịch sử đặt lịch
+      navigate('/customer/booking-history'); // ✅ Quay về trang lịch sử đặt lịch
     } catch (error) {
       console.error('❌ Error approving:', error);
       alert('Lỗi khi phê duyệt: ' + (error.response?.data?.message || error.message));

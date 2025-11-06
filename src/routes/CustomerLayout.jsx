@@ -45,40 +45,12 @@ const CustomerLayout = () => {
 
   return (
     <div className="customer-layout">
-      {/* Header with hamburger menu */}
-      <header className="customer-header">
-        <button className="hamburger-btn" onClick={toggleSidebar}>
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <h1 className="header-title">EV Service Center</h1>
-      </header>
+      
 
       {/* Overlay when sidebar is open */}
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
       )}
-
-      {/* Sidebar */}
-      <aside className={`customer-sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h2>Menu</h2>
-          <button className="close-sidebar-btn" onClick={toggleSidebar}>×</button>
-        </div>
-        <nav className="sidebar-nav">
-          {menuItems.map(item => (
-            <button
-              key={item.id}
-              className={`menu-item ${location.pathname === item.path ? 'active' : ''}`}
-              onClick={() => handleMenuClick(item.path)}
-            >
-              <span className="menu-icon">{item.icon}</span>
-              <span className="menu-label">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-      </aside>
 
       {/* Main content */}
       <main className="customer-main">

@@ -38,6 +38,11 @@ const paymentApi = {
   getAllPaymentsForManagement: () => {
     return axiosClient.get('/payments/management');
   },
+
+  // Tạo VNPay payment URL
+  createVNPayPayment: (paymentData) => {
+    return axiosClient.post('/payment/vnpay/create', paymentData);
+  },
 };
 
 export default paymentApi;

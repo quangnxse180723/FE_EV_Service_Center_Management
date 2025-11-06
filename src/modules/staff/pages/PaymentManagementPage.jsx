@@ -47,10 +47,13 @@ const PaymentManagementPage = () => {
               <td>{payment.licensePlate}</td>
               <td>{payment.scheduledDate}</td>
               <td>
-                {payment.status === 'PAID' ? (
-                  <span className="status-paid">Đã thanh toán</span>
+                {/* ✅ Hiển thị status từ invoice (backend đã map) */}
+                {payment.status === 'Đã thanh toán' || 
+                 payment.status === 'PAID' || 
+                 payment.status === 'COMPLETED' ? (
+                  <span className="status-paid">{payment.status}</span>
                 ) : (
-                  <span className="status-waiting">Chờ thanh toán</span>
+                  <span className="status-waiting">{payment.status || 'Chờ thanh toán'}</span>
                 )}
               </td>
               <td>

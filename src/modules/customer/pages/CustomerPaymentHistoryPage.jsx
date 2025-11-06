@@ -120,7 +120,7 @@ const CustomerPaymentHistoryPage = () => {
         <div className="table-wrapper">
           <table className="payment-history-table">
             <thead>
-              <tr>
+              <tr className="table-header-row">
                 <th>Khách hàng</th>
                 <th>Xe</th>
                 <th>Biển số xe</th>

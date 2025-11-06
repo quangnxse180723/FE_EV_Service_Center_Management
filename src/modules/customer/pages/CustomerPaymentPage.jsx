@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import staffApi from '../../../api/staffApi';
+import paymentApi from '../../../api/paymentApi';
 import './CustomerPaymentPage.css';
 import { getServiceTicketDetail } from '../../technician/services/technicianService'; 
 import './CustomerPaymentPage.css';
@@ -50,6 +51,11 @@ const CustomerPaymentPage = ({ scheduleId: propScheduleId, onClose }) => {
     }
   };
 
+  // ✅ Kiểm tra xem đã thanh toán chưa
+  const isPaid = invoiceData?.paymentStatus && 
+    (invoiceData.paymentStatus !== 'Chờ thanh toán' && 
+     invoiceData.paymentStatus !== 'Chưa thanh toán');
+
   const handleConfirmPayment = async () => {
     if (!selectedPaymentMethod) {
       alert('Vui long chon hinh thuc thanh toan');
@@ -84,25 +90,13 @@ const CustomerPaymentPage = ({ scheduleId: propScheduleId, onClose }) => {
 
   const initiateVNPayPayment = async () => {
     try {
-      // Call backend API để tạo VNPay payment URL
-      const response = await fetch('/api/payment/vnpay/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          scheduleId: parseInt(scheduleId),
-          amount: invoiceData.totalCost,
-          orderInfo: `Thanh toan hoa don bao duong - Schedule ${scheduleId}`,
-        }),
+      // Call backend API để tạo VNPay payment URL với JWT token tự động
+      const data = await paymentApi.createVNPayPayment({
+        scheduleId: parseInt(scheduleId),
+        amount: invoiceData.totalCost,
+        orderInfo: `Thanh toan hoa don bao duong - Schedule ${scheduleId}`,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create payment URL');
-      }
-      
-      const data = await response.json();
       console.log('VNPay payment URL:', data);
       return data.paymentUrl;
     } catch (err) {
@@ -219,32 +213,52 @@ const CustomerPaymentPage = ({ scheduleId: propScheduleId, onClose }) => {
         </div>
 
         <div className="payment-method-section">
-          <span className="label">Hinh thuc thanh toan:</span>
-          <div className="payment-methods">
-            <button
-              className={`payment-btn ${selectedPaymentMethod === 'BANK' ? 'selected' : ''}`}
-              onClick={() => setSelectedPaymentMethod('BANK')}
-              disabled={processingPayment}
-            >
-              Ngân hàng
-            </button>
-            <button
-              className={`payment-btn ${selectedPaymentMethod === 'CASH' ? 'selected' : ''}`}
-              onClick={() => setSelectedPaymentMethod('CASH')}
-              disabled={processingPayment}
-            >
-              Tiền mặt
-            </button>
-          </div>
+          <span className="label">Hình thức thanh toán:</span>
+          {isPaid ? (
+            // ✅ Đã thanh toán → Hiển thị read-only
+            <div className="payment-method-readonly">
+              <span className="payment-method-value">
+                {invoiceData.paymentStatus}
+              </span>
+            </div>
+          ) : (
+            // ✅ Chưa thanh toán → Cho phép chọn
+            <div className="payment-methods">
+              <button
+                className={`payment-btn ${selectedPaymentMethod === 'BANK' ? 'selected' : ''}`}
+                onClick={() => setSelectedPaymentMethod('BANK')}
+                disabled={processingPayment}
+              >
+                Ngân hàng
+              </button>
+              <button
+                className={`payment-btn ${selectedPaymentMethod === 'CASH' ? 'selected' : ''}`}
+                onClick={() => setSelectedPaymentMethod('CASH')}
+                disabled={processingPayment}
+              >
+                Tiền mặt
+              </button>
+            </div>
+          )}
         </div>
 
-        <button 
-          className="btn-confirm-payment"
-          onClick={handleConfirmPayment}
-          disabled={!selectedPaymentMethod || processingPayment}
-        >
-          {processingPayment ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
-        </button>
+        {/* ✅ Chỉ hiển thị nút xác nhận nếu CHƯA thanh toán */}
+        {!isPaid && (
+          <button 
+            className="btn-confirm-payment"
+            onClick={handleConfirmPayment}
+            disabled={!selectedPaymentMethod || processingPayment}
+          >
+            {processingPayment ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+          </button>
+        )}
+
+        {/* ✅ Hiển thị thông báo nếu ĐÃ thanh toán */}
+        {isPaid && (
+          <div className="payment-completed-notice">
+            ✓ Đã thanh toán thành công
+          </div>
+        )}
 
         {/* ✅ Modal xem chi tiết biên bản (không có checkbox) */}
         {showDetailModal && (

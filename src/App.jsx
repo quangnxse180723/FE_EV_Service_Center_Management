@@ -11,6 +11,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 // ===== Components =====
 import ProtectedRoute from "./components/ProtectedRoute";
+import ChatWidget from "./components/chat-widget/ChatWidget";
+import StaffChatWidget from "./components/chat-widget/StaffChatWidget";
 
 // ===== Public Pages =====
 import HomePage from "./pages/HomePage";
@@ -66,11 +68,15 @@ import TechnicianNotificationsPage from "./modules/technician/pages/TechnicianNo
 
 // ===== Styles =====
 import "./App.css";
+import { useAuth } from "./hooks/useAuth";
 
-function App() {
+function AppContent() {
+  const { user } = useAuth();
+  const isCustomer = user?.role === 'CUSTOMER';
+  const isStaff = user?.role === 'STAFF';
+  
   return (
-    <AuthProvider>
-      <Router>
+    <>
         <Routes>
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<HomePage />} />
@@ -85,11 +91,11 @@ function App() {
             <Route path="payment-history" element={<PaymentHistoryPage />} />
             <Route path="profile" element={<CustomerProfilePage />} />
             <Route path="vehicles" element={<CustomerVehiclesPage />} />
-            <Route path="approvals/:scheduleId" element={<ApprovalPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
           </Route>
           
-          {/* Customer standalone routes (không dùng layout) */}
+          {/* ✅ Customer standalone routes (không dùng layout - có HeaderHome riêng) */}
+          <Route path="/customer/approvals/:scheduleId" element={<ApprovalPage />} />
           <Route path="/booking" element={<BookingPage />} />
           <Route path="/booking-history" element={<BookingHistoryPage />} />
           <Route path="/my-vehicles" element={<MyVehiclesPage />} />
@@ -118,16 +124,7 @@ function App() {
             <Route path="payments/:scheduleId" element={<InvoiceDetailPage />} />
             <Route path="checkin" element={<CheckinPage />} />
             <Route path="inventory" element={<PartInventoryPage />} />
-            <Route
-              path="chat"
-              element={
-                <div style={{ padding: "2rem" }}>
-                  Chat khách hàng - Coming soon
-                </div>
-              }
-            />
           </Route>
-
           {/* ===== Admin Routes ===== */}
           <Route path="/admin/dashboard" element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
@@ -196,6 +193,21 @@ function App() {
           {/* ===== 404 Not Found ===== */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+
+        {/* Chat Widget - Chỉ hiện cho CUSTOMER */}
+        {isCustomer && <ChatWidget user={user} />}
+        
+        {/* Staff Chat Widget - Chỉ hiện cho STAFF */}
+        {isStaff && <StaffChatWidget user={user} />}
+      </>
+    );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

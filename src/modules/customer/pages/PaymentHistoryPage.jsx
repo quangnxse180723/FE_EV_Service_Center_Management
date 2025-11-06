@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PaymentHistoryPage.css';
 import paymentApi from '../../../api/paymentApi';
+import HeaderHome from '../../../components/layout/HeaderHome';
 
 export default function PaymentHistoryPage() {
   const navigate = useNavigate();
@@ -95,31 +96,39 @@ export default function PaymentHistoryPage() {
 
   if (loading) {
     return (
-      <div className="payment-history-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Đang tải lịch sử thanh toán...</p>
+      <>
+        <HeaderHome />
+        <div className="payment-history-container">
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Đang tải lịch sử thanh toán...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="payment-history-container">
-        <div className="error-message">
-          <span className="error-icon">⚠️</span>
-          <p>{error}</p>
-          <button onClick={fetchPaymentHistory} className="retry-btn">
-            Thử lại
-          </button>
+      <>
+        <HeaderHome />
+        <div className="payment-history-container">
+          <div className="error-message">
+            <span className="error-icon">⚠️</span>
+            <p>{error}</p>
+            <button onClick={fetchPaymentHistory} className="retry-btn">
+              Thử lại
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="payment-history-container">
+    <>
+      <HeaderHome />
+      <div className="payment-history-container">
       <div className="payment-history-header">
         <h1>Lịch sử thanh toán</h1>
         <p className="subtitle">Quản lý các giao dịch thanh toán của bạn</p>
@@ -167,5 +176,6 @@ export default function PaymentHistoryPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
