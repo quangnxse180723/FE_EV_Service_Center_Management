@@ -17,6 +17,7 @@ import StaffChatWidget from "./components/chat-widget/StaffChatWidget";
 // ===== Public Pages =====
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import PriceListPage from "./pages/PriceListPage";
 
 // ===== Auth Pages =====
 import LoginPage from "./modules/auth/LoginPage";
@@ -80,6 +81,7 @@ function AppContent() {
         <Routes>
           {/* ===== Public Routes ===== */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/price-list" element={<PriceListPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 

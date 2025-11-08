@@ -4,6 +4,8 @@ import './MyVehiclesPage.css';
 import vehicleApi from '../../../api/vehicleApi';
 import customerApi from '../../../api/customerApi';
 import { useAuth } from '../../../contexts/AuthContext';
+import PLACEHOLDER_IMAGES from '../../../utils/placeholders';
+import HeaderHome from '../../../components/layout/HeaderHome';
 
 export default function MyVehiclesPage() {
   const navigate = useNavigate();
@@ -81,7 +83,9 @@ export default function MyVehiclesPage() {
     currentMileage: '',
     lastServiceDate: '',
     imageFile: null,
-    imagePreview: null
+    imagePreview: null,
+    imageBase64: null,
+    otherModel: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -204,8 +208,11 @@ export default function MyVehiclesPage() {
       model: '',
       vin: '',
       currentMileage: '',
+      lastServiceDate: '',
       imageFile: null,
-      imagePreview: null
+      imagePreview: null,
+      imageBase64: null,
+      otherModel: ''
     });
     setShowAddModal(true);
   };
@@ -265,11 +272,12 @@ export default function MyVehiclesPage() {
           ctx.drawImage(img, 0, 0, width, height);
           const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
           
+          // Lưu cả preview và base64 để gửi lên server
           setNewVehicle(prev => ({
             ...prev,
-            imageFile: null, // Clear file object
+            imageFile: file,
             imagePreview: compressedBase64,
-            imageBase64: compressedBase64
+            imageBase64: compressedBase64 // Base64 string sẽ được gửi lên backend
           }));
         };
         img.src = e.target.result;
@@ -304,23 +312,25 @@ export default function MyVehiclesPage() {
       const vehicleData = {
         customerId: parseInt(customerId),
         licensePlate: newVehicle.licensePlate.trim(),
-        model: newVehicle.model.trim(),
+        model: newVehicle.model === 'Other' 
+                ? newVehicle.otherModel.trim() 
+                : newVehicle.model.trim(),
         vin: newVehicle.vin.trim(),
         currentMileage: newVehicle.currentMileage ? parseInt(newVehicle.currentMileage) : 0,
-        imageUrl: null, // ✅ TẠM THỜI BỎ ẢNH - Backend cần fix database column
+        imageUrl: newVehicle.imageBase64 || null, // Gửi base64 string, backend sẽ upload lên Cloudinary
         lastServiceDate: newVehicle.lastServiceDate ? newVehicle.lastServiceDate : null
       };
 
-      console.log('📤 Adding vehicle (WITHOUT IMAGE):');
+      console.log('📤 Adding vehicle with image upload to Cloudinary:');
       console.log('  - customerId:', vehicleData.customerId);
       console.log('  - licensePlate:', vehicleData.licensePlate);
       console.log('  - model:', vehicleData.model);
       console.log('  - vin:', vehicleData.vin);
       console.log('  - currentMileage:', vehicleData.currentMileage);
       console.log('  - lastServiceDate:', vehicleData.lastServiceDate);
-      console.log('⚠️ Image upload disabled temporarily');
+      console.log('  - hasImage:', !!vehicleData.imageUrl);
       
-      // Gọi API để lưu vào database - Gửi JSON object trực tiếp
+      // Gọi API để lưu vào database - Backend sẽ upload ảnh lên Cloudinary
       const response = await vehicleApi.createVehicle(vehicleData);
       
       console.log('✅ Vehicle added successfully:', response);
@@ -335,8 +345,11 @@ export default function MyVehiclesPage() {
         model: '',
         vin: '',
         currentMileage: '',
+        lastServiceDate: '',
         imageFile: null,
-        imagePreview: null
+        imagePreview: null,
+        imageBase64: null,
+        otherModel: ''
       });
       
       // Hiển thị thông báo thành công
@@ -387,8 +400,8 @@ export default function MyVehiclesPage() {
     if (vehicle.imageUrl) {
       return vehicle.imageUrl;
     }
-    // Placeholder image nếu không có ảnh
-    return 'https://via.placeholder.com/400x250/4CAF50/ffffff?text=EV+Vehicle';
+    // Placeholder image offline (SVG data URL)
+    return PLACEHOLDER_IMAGES.vehicleLarge;
   };
 
   if (loading) {
@@ -415,6 +428,9 @@ export default function MyVehiclesPage() {
 
   return (
     <div className="my-vehicles-page">
+      {/* Header Home */}
+      <HeaderHome activeMenu="vehicles" />
+      
       {/* Success Message */}
       {successMessage && (
         <div className="success-toast">
@@ -998,13 +1014,28 @@ export default function MyVehiclesPage() {
                       required
                     >
                       <option value="">Chọn model xe</option>
-                      <option value="VinFast Feliz S">VinFast Feliz S</option>
-                      <option value="Yadea Ulike">Yadea Ulike</option>
-                      <option value="VinFast Klara S">VinFast Klara S</option>
-                      <option value="VinFast Impes">VinFast Impes</option>
-                      <option value="Honda SH">Honda SH</option>
-                      <option value="Yamaha NVX">Yamaha NVX</option>
+                      <option value="Vero X 2025">Xe máy điện Vero X 2025</option>
+                      <option value="Feliz 2025">Xe máy điện Feliz 2025</option>
+                      <option value="EvoGrand">Xe máy điện EvoGrand</option>
+                      <option value="Evo Neo">Xe máy điện Evo Neo</option>
+                      <option value="Klara Neo">Xe máy điện Klara Neo</option>
+                      <option value="Vento Neo">Xe máy điện Vento Neo</option>
+                      <option value="VinFast Feliz Lite">Xe máy điện VinFast Feliz Lite</option>
+                      <option value="VinFast EvoGrand Lite">Xe máy điện VinFast EvoGrand Lite</option>
+                      <option value="VinFast Evo Lite Neo">Xe máy điện VinFast Evo Lite Neo</option>
+      {/* ... (các option khác) ... */}
+      <option value="Other">Khác</option>
                     </select>
+                    {newVehicle.model === 'Other' && (
+      <input
+        type="text"
+        placeholder="Vui lòng nhập model của bạn"
+        value={newVehicle.otherModel}
+        onChange={(e) => handleFormChange('otherModel', e.target.value)}
+        required
+        style={{ marginTop: '10px' }} 
+      />
+    )}
                   </div>
                 </div>
                 
@@ -1054,7 +1085,7 @@ export default function MyVehiclesPage() {
                       color: '#666', 
                       fontSize: '12px' 
                     }}>
-                      💡 Giúp tính toán lần bảo dưỡng tiếp theo dựa trên thời gian (mỗi 3 tháng)
+                      💡 Giúp tính toán lần bảo dưỡng tiếp theo dựa trên thời gian (mỗi 6 tháng)
                     </small>
                   </div>
                 </div>

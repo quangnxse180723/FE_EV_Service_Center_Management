@@ -156,7 +156,6 @@ hr {
 .modal-content {
   background: white;
   border-radius: 12px;
-  padding: 2rem;
   min-width: 400px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }

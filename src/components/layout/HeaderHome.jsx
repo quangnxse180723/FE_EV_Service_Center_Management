@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import NotificationModal from '../shared/NotificationModal';
-import logoImage from '../../assets/img/logo.png';
+import voltfitLogo from '../../assets/img/log_voltfit.png';
 import '../../pages/HomePage.css';
 
 export default function HeaderHome({ activeMenu = 'home' }) {
@@ -54,8 +54,8 @@ export default function HeaderHome({ activeMenu = 'home' }) {
         <div className="hf-header-inner">
           <div className="hf-logo">
             <img 
-              src={logoImage} 
-              alt="VOLTFIX Logo" 
+              src={voltfitLogo} 
+              alt="Voltfit Logo" 
               className="logo-image" 
               onClick={() => navigate('/')} 
               style={{ cursor: 'pointer' }}
@@ -70,12 +70,13 @@ export default function HeaderHome({ activeMenu = 'home' }) {
               Trang chủ
             </a>
             <a 
-              className={`nav-item ${activeMenu === 'booking' ? 'active' : ''}`} 
+              className={`nav-item ${qactiveMenu === 'booking' ? 'active' : ''}`} 
               onClick={() => navigate('/booking')}
             >
               Đặt lịch
             </a>
-            <a className="nav-item">
+            <a className={`nav-item ${activeMenu === 'price' ? 'active' : ''}`}
+            onClick={() => navigate('/price-list')}>
               Bảng giá
             </a>
             <a 

@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import HeaderHome from '../../../components/layout/HeaderHome';
 import './BookingPage.css';
-import mapImage from '/src/assets/img/map.png';
+import GoogleMapComponent from '../../../components/common/GoogleMapComponent';
+import PLACEHOLDER_IMAGES from '../../../utils/placeholders';
 import lichImage from '/src/assets/img/lich.png';
 import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
@@ -720,80 +721,36 @@ export default function BookingPage() {
                       <div 
                         key={vehicleId}
                         className={`vehicle-card ${selectedVehicle?.vehicleId === vehicleId || selectedVehicle?.id === vehicleId ? 'selected' : ''}`}
+                        onClick={() => handleVehicleSelect(vehicle)}
                       >
-                        <div className="vehicle-header">Xe máy điện</div>
                         <div className="vehicle-image">
                           <img 
-                            src={vehicle.imageUrl || 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle'} 
+                            src={vehicle.imageUrl || PLACEHOLDER_IMAGES.vehicle} 
                             alt={vehicle.model || 'Xe điện'}
                             onError={(e) => { 
-                              e.target.src = 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle';
+                              e.target.src = PLACEHOLDER_IMAGES.vehicle;
                             }}
                           />
                         </div>
-                        <div className="vehicle-info">
-                          <div className="vehicle-name" style={{ 
-                            fontSize: '18px', 
-                            fontWeight: '700',
-                            marginBottom: '12px',
-                            color: '#1a1a1a'
-                          }}>
-                            {vehicle.model || 'Xe điện'}
-                          </div>
-                          <div className="vehicle-plate" style={{
-                            display: 'inline-block',
-                            padding: '6px 12px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            color: '#fff',
-                            borderRadius: '6px',
-                            fontWeight: '700',
-                            fontSize: '14px',
-                            marginBottom: '10px',
-                            letterSpacing: '1px',
-                            boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
-                          }}>
-                            {vehicle.licensePlate || 'N/A'}
-                          </div>
-                          <div className="vehicle-vin" style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 12px',
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: '6px',
-                            marginBottom: '8px'
-                          }}>
-                            <span style={{ fontSize: '16px' }}>🔑</span>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '11px', color: '#999', marginBottom: '2px' }}>Số VIN</div>
-                              <div style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>
-                                {vehicle.vin || 'Chưa cập nhật'}
-                              </div>
-                            </div>
-                          </div>
-                          {vehicle.currentMileage > 0 && (
-                            <div className="vehicle-mileage" style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              padding: '10px 12px',
-                              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                              borderRadius: '8px',
-                              boxShadow: '0 3px 10px rgba(245, 87, 108, 0.3)'
-                            }}>
-                              <span style={{ fontSize: '20px' }}>🛣️</span>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '11px', color: '#fff', opacity: 0.9, marginBottom: '2px' }}>Đã chạy</div>
-                                <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>
-                                  {vehicle.currentMileage.toLocaleString()} km
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                        
+                        <div className="vehicle-model-name">
+                          {vehicle.model || 'E-Scooter'}
                         </div>
+                        
+                        <div className="vehicle-license-plate">
+                          {vehicle.licensePlate || 'N/A'}
+                        </div>
+                        
+                        <div className="vehicle-mileage-badge">
+                          {vehicle.currentMileage ? `${vehicle.currentMileage.toLocaleString()} km` : '0 km'}
+                        </div>
+                        
                         <button 
                           className="btn-select-vehicle"
-                          onClick={() => handleVehicleSelect(vehicle)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVehicleSelect(vehicle);
+                          }}
                         >
                           Chọn
                         </button>
@@ -814,11 +771,11 @@ export default function BookingPage() {
                   <h3>Xe đã chọn:</h3>
                   <div className="vehicle-summary">
                     <img 
-                      src={selectedVehicle.imageUrl || 'https://via.placeholder.com/100x75/4CAF50/ffffff?text=EV'} 
+                      src={selectedVehicle.imageUrl || PLACEHOLDER_IMAGES.vehicleSmall} 
                       alt={selectedVehicle.model} 
                       className="vehicle-thumb" 
                       onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/100x75/4CAF50/ffffff?text=EV';
+                        e.target.src = PLACEHOLDER_IMAGES.vehicleSmall;
                       }}
                     />
                     <div className="vehicle-details">
@@ -913,7 +870,14 @@ export default function BookingPage() {
               
               <div className="center-selection">
                 <div className="map-container">
-                  <img src={mapImage} alt="Map" className="map-image" />
+                  <GoogleMapComponent 
+                    centers={serviceCenters}
+                    selectedCenter={selectedCenter}
+                    onCenterSelect={(center) => {
+                      setSelectedCenter(center);
+                      setCurrentStep(3);
+                    }}
+                  />
                 </div>
                 <div className="center-list-container">
                   <div className="search-box">
