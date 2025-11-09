@@ -45,6 +45,14 @@ export default function PaymentHistoryPage() {
       
       console.log('✅ Payments loaded from database:', paymentsData);
       
+      // Debug: Log từng payment để kiểm tra status
+      if (paymentsData.length > 0) {
+        console.log('📋 Sample payment data:', paymentsData[0]);
+        paymentsData.forEach((payment, idx) => {
+          console.log(`Payment ${idx + 1} status: "${payment.status}"`);
+        });
+      }
+      
       setPayments(paymentsData);
       setLoading(false);
     } catch (err) {
@@ -71,17 +79,34 @@ export default function PaymentHistoryPage() {
   };
 
   const getStatusBadge = (status) => {
+    if (!status) return <span className="status-badge status-unknown">N/A</span>;
+    
+    // Normalize status to handle case variations
+    const statusNormalized = status.toString().toLowerCase().trim();
+    
     const statusConfig = {
-      'CHO_THANH_TOAN': { text: 'Chờ thanh toán', class: 'status-pending' },
-      'PENDING': { text: 'Chờ thanh toán', class: 'status-pending' },
-      'DA_THANH_TOAN': { text: 'Đã thanh toán', class: 'status-paid' },
-      'PAID': { text: 'Đã thanh toán', class: 'status-paid' },
-      'COMPLETED': { text: 'Đã thanh toán', class: 'status-paid' },
-      'HUY': { text: 'Đã hủy', class: 'status-cancelled' },
-      'CANCELLED': { text: 'Đã hủy', class: 'status-cancelled' },
+      // Chờ thanh toán
+      'chờ thanh toán': { text: 'Chờ thanh toán', class: 'status-pending' },
+      'cho_thanh_toan': { text: 'Chờ thanh toán', class: 'status-pending' },
+      'pending': { text: 'Chờ thanh toán', class: 'status-pending' },
+      'unpaid': { text: 'Chờ thanh toán', class: 'status-pending' },
+      'new': { text: 'Chờ thanh toán', class: 'status-pending' },
+      'pending_payment': { text: 'Chờ thanh toán', class: 'status-pending' },
+      
+      // Đã thanh toán
+      'đã thanh toán': { text: 'Đã thanh toán', class: 'status-paid' },
+      'da_thanh_toan': { text: 'Đã thanh toán', class: 'status-paid' },
+      'paid': { text: 'Đã thanh toán', class: 'status-paid' },
+      'completed': { text: 'Đã thanh toán', class: 'status-paid' },
+      
+      // Đã hủy
+      'đã hủy': { text: 'Đã hủy', class: 'status-cancelled' },
+      'huy': { text: 'Đã hủy', class: 'status-cancelled' },
+      'cancelled': { text: 'Đã hủy', class: 'status-cancelled' },
+      'canceled': { text: 'Đã hủy', class: 'status-cancelled' },
     };
 
-    const config = statusConfig[status] || { text: status, class: 'status-unknown' };
+    const config = statusConfig[statusNormalized] || { text: status, class: 'status-unknown' };
     return <span className={`status-badge ${config.class}`}>{config.text}</span>;
   };
 
@@ -160,7 +185,7 @@ export default function PaymentHistoryPage() {
                   <td>{payment.vehicleName || payment.vehicleModel || 'N/A'}</td>
                   <td>{payment.licensePlate || payment.vehiclePlate || 'N/A'}</td>
                   <td>{formatDateTime(payment.scheduledDate || payment.appointmentTime || payment.scheduleTime || payment.createdAt)}</td>
-                  <td>{getStatusBadge(payment.status || payment.paymentStatus)}</td>
+                  <td>{getStatusBadge(payment.status)}</td>
                   <td>
                     <button 
                       className="action-btn view-invoice-btn"

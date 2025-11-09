@@ -344,7 +344,7 @@
 /* Header */
 .hf-header {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   padding: 16px 0;
   backdrop-filter: blur(10px);
   position: sticky;
@@ -362,12 +362,15 @@
   padding: 0 40px;
 }
 
+.hf-logo {
+  cursor: pointer;
+}
+
 .hf-logo .logo-image {
   height: 55px;
   width: auto;
-  cursor: pointer;
   transition: transform 0.3s ease;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
 .hf-logo .logo-image:hover {

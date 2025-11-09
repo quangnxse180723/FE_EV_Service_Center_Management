@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import './InvoiceDetailPage.css'; // Sẽ cập nhật CSS ở bước 2
+import './InvoiceDetailPage.css';
 import staffApi from '../../../api/staffApi';
 import paymentApi from '../../../api/paymentApi';
 // Import service của technician để lấy biên bản chi tiết
@@ -55,16 +55,12 @@ const InvoiceDetailPage = () => {
   const hasPaymentMethod = invoice?.paymentMethod && invoice.paymentMethod !== '';
   
   // ✅ Kiểm tra status để ẩn/hiện nút
-  const isPaidOrCompleted = 
-    invoiceStatus === 'PAID' || 
-    invoiceStatus === 'COMPLETED' ||
-    invoiceStatus === 'Đã thanh toán' ||
-    invoice?.status === 'COMPLETED';
-
+  const isPaid = invoiceStatus === 'PAID';
+  
   // ===== HANDLE PAYMENT METHOD SELECT =====
   const handlePaymentMethodChange = (method) => {
     // ✅ Không cho thay đổi nếu đã có payment method từ database
-    if (hasPaymentMethod || isPaidOrCompleted) return;
+    if (hasPaymentMethod || isPaid) return;
     setPaymentMethod(method);
     setError(null);
     setSuccessMessage(null);
@@ -139,115 +135,115 @@ const InvoiceDetailPage = () => {
   if (!invoice) return <div className="invoice-detail-page">Không tìm thấy thông tin hóa đơn.</div>;
 
   // ✅ Display status từ backend
-  const displayStatus = invoice.paymentStatus || 
-    (isPaidOrCompleted ? 'Đã thanh toán' : 
-     invoiceStatus === 'PENDING_PAYMENT' ? 'Chờ thanh toán' : 'Mới (chưa gửi)');
+  const displayStatus =
+    invoiceStatus === 'PAID'
+      ? 'Đã thanh toán'
+      : invoiceStatus === 'PENDING_PAYMENT'
+      ? 'Chờ thanh toán'
+      : 'Mới (chưa gửi)';
 
   // ===== RENDER =====
   return (
     <>
       <div className="invoice-detail-page">
-        <button className="btn-back-main" onClick={() => navigate(-1)}>
-          Trở lại
-        </button>
-        <h2 className="main-title">Quản lý thanh toán</h2>
+        <div className="detail-card">
+          <h2 className="card-title">Chi tiết Hóa Đơn</h2>
 
-        {error && <div className="invoice-error-message">{error}</div>}
-        {successMessage && <div className="invoice-success-message">{successMessage}</div>}
+          {error && <div className="invoice-error-message">{error}</div>}
+          {successMessage && <div className="invoice-success-message">{successMessage}</div>}
 
-        <div className="invoice-summary-card">
-          <div className="info-group">
-            <span className="info-label">Khách hàng:</span>
-            <span className="info-value">{invoice.customerName}</span>
-          </div>
-          <div className="info-group">
-            <span className="info-label">Xe:</span>
-            <span className="info-value">{invoice.vehicleName}</span>
-          </div>
-          <div className="info-group">
-            <span className="info-label">Bảo dưỡng:</span>
-            <span className="info-value">{invoice.maintenanceType}</span>
-          </div>
-          <div className="info-group">
-            <span className="info-label">Biên bản sửa chữa:</span>
-            <button className="btn-detail-inline" onClick={handleShowDetail}>
-              Chi tiết
-            </button>
-          </div>
-          <div className="info-group info-total">
-            <span className="info-label">Tổng chi phí:</span>
-            <span className="info-value total-amount">
-              {Number(invoice.totalCost).toLocaleString()} vnđ
-            </span>
-          </div>
+          <div className="detail-info">
+            <div className="info-row">
+              <span className="info-icon">👤</span>
+              <span className="info-label">Khách hàng:</span>
+              <span className="info-value">{invoice.customerName}</span>
+            </div>
+            
+            <div className="info-row">
+              <span className="info-icon">🚗</span>
+              <span className="info-label">Xe:</span>
+              <span className="info-value">{invoice.vehicleName}</span>
+            </div>
           
-          <div className="info-group payment-method-group">
-            <span className="info-label">Hình thức thanh toán:</span>
-            {hasPaymentMethod || isPaidOrCompleted ? (
-              // ✅ Hiển thị read-only nếu đã có payment method từ database
-              <div className="payment-method-readonly">
-                <span className="payment-method-value">
+
+            <div className="info-row">
+              <span className="info-icon">💰</span>
+              <span className="info-label">Tổng chi phí:</span>
+              <span className="info-value total-amount">
+                {Number(invoice.totalCost).toLocaleString()} vnđ
+              </span>
+            </div>
+            
+            <div className="info-row">
+              <span className="info-icon">💳</span>
+              <span className="info-label">Hình thức thanh toán:</span>
+              {hasPaymentMethod || isPaid ? (
+                <span className="info-value">
                   {paymentMethod === 'BANK' ? 'Ngân hàng' : 
                    paymentMethod === 'CASH' ? 'Tiền mặt' : 
                    invoice.paymentStatus || 'Chưa có'}
                 </span>
-              </div>
-            ) : (
-              // ✅ Cho phép chọn nếu chưa có payment method
-              <div className="payment-options">
+              ) : (
+                <div className="payment-options-inline">
+                  <button
+                    className={`btn-payment-method ${paymentMethod === 'BANK' ? 'selected' : ''}`}
+                    onClick={() => handlePaymentMethodChange('BANK')}
+                  >
+                    Ngân hàng
+                  </button>
+                  <button
+                    className={`btn-payment-method ${paymentMethod === 'CASH' ? 'selected' : ''}`}
+                    onClick={() => handlePaymentMethodChange('CASH')}
+                  >
+                    Tiền mặt
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Nút hành động */}
+          <div className="actions-section">
+            {!isPaid && !hasPaymentMethod && (
+              <>
                 <button
-                  className={`btn-payment-method ${paymentMethod === 'BANK' ? 'selected' : ''}`}
-                  onClick={() => handlePaymentMethodChange('BANK')}
+                  className="btn-send"
+                  onClick={handleSendInvoice}
+                  disabled={!paymentMethod}
                 >
-                  Ngân hàng
+                  Gửi hóa đơn
                 </button>
+                <button className="btn-detail-outline" onClick={handleShowDetail}>
+                  Chi tiết
+                </button>
+              </>
+            )}
+
+            {invoiceStatus === 'PENDING_PAYMENT' && !isPaid && (
+              <>
                 <button
-                  className={`btn-payment-method ${paymentMethod === 'CASH' ? 'selected' : ''}`}
-                  onClick={() => handlePaymentMethodChange('CASH')}
+                  className="btn-complete"
+                  onClick={handleConfirmPayment}
                 >
-                  Tiền mặt
+                  Xác nhận thanh toán
                 </button>
-              </div>
+                <button className="btn-detail-outline" onClick={handleShowDetail}>
+                  Chi tiết
+                </button>
+              </>
+            )}
+
+            {isPaid && (
+              <>
+                <button className="btn-print" onClick={() => window.print()}>
+                  In hóa đơn
+                </button>
+                <button className="btn-detail-outline" onClick={handleShowDetail}>
+                  Chi tiết
+                </button>
+              </>
             )}
           </div>
-
-          <div className="info-group">
-            <span className="info-label">Trạng thái:</span>
-            <span className={`info-value status-tag ${isPaidOrCompleted ? 'status-paid' : 'status-waiting'}`}>
-              {displayStatus}
-            </span>
-          </div>
-        </div>
-
-        {/* Nút hành động */}
-        <div className="invoice-actions">
-          {/* ✅ Chỉ hiển thị nút "Gửi hóa đơn" nếu CHƯA completed/paid */}
-          {!isPaidOrCompleted && !hasPaymentMethod && (
-            <button
-              className="btn-action btn-send"
-              onClick={handleSendInvoice}
-              disabled={!paymentMethod}
-            >
-              Gửi hóa đơn thanh toán cho khách hàng
-            </button>
-          )}
-
-          {/* ✅ Hiển thị nút xác nhận nếu đang chờ thanh toán và chưa paid */}
-          {invoiceStatus === 'PENDING_PAYMENT' && !isPaidOrCompleted && (
-            <button
-              className="btn-action btn-confirm-payment"
-              onClick={handleConfirmPayment}
-            >
-              Xác nhận đã thanh toán
-            </button>
-          )}
-
-          {/* ✅ Hiển thị nút in nếu đã thanh toán */}
-          {isPaidOrCompleted && (
-            <button className="btn-action btn-print">
-              In hóa đơn
-            </button>
-          )}
         </div>
       </div>
 

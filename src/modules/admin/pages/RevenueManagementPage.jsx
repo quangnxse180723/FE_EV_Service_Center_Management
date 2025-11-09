@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RevenueManagementPage.css';
-import logoImage from '/src/assets/img/logo.png';
-import adminAvatar from '/src/assets/img/avtAdmin.jpg';
+import logoImage from '/src/assets/img/log_voltfit.png';
+import AdminHeader from '../layouts/AdminHeader';
 
 export default function RevenueManagementPage() {
   const navigate = useNavigate();
@@ -37,8 +37,7 @@ export default function RevenueManagementPage() {
   });
 
   const handleLogout = () => {
-    alert('Đăng xuất thành công!');
-    navigate('/');
+    navigate('/logout');
   };
 
   const handleMenuClick = (menu) => {
@@ -89,12 +88,6 @@ export default function RevenueManagementPage() {
             Quản lý phụ tùng
           </button>
           <button
-            className={`nav-item ${activeMenu === 'vehicles' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('vehicles')}
-          >
-            Quản lý xe
-          </button>
-          <button
             className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
             onClick={() => handleMenuClick('settings')}
           >
@@ -106,17 +99,7 @@ export default function RevenueManagementPage() {
       {/* Main Content */}
       <div className="admin-main">
         {/* Header */}
-        <header className="admin-header">
-          <div className="header-user">
-            <div className="user-avatar">
-              <img src={adminAvatar} alt="Admin Avatar" className="avatar-image" />
-            </div>
-            <span className="user-name">{adminInfo.name}</span>
-          </div>
-          <button className="btn-logout" onClick={handleLogout}>
-            Logout
-          </button>
-        </header>
+        <AdminHeader />
 
         {/* Content */}
         <div className="admin-content">

@@ -1,56 +1,39 @@
-/* Xóa bỏ CSS cũ, thay thế bằng CSS mới này */
+/* Invoice Detail Page - Match ScheduleDetailPage style */
 .invoice-detail-page {
   padding: 2rem;
-  background: #f4f6f8;
+  background: #f5f7fa;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 3rem;
 }
 
-.invoice-detail-loading,
-.invoice-detail-page .error-message {
-  text-align: center;
-  font-size: 1.2rem;
-  padding: 3rem;
-  color: #555;
+.detail-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.invoice-detail-page .error-message {
-  color: #d9534f;
-}
-
-.btn-back-main {
-  background: #f0e68c; /* Màu vàng nhạt của nút "Trở lại" */
-  color: #333;
-  border: 1px solid #ddd673;
-  padding: 0.5rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.95rem;
-  position: absolute;
-  top: 90px; /* Điều chỉnh vị trí */
-  right: 4rem;
-}
-
-.btn-back-main:hover {
-  background: #e9de7a;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.main-title {
-  font-size: 2rem;
-  color: #333;
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
   margin-bottom: 1.5rem;
   text-align: left;
 }
 
 .invoice-error-message,
 .invoice-success-message {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   font-weight: 500;
+  font-size: 0.9rem;
+  text-align: left;
 }
 
 .invoice-error-message {
@@ -65,264 +48,268 @@
   border: 1px solid #c3e6cb;
 }
 
-.invoice-summary-card {
-  background: #e9ecef; /* Màu nền xám nhạt của card */
-  padding: 2rem 2.5rem;
-  border-radius: 8px;
-  max-width: 800px;
-  /* margin: 0 auto; */ /* Bỏ auto để căn lề trái */
-  margin-left: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border: 1px solid #dee2e6;
+.detail-info {
+  margin-bottom: 2rem;
 }
 
-.info-group {
+.info-row {
   display: flex;
   align-items: center;
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-  color: #212529;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #333;
+  gap: 0.5rem;
+}
+
+.info-row.status-row {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.status-content .info-label {
+  min-width: auto;
+}
+
+.status-content .status-badge {
+  align-self: flex-end;
+}
+
+.info-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .info-label {
-  font-weight: 600;
-  width: 180px; /* Cố định chiều rộng label */
-  flex-shrink: 0;
+  font-weight: 400;
+  color: #666;
+  min-width: 160px;
 }
 
 .info-value {
   font-weight: 500;
-}
-
-.info-total {
-  font-size: 1.2rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px dashed #adb5bd;
+  color: #1a1a1a;
+  flex: 1;
 }
 
 .total-amount {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #0056b3;
+  color: #28a745;
 }
 
-.btn-detail-inline {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.3rem 1rem;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-detail-inline:hover {
-  background: #0056b3;
-}
-
-.payment-options {
+.payment-options-inline {
   display: flex;
   gap: 0.5rem;
-}
-
-/* ✅ Payment Method Read-only (Đã có từ database) */
-.payment-method-readonly {
-  padding: 0.3rem 1rem;
-  background: #e8f5e9;
-  border: 2px solid #4caf50;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-.payment-method-value {
-  color: #2e7d32;
-  font-weight: 600;
-  font-size: 0.95rem;
+  flex: 1;
 }
 
 .btn-payment-method {
-  background: #007bff; /* Màu xanh của nút */
-  color: white;
-  border: 2px solid #007bff;
-  padding: 0.3rem 1rem;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  font-weight: 500;
+  flex: 1;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid #5b5b5b4d;
+  border-radius: 6px;
   cursor: pointer;
-}
-
-.btn-payment-method:not(.selected) {
-  background: #f8f9fa;
-  color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-payment-method:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .btn-payment-method.selected {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px #007bff;
+  background: #007bff;
+  color: #000000;
+  border-color: #007bff;
 }
 
-.status-tag {
-  font-weight: 700;
-  padding: 0.3rem 1rem;
-  border-radius: 4px;
+.btn-payment-method:hover:not(.selected) {
+  border-color: #007bff;
+  background: #5c5b5b;
 }
 
-.status-paid {
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-badge.status-paid {
   background: #28a745;
-  color: white;
+  color: #fff;
 }
 
-.status-waiting {
+.status-badge.status-pending {
   background: #ffc107;
-  color: #333;
+  color: #fff;
 }
 
-.invoice-actions {
-  margin-top: 2rem;
+.actions-section {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
 }
 
-.btn-action {
-  padding: 0.75rem 2rem;
+.btn-send,
+.btn-complete,
+.btn-print,
+.btn-detail-outline {
+  flex: 1;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 0.9rem;
 }
 
 .btn-send {
   background: #007bff;
-  color: white;
-}
-.btn-send:hover:not(:disabled) {
-  background: #0056b3;
-}
-.btn-send:disabled {
-  background: #6c757d;
-  opacity: 0.7;
-  cursor: not-allowed;
+  color: #fff;
+  border: 2px solid #007bff;
 }
 
-.btn-confirm-payment {
-  background: #ffc107;
-  color: #333;
+.btn-send:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+  transform: translateY(-2px);
 }
-.btn-confirm-payment:hover {
-  background: #e0a800;
+
+.btn-send:disabled {
+  background: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-complete {
+  background: #28a745;
+  color: #fff;
+  border: 2px solid #28a745;
+}
+
+.btn-complete:hover {
+  background: #218838;
+  border-color: #218838;
+  transform: translateY(-2px);
 }
 
 .btn-print {
-  background: #28a745;
-  color: white;
-}
-.btn-print:hover {
-  background: #218838;
+  background: #6c757d;
+  color: #fff;
+  border: 2px solid #6c757d;
 }
 
-/* Modal Styles */
+.btn-print:hover {
+  background: #5a6268;
+  border-color: #5a6268;
+  transform: translateY(-2px);
+}
+
+.btn-detail-outline {
+  background: #fff;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
+
+.btn-detail-outline:hover {
+  background: #007bff;
+  color: #fff;
+}
+
+/* Modal styles */
 .invoice-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
-  padding: 1rem;
 }
 
 .invoice-modal-content {
   background: white;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 900px; /* Rộng hơn để chứa bảng */
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  animation: modal-fade-in 0.3s ease;
-}
-
-@keyframes modal-fade-in {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+  border-radius: 12px;
+  min-width: 700px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .invoice-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  padding: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .invoice-modal-header h3 {
   margin: 0;
-  font-size: 1.5rem;
-  color: #333;
+  color: #222;
+  font-size: 1.3rem;
 }
 
 .invoice-modal-close {
   background: none;
   border: none;
   font-size: 2rem;
-  color: #6c757d;
   cursor: pointer;
-  padding: 0.5rem;
-  line-height: 1;
+  color: #999;
+  transition: color 0.2s;
+}
+
+.invoice-modal-close:hover {
+  color: #333;
 }
 
 .invoice-modal-body {
   padding: 1.5rem;
-  overflow-y: auto;
 }
 
-/* Checklist Table (Hình 2) */
 .checklist-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+}
+
+.checklist-table thead {
+  background: #f8f9fa;
 }
 
 .checklist-table th,
 .checklist-table td {
-  border: 1px solid #adb5bd;
   padding: 0.75rem;
   text-align: left;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .checklist-table th {
-  background: #f4f6f8;
   font-weight: 600;
-  color: #333;
-  text-align: center;
+  color: #495057;
 }
 
-.checklist-table td {
-  background: #fff;
-  color: #212529;
-}
-
-.checklist-table td:nth-child(1),
-.checklist-table td:nth-child(3),
-.checklist-table td:nth-child(4),
-.checklist-table td:nth-child(5) {
-  text-align: center;
-}
-
-.checklist-table td:nth-child(3),
-.checklist-table td:nth-child(4) {
-  text-align: right;
-  font-family: 'Courier New', Courier, monospace;
+.checklist-table tbody tr:hover {
+  background: #f8f9fa;
 }

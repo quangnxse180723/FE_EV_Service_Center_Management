@@ -7,7 +7,7 @@ import '../../pages/HomePage.css';
 
 export default function HeaderHome({ activeMenu = 'home' }) {
   const navigate = useNavigate();
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [showAuthDropdown, setShowAuthDropdown] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
@@ -18,7 +18,8 @@ export default function HeaderHome({ activeMenu = 'home' }) {
 
   useEffect(() => {
     if (!showAuthDropdown) return;
-    function handleClickOutside(e) {
+
+    const handleClickOutside = (e) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(e.target) &&
@@ -27,14 +28,16 @@ export default function HeaderHome({ activeMenu = 'home' }) {
       ) {
         setShowAuthDropdown(false);
       }
-    }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAuthDropdown]);
 
   useEffect(() => {
     if (!showMenuDropdown) return;
-    function handleClickOutside(e) {
+
+    const handleClickOutside = (e) => {
       if (
         menuDropdownRef.current &&
         !menuDropdownRef.current.contains(e.target) &&
@@ -43,7 +46,8 @@ export default function HeaderHome({ activeMenu = 'home' }) {
       ) {
         setShowMenuDropdown(false);
       }
-    }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenuDropdown]);
@@ -52,13 +56,11 @@ export default function HeaderHome({ activeMenu = 'home' }) {
     <>
       <header className="hf-header">
         <div className="hf-header-inner">
-          <div className="hf-logo">
+          <div className="hf-logo" onClick={() => navigate('/')}>
             <img 
               src={voltfitLogo} 
               alt="Voltfit Logo" 
-              className="logo-image" 
-              onClick={() => navigate('/')} 
-              style={{ cursor: 'pointer' }}
+              className="logo-image"
             />
           </div>
 
@@ -70,13 +72,15 @@ export default function HeaderHome({ activeMenu = 'home' }) {
               Trang chủ
             </a>
             <a 
-              className={`nav-item ${qactiveMenu === 'booking' ? 'active' : ''}`} 
+              className={`nav-item ${activeMenu === 'booking' ? 'active' : ''}`} 
               onClick={() => navigate('/booking')}
             >
               Đặt lịch
             </a>
-            <a className={`nav-item ${activeMenu === 'price' ? 'active' : ''}`}
-            onClick={() => navigate('/price-list')}>
+            <a 
+              className={`nav-item ${activeMenu === 'price' ? 'active' : ''}`}
+              onClick={() => navigate('/price-list')}
+            >
               Bảng giá
             </a>
             <a 
@@ -92,22 +96,18 @@ export default function HeaderHome({ activeMenu = 'home' }) {
               className={`icon-circle bell ${activeMenu === 'notifications' ? 'active' : ''}`}
               title="Thông báo"
               onClick={() => setShowNotificationModal(true)}
-              style={{ cursor: 'pointer' }}
-            >
-            </div>
+            />
             <div
               className="icon-circle avatar"
               title="Tài khoản"
               ref={avatarRef}
-              onClick={() => setShowAuthDropdown((v) => !v)}
-              style={{ cursor: 'pointer' }}
+              onClick={() => setShowAuthDropdown((prev) => !prev)}
             />
             <div 
               className="icon-circle menu" 
               title="Menu" 
               ref={menuRef}
-              onClick={() => setShowMenuDropdown((v) => !v)}
-              style={{ cursor: 'pointer' }}
+              onClick={() => setShowMenuDropdown((prev) => !prev)}
             />
             {showAuthDropdown && (
               <div className="auth-dropdown-root" ref={dropdownRef}>
@@ -117,13 +117,22 @@ export default function HeaderHome({ activeMenu = 'home' }) {
                       <div className="auth-dropdown-item user-info">
                         <strong>{user?.name || 'Người dùng'}</strong>
                       </div>
-                      <a onClick={() => navigate('/my-vehicles')} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => navigate('/my-vehicles')} 
+                        className="auth-dropdown-item"
+                      >
                         Quản lý xe
                       </a>
-                      <a onClick={() => navigate('/booking-history')} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => navigate('/booking-history')} 
+                        className="auth-dropdown-item"
+                      >
                         Lịch sử
                       </a>
-                      <a onClick={logout} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => navigate('/logout')} 
+                        className="auth-dropdown-item"
+                      >
                         Đăng xuất
                       </a>
                     </>
@@ -141,7 +150,6 @@ export default function HeaderHome({ activeMenu = 'home' }) {
               </div>
             )}
             
-            {/* Menu Dropdown (3 gạch) */}
             {showMenuDropdown && (
               <div className="auth-dropdown-root menu-dropdown-root" ref={menuDropdownRef}>
                 <div className="auth-dropdown-menu">
@@ -150,16 +158,40 @@ export default function HeaderHome({ activeMenu = 'home' }) {
                       <div className="auth-dropdown-item dropdown-header">
                         <strong>📋 Menu</strong>
                       </div>
-                      <a onClick={() => { navigate('/customer/dashboard'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => {
+                          navigate('/customer/dashboard');
+                          setShowMenuDropdown(false);
+                        }} 
+                        className="auth-dropdown-item"
+                      >
                         🏠 Trang chủ
                       </a>
-                      <a onClick={() => { navigate('/customer/payment-history'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => {
+                          navigate('/customer/payment-history');
+                          setShowMenuDropdown(false);
+                        }} 
+                        className="auth-dropdown-item"
+                      >
                         💳 Lịch sử thanh toán
                       </a>
-                      <a onClick={() => { navigate('/customer/profile'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => {
+                          navigate('/customer/profile');
+                          setShowMenuDropdown(false);
+                        }} 
+                        className="auth-dropdown-item"
+                      >
                         👤 Thông tin khách hàng
                       </a>
-                      <a onClick={() => { navigate('/customer/vehicles'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => {
+                          navigate('/customer/vehicles');
+                          setShowMenuDropdown(false);
+                        }} 
+                        className="auth-dropdown-item"
+                      >
                         🚗 Quản lý xe
                       </a>
                     </>
@@ -168,10 +200,22 @@ export default function HeaderHome({ activeMenu = 'home' }) {
                       <div className="auth-dropdown-item dropdown-header">
                         <strong>Vui lòng đăng nhập</strong>
                       </div>
-                      <a onClick={() => { navigate('/login'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => {
+                          navigate('/login');
+                          setShowMenuDropdown(false);
+                        }} 
+                        className="auth-dropdown-item"
+                      >
                         Đăng nhập
                       </a>
-                      <a onClick={() => { navigate('/register'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a 
+                        onClick={() => {
+                          navigate('/register');
+                          setShowMenuDropdown(false);
+                        }} 
+                        className="auth-dropdown-item"
+                      >
                         Đăng ký
                       </a>
                     </>

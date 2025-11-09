@@ -17,6 +17,13 @@ const serviceApi = {
       params: { keyword }
     });
   },
+
+  // Lấy gói bảo dưỡng dựa trên maintenance level (số lần bảo dưỡng)
+  getMaintenancePackageByLevel: (maintenanceLevel) => {
+    return axiosClient.get(`/services/maintenance-package`, {
+      params: { level: maintenanceLevel }
+    });
+  },
 };
 
 export default serviceApi;

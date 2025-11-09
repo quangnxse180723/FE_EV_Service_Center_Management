@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import HeaderHome from '../components/layout/HeaderHome';
 import './HomePage.css';
 import heroImg from '../assets/img/hero_img.png';
-import logoImage from '../assets/img/logo.png';
+import logoImage from '../assets/img/log_voltfit.png';
 
 export default function HomePage() {
   const navigate = useNavigate();

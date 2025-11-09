@@ -1,4 +1,4 @@
-.staff-header {
+.admin-header {
   height: 64px;
   background: #fff;
   border-bottom: 1px solid #d1d5db;
@@ -7,19 +7,16 @@
   justify-content: space-between;
   padding: 0 16px 0 20px;
   gap: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
 }
 
-.staff-user-info {
+.admin-user-info {
   display: flex;
   align-items: center;
   gap: 10px;
   flex: 1;
 }
 
-.staff-avatar {
+.admin-avatar {
   width: 36px;
   height: 36px;
   border-radius: 999px;
@@ -29,13 +26,13 @@
   font-size: 1.2rem;
 }
 
-.staff-full-name {
+.admin-full-name {
   font-weight: 800;
   color: #111827;
 }
 
-.staff-badge {
-  background: #3b82f6;
+.admin-badge {
+  background: #ef4444;
   color: #fff;
   font-weight: 800;
   padding: 2px 8px;
@@ -44,7 +41,14 @@
   text-transform: uppercase;
 }
 
-.staff-bell-btn {
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-bell-btn,
+.admin-logout-btn {
   width: 36px;
   height: 36px;
   border-radius: 999px;
@@ -59,7 +63,13 @@
   flex-shrink: 0;
 }
 
-.staff-bell-btn:hover {
+.admin-bell-btn:hover,
+.admin-logout-btn:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
+}
+
+.admin-logout-btn:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
 }

@@ -22,6 +22,7 @@ import PriceListPage from "./pages/PriceListPage";
 // ===== Auth Pages =====
 import LoginPage from "./modules/auth/LoginPage";
 import RegisterPage from "./modules/auth/RegisterPage";
+import LogoutPage from "./modules/auth/LogoutPage";
 
 // ===== Customer Pages =====
 import CustomerLayout from "./routes/CustomerLayout";
@@ -84,6 +85,7 @@ function AppContent() {
           <Route path="/price-list" element={<PriceListPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
 
           {/* ===== Customer Routes ===== */}
           <Route path="/customer" element={<CustomerLayout />}>

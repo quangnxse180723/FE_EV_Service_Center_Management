@@ -21,7 +21,7 @@ export default function TechnicianSidebar() {
       </nav>
 
       <div className={styles.logoutWrap}>
-        <button className={styles.logoutBtn} onClick={() => navigate("/")}>
+        <button className={styles.logoutBtn} onClick={() => navigate("/logout")}>
           Đăng xuất
         </button>
       </div>

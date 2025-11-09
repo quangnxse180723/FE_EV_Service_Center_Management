@@ -10,7 +10,6 @@ import {
   MdLogout
 } from 'react-icons/md';
 import './Sidebar.css';
-import authApi from '../../../../api/authApi';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -22,21 +21,20 @@ const Sidebar = () => {
     { path: '/staff/vehicles', icon: <MdDirectionsCar />, label: 'Quản lý xe' },
     { path: '/staff/schedules', icon: <MdCalendarToday />, label: 'Quản lý lịch hẹn' },
     { path: '/staff/payments', icon: <MdPayment />, label: 'Quản lý thanh toán' },
-    { path: '/staff/chat', icon: <MdChat />, label: 'Chat khách hàng' },
   ];
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-      await authApi.logout();
-      navigate('/login');
+      navigate('/logout');
     }
   };
 
   return (
     <aside className="staff-sidebar">
-      <div className="sidebar-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-        <span className="logo-volt">VØLT</span>
-        <span className="logo-fix">FIX</span>
+      <div className="sidebar-logo" style={{ cursor: 'pointer' }}>
+        <h2 onClick={() => navigate('/staff/dashboard')}>
+          <img src='/src/assets/img/log_voltfit.png' alt="VOLTFIX Logo" />
+        </h2>
       </div>
 
       <nav className="sidebar-nav">

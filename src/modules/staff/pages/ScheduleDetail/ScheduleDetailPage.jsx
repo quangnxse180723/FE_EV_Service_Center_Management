@@ -128,34 +128,47 @@ const ScheduleDetailPage = () => {
       </div>
 
       <div className="detail-card">
+        <h2 className="card-title">Chi tiết lịch hẹn</h2>
+
         <div className="detail-info">
-          <div className="info-row"><strong>Chủ xe:</strong> {schedule.customerName || 'N/A'}</div>
-          <div className="info-row"><strong>Xe:</strong> {schedule.vehicleModel || 'N/A'}</div>
-          <div className="info-row"><strong>Biển số xe:</strong> {schedule.licensePlate || 'N/A'}</div>
-          <div className="info-row"><strong>Ngày / giờ:</strong> {schedule.scheduledDate || 'N/A'}</div>
-        </div>
-
-        <hr />
-
-        <div className="status-section">
-          <div className="info-row"><strong>Trạng thái:</strong> {getStatusText(schedule.status)}</div>
           <div className="info-row">
+            <span className="info-icon">👤</span>
+            <span className="info-label">Chủ xe:</span>
+            <span className="info-value">{schedule.customerName || 'Customer'}</span>
+          </div>
+          
+          <div className="info-row">
+            <span className="info-icon">🚗</span>
+            <span className="info-label">Xe:</span>
+            <span className="info-value">{schedule.vehicleModel || 'N/A'}</span>
+          </div>
+          
+          <div className="info-row">
+            <span className="info-icon">📅</span>
+            <span className="info-label">Ngày /giờ</span>
+            <span className="info-value">{schedule.scheduledDate || 'N/A'}</span>
+          </div>
+          
+          <div className="info-row status-row">
+            <span className="info-icon">📋</span>
+            <div className="status-content">
+              <span className="info-label"><strong>Trạng thái: </strong>{getStatusText(schedule.status)}</span>
+              <div className="info-row">
             <strong>Kỹ thuật viên phụ trách:</strong>{' '}
             {schedule.technicianName || '(chưa phân công)'}
           </div>
+            </div>
+          </div>
+        
         </div>
 
-        <hr />
-
         <div className="actions-section">
-          <h4>Biên bản sửa chữa:</h4>
-          
           {schedule.status === 'PENDING' && (
             <>
-              <button className="btn-assign" onClick={() => setShowTechnicianModal(true)}>
-                Phân công KTV
+              <button className="btn-complete" onClick={() => setShowTechnicianModal(true)}>
+                Phân công
               </button>
-              <button className="btn-cancel" onClick={handleCancel}>
+              <button className="btn-cancel-outline" onClick={handleCancel}>
                 Hủy
               </button>
             </>
@@ -163,18 +176,27 @@ const ScheduleDetailPage = () => {
 
           {schedule.status === 'IN_PROGRESS' && (
             <>
-              <button className="btn-detail">Chi tiết</button>
               <button className="btn-complete" onClick={handleComplete}>
                 Hoàn tất
               </button>
-              <button className="btn-cancel" onClick={handleCancel}>
+              <button className="btn-cancel-outline" onClick={handleCancel}>
                 Hủy
               </button>
             </>
           )}
 
           {schedule.status === 'COMPLETED' && (
-            <button className="btn-detail">Chi tiết</button>
+            <>
+              <button className="btn-complete" disabled>Hoàn tất</button>
+              <button className="btn-cancel-outline" disabled>Hủy</button>
+            </>
+          )}
+          
+          {schedule.status === 'CANCELLED' && (
+            <>
+              <button className="btn-complete" disabled>Hoàn tất</button>
+              <button className="btn-cancel-outline" disabled>Hủy</button>
+            </>
           )}
         </div>
       </div>

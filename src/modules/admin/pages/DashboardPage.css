@@ -33,9 +33,11 @@
 }
 
 .sidebar-logo .logo {
-  height: 50px;
-  width: auto;
-  transition: transform 0.3s ease;
+  
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  object-fit: contain;
 }
 
 .sidebar-logo .logo:hover {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './VehicleManagementPage.css';
-import logoImage from '/src/assets/img/logo.png';
-import adminAvatar from '/src/assets/img/avtAdmin.jpg';
+import logoImage from '/src/assets/img/log_voltfit.png';
+import AdminHeader from '../layouts/AdminHeader';
 import { getAllVehicles, createVehicle, updateVehicle, deleteVehicle, getAllCustomers } from '../../../api/adminApi.js';
 
 export default function VehicleManagementPage() {
@@ -77,8 +77,7 @@ export default function VehicleManagementPage() {
   };
 
   const handleLogout = () => {
-    alert('Đăng xuất thành công!');
-    navigate('/');
+    navigate('/logout');
   };
 
   // Fetch vehicles on mount
@@ -324,17 +323,7 @@ export default function VehicleManagementPage() {
       {/* Main Content */}
       <div className="admin-main">
         {/* Header */}
-        <header className="admin-header">
-          <div className="header-user">
-            <div className="user-avatar">
-              <img src={adminAvatar} alt="Admin Avatar" className="avatar-image" />
-            </div>
-            <span className="user-name">{adminInfo.name}</span>
-          </div>
-          <button className="btn-logout" onClick={handleLogout}>
-            Logout
-          </button>
-        </header>
+        <AdminHeader />
 
         {/* Content */}
         <div className="admin-content">

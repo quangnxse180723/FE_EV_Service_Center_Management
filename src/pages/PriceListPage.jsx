@@ -8,7 +8,7 @@ import HeaderHome from '../components/layout/HeaderHome';
 
 export default function PriceListPage() {
   const navigate = useNavigate();
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   
   const [localParts, setLocalParts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +182,7 @@ export default function PriceListPage() {
                     </td>
                   </tr>
                 ) : (
-                  localParts.map((p, idx) => {
+                  localParts.slice(0, 19).map((p, idx) => {
                     const total = (p.giaLinhKien + p.giaCongTho) * (p.quantity || 1);
                     return (
                       <tr key={p.id}>

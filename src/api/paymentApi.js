@@ -43,6 +43,16 @@ const paymentApi = {
   createVNPayPayment: (paymentData) => {
     return axiosClient.post('/payment/vnpay/create', paymentData);
   },
+  
+  // Lấy tổng doanh thu theo ngày/tuần/tháng/năm
+  getRevenue: (date, type) => {
+    return axiosClient.get('/payments/revenue', {
+      params: { 
+        date, // Format: YYYY-MM-DD
+        type  // day, week, month, year
+      }
+    });
+  },
 };
 
 export default paymentApi;

@@ -42,6 +42,30 @@ const scheduleApi = {
     return axiosClient.get('/schedules');
   },
 
+  // Lấy thống kê dashboard theo ngày
+  getDashboardStats: (date) => {
+    return axiosClient.get('/schedules/dashboard/stats', {
+      params: { date } // Format: YYYY-MM-DD
+    });
+  },
+
+  // Lọc lịch hẹn theo khoảng thời gian (ngày bảo dưỡng)
+  getSchedulesByDateRange: (startDate, endDate) => {
+    return axiosClient.get('/schedules', {
+      params: { 
+        startDate: startDate, // Format: YYYY-MM-DD
+        endDate: endDate      // Format: YYYY-MM-DD
+      }
+    });
+  },
+
+  // Lọc lịch hẹn theo ngày cụ thể
+  getSchedulesByDate: (date) => {
+    return axiosClient.get('/schedules', {
+      params: { date } // Format: YYYY-MM-DD
+    });
+  },
+
   // Lấy chi tiết lịch hẹn
   getScheduleById: (scheduleId) => {
     return axiosClient.get(`/schedules/${scheduleId}`);
