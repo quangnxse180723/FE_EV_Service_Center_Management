@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import HeaderHome from '../../../components/layout/HeaderHome';
 import './VNPayReturnPage.css';
 
 const VNPayReturnPage = () => {
@@ -55,6 +56,9 @@ const VNPayReturnPage = () => {
 
   return (
     <div className="vnpay-return-page">
+      {/* Header Navigation */}
+      <HeaderHome activeMenu="" />
+      
       <div className="result-card">
         {paymentResult?.success ? (
           <>

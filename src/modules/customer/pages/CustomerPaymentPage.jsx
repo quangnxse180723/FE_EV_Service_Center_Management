@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import staffApi from '../../../api/staffApi';
 import paymentApi from '../../../api/paymentApi';
+import HeaderHome from '../../../components/layout/HeaderHome';
 import './CustomerPaymentPage.css';
-import { getServiceTicketDetail } from '../../technician/services/technicianService'; 
-import './CustomerPaymentPage.css';
+import { getServiceTicketDetail } from '../../technician/services/technicianService';
 
 const CustomerPaymentPage = ({ scheduleId: propScheduleId, onClose }) => {
   const { scheduleId: paramScheduleId } = useParams();
@@ -176,6 +176,9 @@ const CustomerPaymentPage = ({ scheduleId: propScheduleId, onClose }) => {
   return (
     <div className="customer-payment-overlay" onClick={handleClose}>
       <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Header Navigation */}
+        <HeaderHome activeMenu="" />
+        
         <button className="btn-close-modal" onClick={handleClose}>×</button>
         <h2>Xác nhận nội dung bảo dưỡng - {invoiceData.vehicleModel}</h2>
 

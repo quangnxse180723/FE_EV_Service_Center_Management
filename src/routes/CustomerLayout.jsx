@@ -12,7 +12,7 @@ const CustomerLayout = () => {
       id: 'home',
       label: 'Trang chủ',
       icon: '🏠',
-      path: '/customer/dashboard'
+      path: '/'
     },
     {
       id: 'payment-history',

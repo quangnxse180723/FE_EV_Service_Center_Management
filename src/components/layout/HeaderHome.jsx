@@ -149,7 +149,7 @@ export default function HeaderHome({ activeMenu = 'home' }) {
                       <div className="auth-dropdown-item dropdown-header">
                         <strong>📋 Menu</strong>
                       </div>
-                      <a onClick={() => { navigate('/customer/dashboard'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
+                      <a onClick={() => { navigate('/'); setShowMenuDropdown(false); }} className="auth-dropdown-item">
                         🏠 Trang chủ
                       </a>
                       <a onClick={() => { navigate('/customer/payment-history'); setShowMenuDropdown(false); }} className="auth-dropdown-item">

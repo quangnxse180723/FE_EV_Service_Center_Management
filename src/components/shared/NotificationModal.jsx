@@ -68,6 +68,26 @@ export default function NotificationModal({ isOpen, onClose }) {
     }
   };
 
+  // Helper để lấy icon dựa trên type thông báo
+  const getNotificationIcon = (notification) => {
+    if (notification.type === 'MAINTENANCE_OVERDUE') return '🚨';
+    if (notification.type === 'MAINTENANCE_DUE') return '🔔';
+    if (notification.type === 'PAYMENT') return '💳';
+    if (notification.type === 'SCHEDULE') return '📅';
+    return notification.isRead ? '📭' : '📬';
+  };
+
+  // Helper để lấy class dựa trên priority
+  const getNotificationClass = (notification) => {
+    let classes = `notification-item ${notification.isRead ? 'read' : 'unread'}`;
+    if (notification.type === 'MAINTENANCE_OVERDUE') {
+      classes += ' notification-urgent';
+    } else if (notification.type === 'MAINTENANCE_DUE') {
+      classes += ' notification-warning';
+    }
+    return classes;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -91,11 +111,11 @@ export default function NotificationModal({ isOpen, onClose }) {
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`notification-item ${notification.isRead ? 'read' : 'unread'}`}
+                    className={getNotificationClass(notification)}
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="notification-icon">
-                      {notification.isRead ? '📭' : '📬'}
+                      {getNotificationIcon(notification)}
                     </div>
                     <div className="notification-content">
                       <div className="notification-message">{notification.message}</div>

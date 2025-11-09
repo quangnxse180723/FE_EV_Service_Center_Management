@@ -4,6 +4,7 @@ import './MyVehiclesPage.css';
 import vehicleApi from '../../../api/vehicleApi';
 import customerApi from '../../../api/customerApi';
 import { useAuth } from '../../../contexts/AuthContext';
+import HeaderHome from '../../../components/layout/HeaderHome';
 
 export default function MyVehiclesPage() {
   const navigate = useNavigate();
@@ -415,6 +416,9 @@ export default function MyVehiclesPage() {
 
   return (
     <div className="my-vehicles-page">
+      {/* Header Navigation */}
+      <HeaderHome activeMenu="" />
+      
       {/* Success Message */}
       {successMessage && (
         <div className="success-toast">
@@ -546,26 +550,14 @@ export default function MyVehiclesPage() {
                         const isTimeTriggered = levelByTime > levelByKm;
                         
                         return (
-                          <div className="spec-item" style={{
-                            backgroundColor: (() => {
-                              return maintenanceLevel === 1 ? '#e3f2fd' : maintenanceLevel === 2 ? '#fff3e0' : '#ffebee';
-                            })(),
-                            border: `2px solid ${(() => {
-                              return maintenanceLevel === 1 ? '#2196F3' : maintenanceLevel === 2 ? '#FF9800' : '#F44336';
-                            })()}`
-                          }}>
+                          <div className={`spec-item maintenance-level-${maintenanceLevel}`}>
                             <div className="spec-icon">⚙️</div>
                             <div className="spec-content">
                               <span className="spec-label">Lần bảo dưỡng</span>
-                              <span className="spec-value" style={{
-                                fontWeight: '700',
-                                color: (() => {
-                                  return maintenanceLevel === 1 ? '#1976d2' : maintenanceLevel === 2 ? '#f57c00' : '#d32f2f';
-                                })()
-                              }}>
+                              <span className="spec-value">
                                 Lần {maintenanceLevel}
                               </span>
-                              <div style={{ fontSize: '11px', marginTop: '3px', opacity: 0.8 }}>
+                              <div style={{ fontSize: '11px', marginTop: '3px', opacity: 0.8, fontWeight: '500' }}>
                                 {isTimeTriggered 
                                   ? `${monthsSinceLastService} tháng kể từ lần cuối`
                                   : `${vehicle.currentMileage.toLocaleString()} km`}
@@ -597,25 +589,22 @@ export default function MyVehiclesPage() {
                                           (nextMaintenance.kmRemaining && nextMaintenance.kmRemaining < nextMaintenance.monthsRemaining * 333); // Giả sử trung bình 333km/tháng
                         
                         return (
-                          <div className="spec-item next-maintenance-item" style={{
-                            backgroundColor: '#f0f7ff',
-                            border: '2px solid #2196F3'
-                          }}>
+                          <div className="spec-item next-maintenance-item">
                             <div className="spec-icon">⏰</div>
                             <div className="spec-content">
                               <span className="spec-label">Bảo dưỡng tiếp theo</span>
-                              <span className="spec-value next-service-date" style={{ fontWeight: '600', color: '#1976d2' }}>
+                              <span className="spec-value next-service-date">
                                 {isKmSooner ? (
                                   <>
                                     Còn {nextMaintenance.kmRemaining.toLocaleString()} km
-                                    <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
+                                    <div style={{ fontSize: '11px', color: '#92400e', marginTop: '3px', fontWeight: '500' }}>
                                       (Đạt {nextMaintenance.nextKmMilestone.toLocaleString()} km)
                                     </div>
                                   </>
                                 ) : nextMaintenance.nextMaintenanceDate ? (
                                   <>
                                     {nextMaintenance.nextMaintenanceDate.toLocaleDateString('vi-VN')}
-                                    <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
+                                    <div style={{ fontSize: '11px', color: '#92400e', marginTop: '3px', fontWeight: '500' }}>
                                       (Còn {nextMaintenance.monthsRemaining} tháng)
                                     </div>
                                   </>

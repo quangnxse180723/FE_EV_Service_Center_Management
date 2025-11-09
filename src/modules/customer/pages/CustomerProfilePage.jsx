@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './CustomerProfilePage.css';
 import customerApi from '../../../api/customerApi';
 import { useAuth } from '../../../contexts/AuthContext';
+import HeaderHome from '../../../components/layout/HeaderHome';
 import defaultAvatar from '/src/assets/img/user-avatar.jpg'; // Ảnh của bạn
 
 export default function CustomerProfilePage() {
@@ -177,6 +178,9 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="customer-profile-page">
+      {/* Header Navigation */}
+      <HeaderHome activeMenu="" />
+      
       {/* Success Message */}
       {successMessage && (
         <div className="success-toast">
@@ -198,7 +202,7 @@ export default function CustomerProfilePage() {
             ← Quay lại
           </button>
           <h1>Thông tin cá nhân</h1>
-          <div></div>
+          <div style={{ width: '140px' }}></div>
         </div>
       </div>
 

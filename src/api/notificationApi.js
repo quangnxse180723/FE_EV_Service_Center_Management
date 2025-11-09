@@ -32,6 +32,19 @@ const notificationApi = {
   // Lấy số lượng thông báo chưa đọc
   getUnreadCount: (customerId) => {
     return axiosClient.get(`/notifications/customer/${customerId}/unread-count`);
+  },
+
+  // Tạo thông báo bảo dưỡng tự động
+  createMaintenanceNotification: (notificationData) => {
+    // notificationData: { accountId, message, type, priority, vehicleId, link }
+    return axiosClient.post('/notifications/maintenance', notificationData);
+  },
+
+  // Kiểm tra xem thông báo đã tồn tại chưa (để tránh duplicate)
+  checkNotificationExists: (accountId, vehicleId, type) => {
+    return axiosClient.get('/notifications/check', {
+      params: { accountId, vehicleId, type }
+    });
   }
 };
 

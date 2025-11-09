@@ -69,11 +69,16 @@ import TechnicianNotificationsPage from "./modules/technician/pages/TechnicianNo
 // ===== Styles =====
 import "./App.css";
 import { useAuth } from "./hooks/useAuth";
+import useMaintenanceNotification from "./hooks/useMaintenanceNotification";
 
 function AppContent() {
   const { user } = useAuth();
   const isCustomer = user?.role === 'CUSTOMER';
   const isStaff = user?.role === 'STAFF';
+  
+  // Kích hoạt kiểm tra bảo dưỡng tự động cho customer
+  const customerId = localStorage.getItem('customerId');
+  useMaintenanceNotification(isCustomer ? customerId : null);
   
   return (
     <>

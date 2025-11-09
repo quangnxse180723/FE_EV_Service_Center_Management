@@ -114,6 +114,43 @@
   background: #d1e7f5;
 }
 
+/* Maintenance notification styles */
+.notification-item.notification-urgent {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+}
+
+.notification-item.notification-urgent:hover {
+  background: #ffcdd2;
+}
+
+.notification-item.notification-urgent.unread {
+  background: #ffcdd2;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.notification-item.notification-warning {
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+}
+
+.notification-item.notification-warning:hover {
+  background: #ffe0b2;
+}
+
+.notification-item.notification-warning.unread {
+  background: #ffe0b2;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
 .notification-icon {
   font-size: 24px;
   flex-shrink: 0;
