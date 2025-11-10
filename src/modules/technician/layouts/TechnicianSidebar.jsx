@@ -17,7 +17,7 @@ export default function TechnicianSidebar() {
         <MenuItem to="/technician" end icon="▦" label="Dashboard" />
         <MenuItem to="/technician/assigned-jobs" icon="🛵" label="Xe được phân công" />
         <MenuItem to="/technician/services" icon="🗓️" label="Phiếu dịch vụ" />
-        <MenuItem to="/technician/inspection" icon="✅" label="Biên bản kiểm tra" />
+        <MenuItem to="/technician/inspections" icon="✅" label="Biên bản kiểm tra" />
       </nav>
 
       <div className={styles.logoutWrap}>

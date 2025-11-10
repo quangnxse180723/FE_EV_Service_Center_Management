@@ -62,6 +62,7 @@ import TechnicianLayout from "./modules/technician/layouts/TechnicianLayout";
 import TechnicianDashboardPage from "./modules/technician/pages/DashboardPage";
 import AssignedJobsPage from "./modules/technician/pages/AssignedJobsPage";
 import InspectionPage from "./modules/technician/pages/InspectionPage";
+import InspectionListPage from "./modules/technician/pages/InspectionListPage";
 import ServiceTicketsPage from "./modules/technician/pages/ServiceTicketsPage";
 import ServiceTicketDetailPage from "./modules/technician/pages/ServiceTicketDetailPage";
 import TechnicianNotificationsPage from "./modules/technician/pages/TechnicianNotificationsPage";
@@ -182,7 +183,7 @@ function AppContent() {
             <Route index element={<TechnicianDashboardPage />} />
             <Route path="dashboard" element={<TechnicianDashboardPage />} />
             <Route path="assigned-jobs" element={<AssignedJobsPage />} />
-            <Route path="inspection" element={<InspectionPage />} />
+            <Route path="inspections" element={<InspectionListPage />} />
             <Route path="inspection/:recordId" element={<InspectionPage />} />
             <Route path="services" element={<ServiceTicketsPage />} />
             <Route path="services/:ticketId" element={<ServiceTicketDetailPage />} />
