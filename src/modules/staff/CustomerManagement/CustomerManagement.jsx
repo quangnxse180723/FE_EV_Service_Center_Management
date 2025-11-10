@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaSearch, FaEdit } from 'react-icons/fa';
 import customerApi from '../../../api/customerApi'; // ✅ Sửa đường dẫn
 import './CustomerManagement.css';
 
@@ -7,6 +7,16 @@ const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // State cho modal sửa
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
 
   useEffect(() => {
     document.title = 'Quản lý khách hàng';
@@ -44,18 +54,62 @@ const CustomerManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
+  // Mở modal sửa
+  const handleEdit = (customer) => {
+    setEditingCustomer(customer);
+    setEditForm({
+      fullName: customer.fullName || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: customer.address || ''
+    });
+    setShowEditModal(true);
+  };
+
+  // Đóng modal
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingCustomer(null);
+    setEditForm({
+      fullName: '',
+      email: '',
+      phone: '',
+      address: ''
+    });
+  };
+
+  // Lưu thay đổi
+  const handleSaveEdit = async () => {
+    if (!editForm.fullName || !editForm.email || !editForm.phone) {
+      alert('Vui lòng điền đầy đủ thông tin bắt buộc (Họ tên, Email, Số điện thoại)');
+      return;
+    }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editForm.email)) {
+      alert('Email không hợp lệ!');
+      return;
+    }
+
+    // Validate phone
+    const phoneRegex = /^[0-9]{10,11}$/;
+    if (!phoneRegex.test(editForm.phone)) {
+      alert('Số điện thoại không hợp lệ (phải là 10-11 chữ số)!');
       return;
     }
 
     try {
-      await customerApi.deleteCustomer(id);
-      alert('Xóa khách hàng thành công');
+      setLoading(true);
+      await customerApi.updateCustomer(editingCustomer.customerId, editForm);
+      alert('Cập nhật thông tin khách hàng thành công!');
+      handleCancelEdit();
       fetchCustomers();
     } catch (error) {
-      console.error('Error deleting customer:', error);
-      alert('Không thể xóa khách hàng');
+      console.error('Error updating customer:', error);
+      alert(error.response?.data?.message || 'Không thể cập nhật thông tin khách hàng');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,15 +165,12 @@ const CustomerManagement = () => {
                     
                     <td>
                       <div className="action-buttons">
-                        <button className="btn-edit" title="Chỉnh sửa">
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="btn-delete"
-                          title="Xóa"
-                          onClick={() => handleDelete(customer.customerId)}
+                        <button 
+                          className="btn-edit" 
+                          title="Chỉnh sửa"
+                          onClick={() => handleEdit(customer)}
                         >
-                          <FaTrash />
+                          <FaEdit />
                         </button>
                       </div>
                     </td>
@@ -128,6 +179,64 @@ const CustomerManagement = () => {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal sửa thông tin khách hàng */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={handleCancelEdit}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Chỉnh sửa thông tin khách hàng</h3>
+            
+            <div className="form-group">
+              <label>Họ tên <span className="required">*</span></label>
+              <input
+                type="text"
+                value={editForm.fullName}
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                placeholder="Nhập họ tên"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Email <span className="required">*</span></label>
+              <input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="Nhập email"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Số điện thoại <span className="required">*</span></label>
+              <input
+                type="text"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                placeholder="Nhập số điện thoại"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Địa chỉ</label>
+              <input
+                type="text"
+                value={editForm.address}
+                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                placeholder="Nhập địa chỉ"
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-save" onClick={handleSaveEdit} disabled={loading}>
+                {loading ? 'Đang lưu...' : 'Lưu'}
+              </button>
+              <button className="btn-cancel" onClick={handleCancelEdit} disabled={loading}>
+                Hủy
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
