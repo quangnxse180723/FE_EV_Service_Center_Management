@@ -81,17 +81,17 @@ export default function VehicleManagementPage() {
     navigate('/');
   };
 
-  // Fetch vehicles on mount
+  // 🔄 API GET: Tải dữ liệu xe khi component mount lần đầu
   useEffect(() => {
     const fetchVehiclesAndOwners = async () => {
       setLoading(true);
       setError(null);
       try {
-        // fetch vehicles and customers in parallel
+        // 📞 Gọi 2 API GET cùng lúc để lấy danh sách Xe và Khách hàng
         const [vehiclesData, customersData] = await Promise.all([
-          getAllVehicles(),
+          getAllVehicles(),     // 👉 GET /api/admin/vehicles - Lấy danh sách tất cả xe
           // getAllCustomers may fail or be empty; allow graceful fallback
-          getAllCustomers().catch((e) => {
+          getAllCustomers().catch((e) => {  // 👉 GET /api/admin/customers - Lấy danh sách khách hàng (để hiển thị tên chủ xe)
             console.warn('getAllCustomers failed, continuing without owner enrichment', e);
             return [];
           })
@@ -168,8 +168,6 @@ export default function VehicleManagementPage() {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
-    } else if (menu === 'settings') {
-      navigate('/admin/settings');
     }
   };
 
@@ -195,10 +193,13 @@ export default function VehicleManagementPage() {
     setIsModalOpen(true);
   };
 
+  // 🗑️ API DELETE: Xóa xe theo ID
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa xe này?')) {
       try {
+        // 📞 DELETE /api/admin/vehicles/{id} - Xóa xe theo ID
         await deleteVehicle(id);
+        // 💾 Cập nhật state: Loại bỏ xe vừa xóa khỏi danh sách
         setVehicles(vehicles.filter(vehicle => vehicle.vehicleId !== id));
         alert('Đã xóa xe!');
       } catch (err) {
@@ -214,13 +215,18 @@ export default function VehicleManagementPage() {
     setIsModalOpen(true);
   };
 
+  // ✏️➕ API CREATE & UPDATE: Lưu dữ liệu xe (Thêm mới hoặc Cập nhật)
   const handleSave = async () => {
     try {
       if (editingItem) {
+        // 📞 PUT /api/admin/vehicles/{id} - Cập nhật thông tin xe
         const updated = await updateVehicle(editingItem.vehicleId, formData);
+        // 💾 Cập nhật state: Thay thế xe cũ bằng dữ liệu mới
         setVehicles(vehicles.map(v => (v.vehicleId === editingItem.vehicleId ? updated : v)));
       } else {
+        // 📞 POST /api/admin/vehicles - Tạo xe mới
         const created = await createVehicle(formData);
+        // 💾 Cập nhật state: Thêm xe mới vào danh sách
         setVehicles([...vehicles, created]);
       }
       setIsModalOpen(false);
@@ -311,12 +317,6 @@ export default function VehicleManagementPage() {
             onClick={() => handleMenuClick('vehicles')}
           >
             Quản lý xe
-          </button>
-          <button
-            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('settings')}
-          >
-            Cài đặt hệ thống
           </button>
         </nav>
       </aside>

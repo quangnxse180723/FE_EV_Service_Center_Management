@@ -25,17 +25,19 @@ export default function UserManagementPage() {
   // Dữ liệu nhân viên (lấy từ backend - staff)
   const [employees, setEmployees] = useState([]);
 
-  // Fetch data on mount
+  // 🔄 API GET: Tải dữ liệu khi component mount lần đầu
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
+        // 📞 Gọi 3 API GET cùng lúc để lấy danh sách Khách hàng, Kỹ thuật viên, Nhân viên
         const [customersData, techniciansData, staffsData] = await Promise.all([
-          getAllCustomers(),
-          getAllTechnicians(),
-          getAllStaffs()
+          getAllCustomers(),    // 👉 GET /api/admin/customers - Lấy danh sách tất cả khách hàng
+          getAllTechnicians(),  // 👉 GET /api/admin/technicians - Lấy danh sách tất cả kỹ thuật viên
+          getAllStaffs()        // 👉 GET /api/admin/staffs - Lấy danh sách tất cả nhân viên
         ]);
+        // 💾 Lưu dữ liệu vào state để hiển thị lên UI
         setCustomers(customersData);
         setTechnicians(techniciansData);
         setEmployees(Array.isArray(staffsData) ? staffsData : []);
@@ -65,25 +67,30 @@ export default function UserManagementPage() {
       navigate('/admin/parts');
     } else if (menu === 'vehicles') {
       navigate('/admin/vehicles');
-    } else if (menu === 'settings') {
-      navigate('/admin/settings');
     }
   };
 
+  // 🗑️ API DELETE: Xóa tài khoản (Khách hàng / Kỹ thuật viên / Nhân viên)
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa tài khoản này?')) {
       try {
+        // 👉 Kiểm tra tab hiện tại để gọi đúng API xóa
         if (activeTab === 'customers') {
+          // 📞 DELETE /api/admin/customers/{id} - Xóa khách hàng theo ID
           await deleteCustomer(id);
+          // 💾 Cập nhật state: Loại bỏ khách hàng vừa xóa khỏi danh sách
           setCustomers(customers.filter(cust => cust.customerId !== id));
         } else if (activeTab === 'technicians') {
+          // 📞 DELETE /api/admin/technicians/{id} - Xóa kỹ thuật viên theo ID
           await deleteTechnician(id);
+          // 💾 Cập nhật state: Loại bỏ kỹ thuật viên vừa xóa khỏi danh sách
           setTechnicians(technicians.filter(tech => tech.technicianId !== id));
         } else if (activeTab === 'employees') {
-          // call backend delete for staff
+          // 📞 DELETE /api/admin/staffs/{id} - Xóa nhân viên theo ID
           try {
             await deleteStaff(id);
-              setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
+            // 💾 Cập nhật state: Loại bỏ nhân viên vừa xóa khỏi danh sách
+            setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
           } catch (e) {
             console.warn('deleteStaff failed, falling back to client filter', e.message);
             setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
@@ -119,29 +126,41 @@ export default function UserManagementPage() {
     setIsModalOpen(true);
   };
 
+  // ✏️➕ API CREATE & UPDATE: Lưu dữ liệu (Thêm mới hoặc Cập nhật)
   const handleSave = async () => {
     try {
+      // 👉 Kiểm tra tab hiện tại để gọi đúng API
       if (activeTab === 'customers') {
         if (editingItem) {
+          // 📞 PUT /api/admin/customers/{id} - Cập nhật thông tin khách hàng
           const updated = await updateCustomer(editingItem.customerId, formData);
+          // 💾 Cập nhật state: Thay thế khách hàng cũ bằng dữ liệu mới
           setCustomers(customers.map(c => (c.customerId === editingItem.customerId ? updated : c)));
         } else {
+          // 📞 POST /api/admin/customers - Tạo khách hàng mới
           const created = await createCustomer(formData);
+          // 💾 Cập nhật state: Thêm khách hàng mới vào danh sách
           setCustomers([...customers, created]);
         }
       } else if (activeTab === 'technicians') {
         if (editingItem) {
+          // 📞 PUT /api/admin/technicians/{id} - Cập nhật thông tin kỹ thuật viên
           const updated = await updateTechnician(editingItem.technicianId, formData);
+          // 💾 Cập nhật state: Thay thế kỹ thuật viên cũ bằng dữ liệu mới
           setTechnicians(technicians.map(t => (t.technicianId === editingItem.technicianId ? updated : t)));
         } else {
+          // 📞 POST /api/admin/technicians - Tạo kỹ thuật viên mới
           const created = await createTechnician(formData);
+          // 💾 Cập nhật state: Thêm kỹ thuật viên mới vào danh sách
           setTechnicians([...technicians, created]);
         }
       } else if (activeTab === 'employees') {
         // staff CRUD
         if (editingItem) {
           try {
+            // 📞 PUT /api/admin/staffs/{id} - Cập nhật thông tin nhân viên
             const updated = await updateStaff(editingItem.staffId || editingItem.id, formData);
+            // 💾 Cập nhật state: Thay thế nhân viên cũ bằng dữ liệu mới
             setEmployees(employees.map(e => ((e.staffId || e.id) === (editingItem.staffId || editingItem.id) ? updated : e)));
           } catch (e) {
             console.error('updateStaff failed', e);
@@ -149,7 +168,9 @@ export default function UserManagementPage() {
           }
         } else {
           try {
+            // 📞 POST /api/admin/staffs - Tạo nhân viên mới
             const created = await createStaff(formData);
+            // 💾 Cập nhật state: Thêm nhân viên mới vào danh sách
             setEmployees([...employees, created]);
           } catch (e) {
             console.error('createStaff failed', e);
@@ -216,12 +237,6 @@ export default function UserManagementPage() {
             onClick={() => handleMenuClick('vehicles')}
           >
             Quản lý xe
-          </button>
-          <button
-            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('settings')}
-          >
-            Cài đặt hệ thống
           </button>
         </nav>
       </aside>
@@ -293,16 +308,16 @@ export default function UserManagementPage() {
                     </tr>
                   ) : (
                     currentData.map((user) => (
-                      <tr key={user.customerId || user.technicianId || user.id}>
+                      <tr key={user.customerId || user.technicianId || user.staffId || user.id}>
                         <td>{user.name || user.fullName || 'N/A'}</td>
-                        <td>{user.customerId || user.technicianId || user.id}</td>
+                        <td>{user.customerId || user.technicianId || user.staffId || user.id || 'N/A'}</td>
                         <td>{user.username || user.email || 'N/A'}</td>
                         <td>{user.status || 'Hoạt động'}</td>
                         <td className="cell-actions">
-                          <button className="btn-action btn-edit" onClick={() => handleEdit(user)} disabled={activeTab === 'employees'}>Sửa</button>
+                          <button className="btn-action btn-edit" onClick={() => handleEdit(user)}>Sửa</button>
                           <button
                             className="btn-action btn-delete"
-                            onClick={() => handleDelete(user.customerId || user.technicianId || user.id)}
+                            onClick={() => handleDelete(user.customerId || user.technicianId || user.staffId || user.id)}
                             disabled={loading}
                           >
                             Xóa

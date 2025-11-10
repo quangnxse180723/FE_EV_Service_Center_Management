@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PartsManagementPage.css';
 import logoImage from '/src/assets/img/logo.png';
 import adminAvatar from '/src/assets/img/avtAdmin.jpg';
+import { getAllParts, createPart, updatePart, deletePart } from '../../../api/adminApi.js';
 
 export default function PartsManagementPage() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('parts');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Giả lập dữ liệu admin
   const adminInfo = {
@@ -14,28 +17,52 @@ export default function PartsManagementPage() {
     role: 'Administrator'
   };
 
-  // Dữ liệu phụ tùng (19 items)
-  const [parts, setParts] = useState([
-    { id: 1, name: 'Phanh tay', price: 200000, quantity: 100 },
-    { id: 2, name: 'Đèn / còi / hiển thị đồng hồ', price: 150000, quantity: 100 },
-    { id: 3, name: 'Vỏ bọc, tay gas', price: 200000, quantity: 100 },
-    { id: 4, name: 'Chân chống cạnh/ chân chống đứng', price: 150000, quantity: 100 },
-    { id: 5, name: 'Cơ cấu khóa yên xe', price: 200000, quantity: 100 },
-    { id: 6, name: 'Ắc quy Li-on', price: 1000000, quantity: 100 },
-    { id: 7, name: 'Dầu phanh', price: 150000, quantity: 100 },
-    { id: 8, name: 'Phanh trước', price: 200000, quantity: 100 },
-    { id: 9, name: 'Ống dầu phanh trước', price: 150000, quantity: 100 },
-    { id: 10, name: 'Vành xe trước', price: 300000, quantity: 100 },
-    { id: 11, name: 'Lốp xe trước', price: 200000, quantity: 100 },
-    { id: 12, name: 'Cổ phốt', price: 250000, quantity: 100 },
-    { id: 13, name: 'Giảm xóc trước', price: 400000, quantity: 100 },
-    { id: 14, name: 'Phanh sau', price: 200000, quantity: 100 },
-    { id: 15, name: 'Ống dầu phanh sau', price: 150000, quantity: 100 },
-    { id: 16, name: 'Vành xe sau', price: 300000, quantity: 100 },
-    { id: 17, name: 'Lốp xe sau', price: 200000, quantity: 100 },
-    { id: 18, name: 'Giảm xóc sau', price: 400000, quantity: 100 },
-    { id: 19, name: 'Động cơ', price: 3000000, quantity: 100 }
-  ]);
+  // 💾 State cho dữ liệu phụ tùng từ API
+  const [parts, setParts] = useState([]);
+
+  // 🔄 API GET: Tải danh sách phụ tùng khi component mount
+  useEffect(() => {
+    const fetchParts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // 📞 GET /api/admin/parts - Lấy danh sách phụ tùng từ backend
+        const data = await getAllParts();
+        console.log('✅ Loaded parts:', data);
+        // 💾 Lưu vào state
+        setParts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('❌ Error loading parts:', err);
+        setError('Không thể tải danh sách phụ tùng');
+        // Fallback về dữ liệu mẫu nếu API lỗi
+        setParts([
+          { partId: 1, name: 'Phanh tay', price: 200000 },
+          { partId: 2, name: 'Đèn / còi / hiển thị đồng hồ', price: 150000 },
+          { partId: 3, name: 'Vỏ bọc, tay gas', price: 200000 },
+          { partId: 4, name: 'Chân chống cạnh/ chân chống đứng', price: 150000 },
+          { partId: 5, name: 'Cơ cấu khóa yên xe', price: 200000 },
+          { partId: 6, name: 'Ắc quy Li-on', price: 1000000 },
+          { partId: 7, name: 'Dầu phanh', price: 150000 },
+          { partId: 8, name: 'Phanh trước', price: 200000 },
+          { partId: 9, name: 'Ống dầu phanh trước', price: 150000 },
+          { partId: 10, name: 'Vành xe trước', price: 300000 },
+          { partId: 11, name: 'Lốp xe trước', price: 200000 },
+          { partId: 12, name: 'Cổ phốt', price: 250000 },
+          { partId: 13, name: 'Giảm xóc trước', price: 400000 },
+          { partId: 14, name: 'Phanh sau', price: 200000 },
+          { partId: 15, name: 'Ống dầu phanh sau', price: 150000 },
+          { partId: 16, name: 'Vành xe sau', price: 300000 },
+          { partId: 17, name: 'Lốp xe sau', price: 200000 },
+          { partId: 18, name: 'Giảm xóc sau', price: 400000 },
+          { partId: 19, name: 'Động cơ', price: 3000000 }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchParts();
+  }, []);
 
   const handleLogout = () => {
     alert('Đăng xuất thành công!');
@@ -52,24 +79,35 @@ export default function PartsManagementPage() {
       navigate('/admin/revenue');
     } else if (menu === 'vehicles') {
       navigate('/admin/vehicles');
-    } else if (menu === 'settings') {
-      navigate('/admin/settings');
     }
   };
 
+  // ✏️ Sửa phụ tùng
   const handleEdit = (id) => {
-    alert(`Chỉnh sửa phụ tùng ${id}`);
+    alert(`Chức năng sửa phụ tùng ${id} sẽ được phát triển!`);
+    // TODO: Mở modal chỉnh sửa, sau đó gọi updatePart(id, data)
   };
 
-  const handleDelete = (id) => {
+  // 🗑️ API DELETE: Xóa phụ tùng
+  const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa phụ tùng này?')) {
-      setParts(parts.filter(part => part.id !== id));
-      alert('Đã xóa phụ tùng!');
+      try {
+        // 📞 DELETE /api/admin/parts/{id} - Xóa phụ tùng
+        await deletePart(id);
+        // 💾 Cập nhật state: Loại bỏ phụ tùng vừa xóa
+        setParts(parts.filter(part => (part.partId || part.id) !== id));
+        alert('Đã xóa phụ tùng!');
+      } catch (err) {
+        console.error('❌ Error deleting part:', err);
+        alert('Lỗi khi xóa phụ tùng: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
+  // ➕ Thêm phụ tùng
   const handleAdd = () => {
     alert('Chức năng thêm phụ tùng sẽ được phát triển!');
+    // TODO: Mở modal thêm mới, sau đó gọi createPart(data)
   };
 
   return (
@@ -110,12 +148,6 @@ export default function PartsManagementPage() {
           >
             Quản lý xe
           </button>
-          <button
-            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('settings')}
-          >
-            Cài đặt hệ thống
-          </button>
         </nav>
       </aside>
 
@@ -138,44 +170,63 @@ export default function PartsManagementPage() {
         <div className="admin-content">
           <h1 className="page-title">Quản lý phụ tùng</h1>
 
+          {/* Loading & Error States */}
+          {loading && <div style={{ textAlign: 'center', padding: '2rem' }}>Đang tải...</div>}
+          {error && <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>{error}</div>}
+
           {/* Parts Table */}
-          <div className="parts-table-container">
-            <table className="parts-table">
-              <thead>
-                <tr>
-                  <th>STT</th>
-                  <th>Tên linh kiện</th>
-                  <th>Giá linh kiện</th>
-                  <th>Số lượng</th>
-                </tr>
-              </thead>
-              <tbody>
-                {parts.map((part) => (
-                  <tr key={part.id}>
-                    <td className="text-center">{part.id}</td>
-                    <td>{part.name}</td>
-                    <td className="text-right">{part.price.toLocaleString('vi-VN')} VND</td>
-                    <td className="text-center">{part.quantity}</td>
+          {!loading && (
+            <div className="parts-table-container">
+              <table className="parts-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Tên linh kiện</th>
+                    <th>Giá linh kiện</th>
+                    <th>Hành động</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {parts.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                        Không có phụ tùng nào
+                      </td>
+                    </tr>
+                  ) : (
+                    parts.map((part, index) => (
+                      <tr key={part.partId || part.id || index}>
+                        <td className="text-center">{index + 1}</td>
+                        <td>{part.name}</td>
+                        <td className="text-right">{part.price?.toLocaleString('vi-VN')} VND</td>
+                        <td className="text-center">
+                          <button 
+                            className="btn-action btn-edit-inline" 
+                            onClick={() => handleEdit(part.partId || part.id)}
+                            style={{ marginRight: '8px', padding: '4px 12px', fontSize: '14px' }}
+                          >
+                            Sửa
+                          </button>
+                          <button 
+                            className="btn-action btn-delete-inline" 
+                            onClick={() => handleDelete(part.partId || part.id)}
+                            style={{ padding: '4px 12px', fontSize: '14px' }}
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="table-actions">
             <button className="btn-action btn-add" onClick={handleAdd}>
               Thêm phụ tùng
-            </button>
-            <button className="btn-action btn-edit" onClick={() => handleEdit(parts[0]?.id)}>
-              Chỉnh sửa
-            </button>
-            <button 
-              className="btn-action btn-delete" 
-              onClick={() => handleDelete(parts[parts.length - 1]?.id)}
-              disabled={parts.length === 0}
-            >
-              Xóa
             </button>
           </div>
         </div>
