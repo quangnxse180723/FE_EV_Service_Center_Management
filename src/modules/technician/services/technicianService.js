@@ -99,18 +99,37 @@ function mapVehicleResponse(vehicles) {
 }
 
 // Helper map trạng thái từ tiếng Anh (backend) sang tiếng Việt (frontend)
+// Hàm này dùng chung cho tất cả các trang: Xe được phân công, Phiếu dịch vụ, Chi tiết phiếu
 function mapStatus(status) {
-  const statusUpper = (status || '').toUpperCase();
-  switch (statusUpper) {
-    case 'PENDING':
-      return 'Chờ nhận';
-    case 'IN_PROGRESS':
-      return 'Đang kiểm tra';
-    case 'COMPLETED':
-      return 'Hoàn thành';
-    default:
-      return status;
+  if (!status) return status;
+  
+  const statusUpper = status.toString().toUpperCase().trim();
+  
+  // Nếu đã là tiếng Việt thì giữ nguyên
+  if (statusUpper.includes('CHỜ') || statusUpper.includes('ĐÃ') || 
+      statusUpper.includes('ĐANG') || statusUpper.includes('HOÀN')) {
+    return status;
   }
+  
+  // Mapping trạng thái (thống nhất cho tất cả trang)
+  const statusMap = {
+    // Trạng thái chính
+    'PENDING': 'Chờ nhận',
+    'APPROVED': 'Đã duyệt',
+    'IN_PROGRESS': 'Đang kiểm tra',
+    'COMPLETED': 'Hoàn thành',
+    'CANCELLED': 'Đã hủy',
+    'REJECTED': 'Từ chối',
+    
+    // Các biến thể khác
+    'WAITING': 'Chờ duyệt',
+    'DONE': 'Hoàn thành',
+    'ASSIGNED': 'Đã phân công',
+    'NOT_STARTED': 'Chưa bắt đầu',
+    'PROCESSING': 'Đang xử lý'
+  };
+  
+  return statusMap[statusUpper] || status;
 }
 
 
@@ -284,7 +303,14 @@ export async function fetchServiceTickets(technicianId = null) {
   try {
     const id = technicianId || getTechnicianId();
     const response = await axiosClient.get(`/technician/${id}/service-tickets`);
-    return Array.isArray(response) ? response : [];
+    
+    // Mapping trạng thái sang tiếng Việt (dùng hàm mapStatus chung)
+    const mappedResponse = Array.isArray(response) ? response.map(ticket => ({
+      ...ticket,
+      status: mapStatus(ticket.status)
+    })) : [];
+    
+    return mappedResponse;
   } catch (error) {
     console.error('Error fetching service tickets:', error);
     throw error;
@@ -311,6 +337,14 @@ export async function getServiceTicketDetail(scheduleId) {
       console.warn('   3. Cần kiểm tra database: SELECT * FROM maintenanceschedule WHERE schedule_id = ' + scheduleId);
     }
     
+    // Mapping trạng thái processStatus sang tiếng Việt cho từng item
+    if (response.items && Array.isArray(response.items)) {
+      response.items = response.items.map(item => ({
+        ...item,
+        processStatus: mapStatus(item.processStatus)
+      }));
+    }
+    
     return response;
   } catch (error) {
     console.error('❌ Error fetching service ticket detail:', error);
@@ -331,6 +365,32 @@ export async function confirmItemCompletion(itemId) {
     console.log('✅ Item confirmed successfully');
   } catch (error) {
     console.error('❌ Error confirming item:', error);
+    throw error;
+  }
+}
+
+/**
+ * Lấy danh sách biên bản kiểm tra của kỹ thuật viên
+ * @param {number} technicianId - ID của kỹ thuật viên (optional, mặc định lấy từ localStorage)
+ * @returns {Promise<Array>} Danh sách biên bản kiểm tra
+ */
+export async function fetchInspectionReports(technicianId = null) {
+  try {
+    const id = technicianId || getTechnicianId();
+    // Sử dụng lại API service-tickets nhưng có thể backend cần endpoint riêng
+    // Hoặc dùng: /technician/${id}/inspection-reports
+    const response = await axiosClient.get(`/technician/${id}/service-tickets`);
+    
+    // Mapping trạng thái sang tiếng Việt và đổi tên field
+    const mappedResponse = Array.isArray(response) ? response.map(report => ({
+      ...report,
+      inspectionDate: report.startTime || report.scheduledDate, // Đổi tên field
+      status: mapStatus(report.status)
+    })) : [];
+    
+    return mappedResponse;
+  } catch (error) {
+    console.error('Error fetching inspection reports:', error);
     throw error;
   }
 }
