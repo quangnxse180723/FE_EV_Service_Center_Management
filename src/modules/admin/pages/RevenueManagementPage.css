@@ -1,7 +1,4 @@
-/* Revenue Management Page - inherits from DashboardPage.css */
 
-/* Import base admin styles */
-@import './DashboardPage.css';
 
 /* Revenue Table Container */
 .revenue-table-container {

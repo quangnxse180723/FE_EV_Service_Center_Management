@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './UserManagementPage.css';
 import logoImage from '/src/assets/img/log_voltfit.png';
 import AdminHeader from '../layouts/AdminHeader';
-import { getAllCustomers, createCustomer, updateCustomer, deleteCustomer, getAllTechnicians, createTechnician, updateTechnician, deleteTechnician, getAllStaffs, createStaff, updateStaff, deleteStaff } from '../../../api/adminApi.js';
+import { getAllCustomers, createCustomer, updateCustomer, toggleCustomerLock, getAllTechnicians, createTechnician, updateTechnician, deleteTechnician, getAllStaffs, createStaff, updateStaff, deleteStaff } from '../../../api/adminApi.js';
 
 export default function UserManagementPage() {
   const navigate = useNavigate();
@@ -25,17 +25,19 @@ export default function UserManagementPage() {
   // Dữ liệu nhân viên (lấy từ backend - staff)
   const [employees, setEmployees] = useState([]);
 
-  // Fetch data on mount
+  // 🔄 API GET: Tải dữ liệu khi component mount lần đầu
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
+        // 📞 Gọi 3 API GET cùng lúc để lấy danh sách Khách hàng, Kỹ thuật viên, Nhân viên
         const [customersData, techniciansData, staffsData] = await Promise.all([
-          getAllCustomers(),
-          getAllTechnicians(),
-          getAllStaffs()
+          getAllCustomers(),    // 👉 GET /api/admin/customers - Lấy danh sách tất cả khách hàng
+          getAllTechnicians(),  // 👉 GET /api/admin/technicians - Lấy danh sách tất cả kỹ thuật viên
+          getAllStaffs()        // 👉 GET /api/admin/staffs - Lấy danh sách tất cả nhân viên
         ]);
+        // 💾 Lưu dữ liệu vào state để hiển thị lên UI
         setCustomers(customersData);
         setTechnicians(techniciansData);
         setEmployees(Array.isArray(staffsData) ? staffsData : []);
@@ -62,36 +64,32 @@ export default function UserManagementPage() {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
-    } else if (menu === 'vehicles') {
-      navigate('/admin/vehicles');
-    } else if (menu === 'settings') {
-      navigate('/admin/settings');
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa tài khoản này?')) {
+  // � Khóa/Mở khóa tài khoản
+  const handleToggleLock = async (id, currentStatus) => {
+    const action = currentStatus ? 'khóa' : 'mở khóa';
+    if (window.confirm(`Bạn có chắc muốn ${action} tài khoản này?`)) {
       try {
+        // 👉 Chỉ hỗ trợ cho customer hiện tại
         if (activeTab === 'customers') {
-          await deleteCustomer(id);
-          setCustomers(customers.filter(cust => cust.customerId !== id));
+          // 📞 PUT /api/admin/customers/{id}/toggle-lock - Toggle lock customer
+          await toggleCustomerLock(id);
+          // 💾 Cập nhật state: Refresh lại danh sách
+          const data = await getAllCustomers();
+          setCustomers(data);
+          alert(`Đã ${action} tài khoản thành công!`);
         } else if (activeTab === 'technicians') {
-          await deleteTechnician(id);
-          setTechnicians(technicians.filter(tech => tech.technicianId !== id));
+          // TODO: Implement toggle lock for technicians
+          alert('Chưa hỗ trợ khóa/mở khóa kỹ thuật viên');
         } else if (activeTab === 'employees') {
-          // call backend delete for staff
-          try {
-            await deleteStaff(id);
-              setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
-          } catch (e) {
-            console.warn('deleteStaff failed, falling back to client filter', e.message);
-            setEmployees(employees.filter(emp => emp.staffId !== id && emp.id !== id));
-          }
+          // TODO: Implement toggle lock for staff
+          alert('Chưa hỗ trợ khóa/mở khóa nhân viên');
         }
-        alert('Đã xóa tài khoản!');
       } catch (err) {
-        alert('Lỗi khi xóa tài khoản');
-        console.error('Error deleting:', err);
+        alert('Lỗi khi thay đổi trạng thái tài khoản');
+        console.error('Error toggling lock:', err);
       }
     }
   };
@@ -99,11 +97,27 @@ export default function UserManagementPage() {
   // Modal & form state for add/edit
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState(null);
-  const [formData, setFormData] = React.useState({ name: '', email: '', phone: '', address: '' });
+  const [formData, setFormData] = React.useState({ 
+    role: 'CUSTOMER', 
+    fullName: '', 
+    email: '', 
+    password: '', 
+    confirmPassword: '',
+    phone: '', 
+    address: '' 
+  });
 
   const handleAdd = () => {
     setEditingItem(null);
-    setFormData({ name: '', email: '', phone: '', address: '' });
+    setFormData({ 
+      role: 'CUSTOMER', 
+      fullName: '', 
+      email: '', 
+      password: '', 
+      confirmPassword: '',
+      phone: '', 
+      address: '' 
+    });
     setIsModalOpen(true);
   };
 
@@ -118,29 +132,101 @@ export default function UserManagementPage() {
     setIsModalOpen(true);
   };
 
+  // ✏️➕ API CREATE & UPDATE: Lưu dữ liệu (Thêm mới hoặc Cập nhật)
   const handleSave = async () => {
+    // Validation cho thêm mới
+    if (!editingItem) {
+      // Kiểm tra các trường bắt buộc
+      if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+        alert('Vui lòng điền đầy đủ thông tin!');
+        return;
+      }
+
+      // Kiểm tra password khớp
+      if (formData.password !== formData.confirmPassword) {
+        alert('Mật khẩu và xác nhận mật khẩu không khớp!');
+        return;
+      }
+
+      // Kiểm tra độ dài password
+      if (formData.password.length < 6) {
+        alert('Mật khẩu phải có ít nhất 6 ký tự!');
+        return;
+      }
+
+      // Kiểm tra email hợp lệ
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        alert('Email không hợp lệ!');
+        return;
+      }
+    }
+
     try {
-      if (activeTab === 'customers') {
-        if (editingItem) {
-          const updated = await updateCustomer(editingItem.customerId, formData);
-          setCustomers(customers.map(c => (c.customerId === editingItem.customerId ? updated : c)));
-        } else {
-          const created = await createCustomer(formData);
+      // 👉 Thêm mới tài khoản
+      if (!editingItem) {
+        const newAccountData = {
+          username: formData.email,
+          password: formData.password,
+          email: formData.email,
+          role: formData.role,
+          fullName: formData.fullName,
+          phone: formData.phone || '',
+          address: formData.address || ''
+        };
+
+        // Gọi API tạo tài khoản theo role
+        if (formData.role === 'CUSTOMER') {
+          const created = await createCustomer(newAccountData);
           setCustomers([...customers, created]);
+        } else if (formData.role === 'TECHNICIAN') {
+          const created = await createTechnician(newAccountData);
+          setTechnicians([...technicians, created]);
+        } else if (formData.role === 'STAFF') {
+          const created = await createStaff(newAccountData);
+          setEmployees([...employees, created]);
+        }
+
+        alert('Đã thêm tài khoản thành công!');
+        setIsModalOpen(false);
+        return;
+      }
+
+      // � Cập nhật tài khoản (code cũ)
+      if (activeTab === 'customers') {
+        // Chuyển đổi field name sang fullName cho Customer entity
+        const customerData = {
+          fullName: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address
+        };
+        
+        if (editingItem) {
+          // 📞 PUT /api/admin/customers/{id} - Cập nhật thông tin khách hàng
+          const updated = await updateCustomer(editingItem.customerId, customerData);
+          // 💾 Cập nhật state: Thay thế khách hàng cũ bằng dữ liệu mới
+          setCustomers(customers.map(c => (c.customerId === editingItem.customerId ? updated : c)));
         }
       } else if (activeTab === 'technicians') {
         if (editingItem) {
+          // 📞 PUT /api/admin/technicians/{id} - Cập nhật thông tin kỹ thuật viên
           const updated = await updateTechnician(editingItem.technicianId, formData);
+          // 💾 Cập nhật state: Thay thế kỹ thuật viên cũ bằng dữ liệu mới
           setTechnicians(technicians.map(t => (t.technicianId === editingItem.technicianId ? updated : t)));
         } else {
+          // 📞 POST /api/admin/technicians - Tạo kỹ thuật viên mới
           const created = await createTechnician(formData);
+          // 💾 Cập nhật state: Thêm kỹ thuật viên mới vào danh sách
           setTechnicians([...technicians, created]);
         }
       } else if (activeTab === 'employees') {
         // staff CRUD
         if (editingItem) {
           try {
+            // 📞 PUT /api/admin/staffs/{id} - Cập nhật thông tin nhân viên
             const updated = await updateStaff(editingItem.staffId || editingItem.id, formData);
+            // 💾 Cập nhật state: Thay thế nhân viên cũ bằng dữ liệu mới
             setEmployees(employees.map(e => ((e.staffId || e.id) === (editingItem.staffId || editingItem.id) ? updated : e)));
           } catch (e) {
             console.error('updateStaff failed', e);
@@ -148,7 +234,9 @@ export default function UserManagementPage() {
           }
         } else {
           try {
+            // 📞 POST /api/admin/staffs - Tạo nhân viên mới
             const created = await createStaff(formData);
+            // 💾 Cập nhật state: Thêm nhân viên mới vào danh sách
             setEmployees([...employees, created]);
           } catch (e) {
             console.error('createStaff failed', e);
@@ -210,12 +298,6 @@ export default function UserManagementPage() {
           >
             Quản lý phụ tùng
           </button>
-          <button
-            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('settings')}
-          >
-            Cài đặt hệ thống
-          </button>
         </nav>
       </aside>
 
@@ -275,24 +357,34 @@ export default function UserManagementPage() {
                       </td>
                     </tr>
                   ) : (
-                    currentData.map((user) => (
-                      <tr key={user.customerId || user.technicianId || user.id}>
-                        <td>{user.name || user.fullName || 'N/A'}</td>
-                        <td>{user.customerId || user.technicianId || user.id}</td>
-                        <td>{user.username || user.email || 'N/A'}</td>
-                        <td>{user.status || 'Hoạt động'}</td>
-                        <td className="cell-actions">
-                          <button className="btn-action btn-edit" onClick={() => handleEdit(user)} disabled={activeTab === 'employees'}>Sửa</button>
-                          <button
-                            className="btn-action btn-delete"
-                            onClick={() => handleDelete(user.customerId || user.technicianId || user.id)}
-                            disabled={loading}
-                          >
-                            Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    currentData.map((user) => {
+                      // Lấy trạng thái từ account.isActive
+                      const isActive = user.account?.isActive !== false; // Default true nếu không có thông tin
+                      const statusText = isActive ? 'Hoạt động' : 'Bị khóa';
+                      const statusClass = isActive ? 'status-active' : 'status-locked';
+                      
+                      return (
+                        <tr key={user.customerId || user.technicianId || user.staffId || user.id}>
+                          <td>{user.name || user.fullName || 'N/A'}</td>
+                          <td>{user.customerId || user.technicianId || user.staffId || user.id || 'N/A'}</td>
+                          <td>{user.username || user.email || 'N/A'}</td>
+                          <td><span className={statusClass}>{statusText}</span></td>
+                          <td className="cell-actions">
+                            <button className="btn-action btn-edit" onClick={() => handleEdit(user)}>Sửa</button>
+                            <button
+                              className={`btn-action ${isActive ? 'btn-lock' : 'btn-unlock'}`}
+                              onClick={() => handleToggleLock(
+                                user.customerId || user.technicianId || user.staffId || user.id,
+                                isActive
+                              )}
+                              disabled={loading}
+                            >
+                              {isActive ? '🔒 Khóa' : '🔓 Mở khóa'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -312,12 +404,74 @@ export default function UserManagementPage() {
       {isModalOpen && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>{editingItem ? 'Chỉnh sửa' : 'Thêm mới'} {activeTab === 'customers' ? 'khách hàng' : activeTab === 'technicians' ? 'kỹ thuật viên' : 'nhân viên'}</h3>
+            <h3>{editingItem ? 'Chỉnh sửa' : 'Thêm mới'} tài khoản</h3>
             <div className="modal-form">
-              <input type="text" placeholder="Họ và tên" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-              <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-              <input type="tel" placeholder="Số điện thoại" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-              <input type="text" placeholder="Địa chỉ" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+              {/* Chỉ hiển thị role khi thêm mới */}
+              {!editingItem && (
+                <div className="form-group">
+                  <label>Vai trò:</label>
+                  <select 
+                    value={formData.role} 
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #dadce0',
+                      borderRadius: '8px',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    <option value="CUSTOMER">Khách hàng</option>
+                    <option value="TECHNICIAN">Kỹ thuật viên</option>
+                    <option value="STAFF">Nhân viên</option>
+                  </select>
+                </div>
+              )}
+              
+              <input 
+                type="text" 
+                placeholder="Họ và tên *" 
+                value={formData.fullName} 
+                onChange={(e) => setFormData({...formData, fullName: e.target.value})} 
+              />
+              <input 
+                type="email" 
+                placeholder="Email *" 
+                value={formData.email} 
+                onChange={(e) => setFormData({...formData, email: e.target.value})} 
+              />
+              
+              {/* Chỉ hiển thị password khi thêm mới */}
+              {!editingItem && (
+                <>
+                  <input 
+                    type="password" 
+                    placeholder="Mật khẩu * (ít nhất 6 ký tự)" 
+                    value={formData.password} 
+                    onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="Nhập lại mật khẩu *" 
+                    value={formData.confirmPassword} 
+                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} 
+                  />
+                </>
+              )}
+              
+              <input 
+                type="tel" 
+                placeholder="Số điện thoại" 
+                value={formData.phone} 
+                onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+              />
+              <input 
+                type="text" 
+                placeholder="Địa chỉ" 
+                value={formData.address} 
+                onChange={(e) => setFormData({...formData, address: e.target.value})} 
+              />
+              
               <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '12px'}}>
                 <button onClick={handleCloseModal}>Hủy</button>
                 <button onClick={handleSave}>Lưu</button>

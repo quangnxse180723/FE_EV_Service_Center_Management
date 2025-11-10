@@ -16,7 +16,7 @@ export default function DashboardPage() {
   };
 
   // Live stats fetched from backend
-  const [stats, setStats] = useState({ customers: 0, employees: 0, services: 0 });
+  const [stats, setStats] = useState({ customers: 0, employees: 0, technicians: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -37,9 +37,9 @@ export default function DashboardPage() {
 
         const customersCount = Array.isArray(customersRes) ? customersRes.length : (customersRes?.length || 0);
         const staffCount = Array.isArray(staffsRes) ? staffsRes.length : (staffsRes?.length || 0);
-        const servicesCount = Array.isArray(vehiclesRes) ? vehiclesRes.length : (vehiclesRes?.length || 0);
+        const techniciansCount = Array.isArray(techniciansRes) ? techniciansRes.length : (techniciansRes?.length || 0);
 
-        setStats({ customers: customersCount, employees: staffCount, services: servicesCount });
+        setStats({ customers: customersCount, employees: staffCount, technicians: techniciansCount });
         setStaffs(Array.isArray(staffsRes) ? staffsRes : []);
         setTechnicians(Array.isArray(techniciansRes) ? techniciansRes : []);
       } catch (err) {
@@ -92,10 +92,6 @@ export default function DashboardPage() {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
-    } else if (menu === 'vehicles') {
-      navigate('/admin/vehicles');
-    } else if (menu === 'settings') {
-      navigate('/admin/settings');
     }
   };
 
@@ -131,12 +127,6 @@ export default function DashboardPage() {
           >
             Quản lý phụ tùng
           </button>
-          <button
-            className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('settings')}
-          >
-            Cài đặt hệ thống
-          </button>
         </nav>
       </aside>
 
@@ -160,41 +150,15 @@ export default function DashboardPage() {
               <div className="stat-value">{stats.employees}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Dịch vụ</div>
-              <div className="stat-value">{stats.services}</div>
+              <div className="stat-label">Kỹ thuật viên</div>
+              <div className="stat-value">{stats.technicians}</div>
             </div>
           </div>
 
           {/* Charts Placeholder */}
           <div className="charts-grid">
-            <div className="chart-card stat-card">
-              <div className="stat-label">Kỹ thuật viên</div>
-              <div className="stat-value">{technicians.length}</div>
-
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: 20, width: '100%' }}>Loading technicians...</div>
-              ) : error ? (
-                <div style={{ color: 'red', textAlign: 'center', padding: 20, width: '100%' }}>Error: {String(error)}</div>
-              ) : (
-                (() => {
-                  const groups = groupTechniciansByCenter(technicians);
-                  if (!groups.length) return <div style={{ textAlign: 'center', padding: 20, width: '100%' }}>Không có kỹ thuật viên</div>;
-                  const max = Math.max(...groups.map(g => g.count));
-                  return (
-                    <div style={{ padding: '8px 16px', width: '100%', marginTop: 12 }}>
-                      {groups.map((g) => (
-                        <div key={g.name} style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-                          <div style={{ width: 160, fontSize: 13, color: '#333' }}>{g.name}</div>
-                          <div style={{ flex: 1, margin: '0 12px', background: '#eee', height: 16, borderRadius: 8 }}>
-                            <div style={{ width: `${(g.count / (max || 1)) * 100}%`, height: '100%', background: '#6c8cff', borderRadius: 8 }} />
-                          </div>
-                          <div style={{ width: 36, textAlign: 'right', fontWeight: 600 }}>{g.count}</div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()
-              )}
+            <div className="chart-card">
+              <div className="chart-placeholder">Chart 1</div>
             </div>
             <div className="chart-card">
               <div className="chart-placeholder">Chart 2</div>

@@ -71,14 +71,22 @@ const CustomerPaymentPage = ({ scheduleId: propScheduleId, onClose }) => {
         if (paymentUrl) {
           window.location.href = paymentUrl;
         }
-      } else {
-        // Tiền mặt - chỉ cần xác nhận thanh toán
-        alert('Vui long den trung tam de thanh toan tien mat');
-        if (isModalMode && onClose) {
-          onClose();
-        } else {
-          navigate('/customer/homepage');
-        }
+      } else if (selectedPaymentMethod === 'CASH') {
+        // Tiền mặt - cập nhật trạng thái thanh toán
+        const paymentData = {
+          method: 'CASH',
+          amount: invoiceData.totalCost,
+          transactionReference: `CASH_${scheduleId}_${Date.now()}`
+        };
+        
+        // Gọi API để thanh toán hóa đơn
+        await paymentApi.payInvoice(invoiceData.invoiceId, paymentData);
+        
+        // Hiển thị thông báo thành công
+        alert('Thanh toán thành công!');
+        
+        // Chuyển về trang lịch sử thanh toán
+        navigate('/customer/payment-history');
       }
     } catch (err) {
       console.error('Error processing payment:', err);
