@@ -28,8 +28,9 @@ export default function ServiceTicketsPage() {
   }, []);
 
   const getStatusClass = (status) => {
-    if (status === "Đã duyệt") return styles['status-approved'];
-    if (status === "Chờ duyệt") return styles['status-pending'];
+    if (status === "Đã duyệt" || status === "Hoàn thành") return styles['status-approved'];
+    if (status === "Chờ duyệt" || status === "Chờ nhận") return styles['status-pending'];
+    if (status === "Đang kiểm tra") return styles['status-in-progress'];
     return styles['status-pending'];
   };
 

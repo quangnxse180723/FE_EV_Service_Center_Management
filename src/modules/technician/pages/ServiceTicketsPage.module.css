@@ -172,6 +172,11 @@
   color: #0f5132;
 }
 
+.status-in-progress {
+  background: #cfe2ff;
+  color: #084298;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
