@@ -33,6 +33,25 @@ const technicianApi = {
       console.error('❌ Error fetching assigned vehicles by status:', error);
       throw error;
     }
+  },
+
+  // Lấy thống kê dashboard cho technician
+  getDashboardStats: async (technicianId, date = null) => {
+    try {
+      console.log('📊 Fetching dashboard stats for technician:', technicianId);
+      const params = {};
+      if (date) {
+        params.date = date; // Format: YYYY-MM-DD
+      }
+      const response = await axiosClient.get(`/technician/${technicianId}/dashboard/stats`, {
+        params
+      });
+      console.log('✅ Dashboard Stats:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error fetching dashboard stats:', error);
+      throw error;
+    }
   }
 };
 

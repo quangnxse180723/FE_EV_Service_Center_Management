@@ -160,15 +160,6 @@ export default function HeaderHome({ activeMenu = 'home' }) {
                       </div>
                       <a 
                         onClick={() => {
-                          navigate('/customer/dashboard');
-                          setShowMenuDropdown(false);
-                        }} 
-                        className="auth-dropdown-item"
-                      >
-                        🏠 Trang chủ
-                      </a>
-                      <a 
-                        onClick={() => {
                           navigate('/customer/payment-history');
                           setShowMenuDropdown(false);
                         }} 

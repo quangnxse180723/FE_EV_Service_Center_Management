@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import HeaderHome from '../../../components/layout/HeaderHome';
+import GoogleMapComponent from '../../../components/common/GoogleMapComponent';
 import './BookingPage.css';
 import mapImage from '/src/assets/img/map.png';
 import lichImage from '/src/assets/img/lich.png';
@@ -913,7 +914,14 @@ export default function BookingPage() {
               
               <div className="center-selection">
                 <div className="map-container">
-                  <img src={mapImage} alt="Map" className="map-image" />
+                  <GoogleMapComponent 
+                    centers={serviceCenters}
+                    selectedCenter={selectedCenter}
+                    onCenterSelect={(center) => {
+                      setSelectedCenter(center);
+                      console.log('Selected center from map:', center);
+                    }}
+                  />
                 </div>
                 <div className="center-list-container">
                   <div className="search-box">
@@ -982,11 +990,9 @@ export default function BookingPage() {
                   <div className="selected-center-info">
                     <div className="center-name-display">
                       <span>{selectedCenter?.name || 'Voltfix Quận 1'}</span>
-                      <span> - </span>
-                      <span>{selectedCenter?.distance || '1.2 km'}</span>
+                      
                     </div>
                   </div>
-                  <img src={lichImage} alt="Calendar" className="calendar-image" />
                 </div>
                 <div className="timeslots-section">
                   {/* Date Picker */}

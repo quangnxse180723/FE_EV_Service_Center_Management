@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import vehicleApi from '../../../api/vehicleApi';
+import HeaderHome from '../../../components/layout/HeaderHome';
 import './CustomerVehiclesPage.css';
 
 const CustomerVehiclesPage = () => {
@@ -146,8 +147,10 @@ const CustomerVehiclesPage = () => {
   }
 
   return (
-    <div className="customer-vehicles-page">
-      <div className="vehicles-header">
+    <>
+      <HeaderHome />
+      <div className="customer-vehicles-page">
+        <div className="vehicles-header">
         <h1>Quản lý xe của tôi</h1>
         <button className="btn-add-vehicle" onClick={() => { setEditingVehicle(null); setShowAddModal(true); }}>
           ➕ Thêm xe mới
@@ -290,7 +293,8 @@ const CustomerVehiclesPage = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -46,7 +46,8 @@ const StaffChatWidget = ({ user }) => {
   // ==================== REFS ====================
   const stompClientRef = useRef(null); // WebSocket client
   const messagesEndRef = useRef(null); // Ref để auto scroll
-  const subscriptionRef = useRef(null); // WebSocket subscription
+  const subscriptionRef = useRef(null); // WebSocket subscription cho conversation hiện tại
+  const allMessagesSubscriptionRef = useRef(null); // WebSocket subscription cho tất cả tin nhắn
   
   // ==================== CONSTANTS ====================
   const WS_URL = 'http://localhost:8080/ws';
@@ -230,6 +231,9 @@ const StaffChatWidget = ({ user }) => {
         setConnecting(false);
         setError(null);
 
+        // Subscribe to topic chung để nhận tất cả tin nhắn từ customer
+        subscribeToAllMessages(client);
+
         // Subscribe to conversation nếu đã chọn
         if (selectedConversation) {
           subscribeToConversation(client, selectedConversation.conversationId);
@@ -258,6 +262,75 @@ const StaffChatWidget = ({ user }) => {
 
     client.activate();
     stompClientRef.current = client;
+  };
+
+  /**
+   * Subscribe to topic chung để nhận tất cả tin nhắn từ customer
+   */
+  const subscribeToAllMessages = (client) => {
+    console.log('📡 ===== SUBSCRIBE TO ALL CUSTOMER MESSAGES =====');
+    
+    const topic = '/topic/staff/all-messages';
+    console.log('📡 Topic:', topic);
+    console.log('📡 Current staff user:', user);
+
+    const subscription = client.subscribe(
+      topic,
+      (message) => {
+        try {
+          console.log('📩 ===== NHẬN TIN NHẮN MỚI TỪ CUSTOMER =====');
+          console.log('📩 Raw message:', message);
+          
+          const newMessage = JSON.parse(message.body);
+          console.log('📩 Parsed Message:', newMessage);
+          console.log('📩 Conversation ID:', newMessage.conversationId);
+          console.log('📩 Sender ID:', newMessage.senderId);
+          console.log('📩 Content:', newMessage.content);
+          
+          // Hiển thị notification để test
+          console.log('🔔 STAFF NHẬN ĐƯỢC TIN NHẮN MỚI!');
+          
+          // Reload conversations để hiển thị tin nhắn mới trong sidebar
+          console.log('🔄 Reloading conversations...');
+          loadConversations();
+          
+          // Nếu đang xem conversation này, thêm message vào
+          if (selectedConversation && selectedConversation.conversationId === newMessage.conversationId) {
+            console.log('✅ Đang xem conversation này, thêm message vào UI');
+            setMessages((prev) => {
+              const exists = prev.some(msg => msg.id === newMessage.id);
+              if (exists) {
+                console.log('⚠️ Message đã tồn tại, skip');
+                return prev;
+              }
+              console.log('➕ Thêm message mới vào danh sách');
+              return [...prev, newMessage];
+            });
+          } else {
+            console.log('ℹ️ Không đang xem conversation này');
+          }
+          
+          // Tăng unread count
+          setUnreadCount((prev) => {
+            const newCount = prev + 1;
+            console.log(`🔔 Unread count: ${prev} -> ${newCount}`);
+            return newCount;
+          });
+          
+          console.log('✅ Đã xử lý tin nhắn mới từ customer');
+          console.log('📩 ===== KẾT THÚC XỬ LÝ TIN NHẮN =====\n');
+          
+        } catch (err) {
+          console.error('❌ Error parsing message:', err);
+          console.error('❌ Stack:', err.stack);
+        }
+      }
+    );
+
+    allMessagesSubscriptionRef.current = subscription;
+    console.log('✅ Đã subscribe vào topic chung thành công!');
+    console.log('⏳ Đang lắng nghe tin nhắn từ:', topic);
+    console.log('📡 ===== KẾT THÚC SUBSCRIBE TO ALL MESSAGES =====\n');
   };
 
   /**
@@ -332,6 +405,11 @@ const StaffChatWidget = ({ user }) => {
     if (subscriptionRef.current) {
       subscriptionRef.current.unsubscribe();
       subscriptionRef.current = null;
+    }
+
+    if (allMessagesSubscriptionRef.current) {
+      allMessagesSubscriptionRef.current.unsubscribe();
+      allMessagesSubscriptionRef.current = null;
     }
 
     if (stompClientRef.current) {
@@ -550,23 +628,31 @@ const StaffChatWidget = ({ user }) => {
   // ==================== WIDGET LIFECYCLE ====================
   
   /**
-   * Khi mở widget: Load conversations và connect WebSocket
+   * Auto-connect WebSocket khi component mount để luôn nhận tin nhắn
+   */
+  useEffect(() => {
+    if (user) {
+      console.log('🚀 Staff component mounted, auto-connecting WebSocket...');
+      connectWebSocket();
+    }
+    
+    return () => {
+      disconnectWebSocket();
+    };
+  }, [user]);
+  
+  /**
+   * Khi mở widget: Load conversations
    */
   useEffect(() => {
     if (isOpen) {
       loadConversations();
-      connectWebSocket();
+      // WebSocket đã connect rồi, không cần connect lại
+      if (!connected && !connecting) {
+        connectWebSocket();
+      }
     }
   }, [isOpen]);
-
-  /**
-   * Cleanup khi unmount
-   */
-  useEffect(() => {
-    return () => {
-      disconnectWebSocket();
-    };
-  }, []);
 
   /**
    * Reset khi user logout

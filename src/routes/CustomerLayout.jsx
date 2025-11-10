@@ -9,12 +9,6 @@ const CustomerLayout = () => {
 
   const menuItems = [
     {
-      id: 'home',
-      label: 'Trang chủ',
-      icon: '🏠',
-      path: '/customer/dashboard'
-    },
-    {
       id: 'payment-history',
       label: 'Lịch sử thanh toán',
       icon: '💳',
