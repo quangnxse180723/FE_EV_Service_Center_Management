@@ -102,10 +102,28 @@ const StaffChatWidget = ({ user }) => {
       console.log('📦 Response data:', data);
 
       // Backend có thể trả về {data: [...]} hoặc trực tiếp [...]
-      const conversationsList = Array.isArray(data) ? data : (data.data || []);
-      
+      const rawList = Array.isArray(data) ? data : (data.data || []);
+
+      // Normalize fields to a consistent shape to avoid brittle code when
+      // backend returns snake_case or nested objects.
+      const conversationsList = rawList.map((conv) => ({
+        conversationId: conv.conversationId || conv.conversation_id || conv.id,
+        customerAccountId:
+          conv.customerAccountId ||
+          conv.customer_account_id ||
+          (conv.customer && (conv.customer.accountId || conv.customer.account_id)) ||
+          (conv.customerAccount && (conv.customerAccount.accountId || conv.customerAccount.account_id)) ||
+          null,
+        customerName: conv.customerName || conv.customer_name || (conv.customer && (conv.customer.fullName || conv.customer.full_name)) || null,
+        customerEmail: conv.customerEmail || conv.customer_email || (conv.customer && conv.customer.email) || null,
+        unreadCount: conv.unreadCount || conv.unread_count || 0,
+        lastMessage: conv.lastMessage || conv.last_message || conv.preview || null,
+        lastMessageTime: conv.lastMessageTime || conv.last_message_time || conv.updatedAt || conv.updated_at || null,
+        __raw: conv,
+      }));
+
       console.log('✅ Loaded conversations:', conversationsList.length);
-      
+
       setConversations(conversationsList);
 
       // Tính tổng unread count
@@ -358,13 +376,31 @@ const StaffChatWidget = ({ user }) => {
       return;
     }
     
-    console.log('🔵 ===== BẮT ĐẦU GỬI TIN NHẮN =====');
+    console.log('🔵 ===== BẮT ĐẦU GỬI TIN NHẮN (STAFF) =====');
     console.log('📝 Nội dung:', content);
-    console.log('💬 Conversation ID:', selectedConversation.conversationId);
-    console.log('👤 Receiver (Customer) ID:', selectedConversation.customerAccountId);
-    
-    if (!connected) {
+
+    // Robust extraction of receiver/account id — backend may return different field names
+    const receiverId =
+      selectedConversation.customerAccountId ||
+      selectedConversation.customer_account_id ||
+      (selectedConversation.customer && (selectedConversation.customer.accountId || selectedConversation.customer.account_id)) ||
+      (selectedConversation.__raw && (selectedConversation.__raw.customerAccountId || selectedConversation.__raw.customer_account_id)) ||
+      null;
+
+    const convId = selectedConversation.conversationId || selectedConversation.conversation_id || selectedConversation.id || (selectedConversation.__raw && (selectedConversation.__raw.conversationId || selectedConversation.__raw.conversation_id));
+
+    console.log('💬 Resolved Conversation ID:', convId);
+    console.log('👤 Resolved Receiver (Customer) Account ID:', receiverId);
+
+    if (!receiverId) {
+      console.error('❌ Không xác định được receiverId cho customer. Raw conversation:', selectedConversation.__raw || selectedConversation);
+      setError('Không xác định được khách hàng nhận tin. Vui lòng refresh danh sách.');
+      return;
+    }
+
+    if (!connected || !stompClientRef.current || !stompClientRef.current.active) {
       setError('Chưa kết nối WebSocket. Vui lòng thử lại.');
+      console.warn('⚠️ WS not connected - stompClientRef:', stompClientRef.current);
       return;
     }
 
@@ -373,30 +409,61 @@ const StaffChatWidget = ({ user }) => {
       setError(null);
 
       const messageData = {
-        receiverId: selectedConversation.customerAccountId, // Account ID của customer
+        receiverId: receiverId, // Account ID của customer
         content: content,
         timestamp: new Date().toISOString(),
+        conversationId: convId,
       };
 
-      console.log('📤 Đang gửi qua WebSocket:', messageData);
+      console.log('📤 Đang gửi qua WebSocket (publish):', messageData);
 
-      // Gửi qua WebSocket
-      stompClientRef.current.publish({
-        destination: '/app/chat.send',
-        body: JSON.stringify(messageData),
-      });
+      try {
+        stompClientRef.current.publish({
+          destination: '/app/chat.send',
+          body: JSON.stringify(messageData),
+        });
 
-      console.log('✅ Đã gửi qua WebSocket thành công!');
+        console.log('✅ publish() returned (no exception)');
+      } catch (pubErr) {
+        console.error('❌ publish() threw error:', pubErr);
+
+        // Fallback: try REST POST /api/chat/message as a backup (if backend exposes it)
+        try {
+          const token = localStorage.getItem('token');
+          if (token) {
+            console.warn('🔁 Fallback to REST POST /api/chat/message');
+            const resp = await fetch(`${API_BASE_URL}/chat/message`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ conversationId: convId, receiverId, content }),
+            });
+
+            if (!resp.ok) {
+              console.error('❌ Fallback REST send failed', resp.status, resp.statusText);
+              throw new Error('Fallback REST send failed: ' + resp.status);
+            }
+
+            console.log('✅ Fallback REST send succeeded');
+          }
+        } catch (restErr) {
+          console.error('❌ Fallback REST also failed:', restErr);
+          setError('Không thể gửi tin nhắn qua WebSocket và REST.');
+          throw restErr; // rethrow to outer catch
+        }
+      }
 
       // Optimistic update: Thêm tin nhắn ngay vào UI
       const userId = user?.id || user?.accountId;
       const tempMessage = {
         id: Date.now(),
         senderId: userId,
-        receiverId: selectedConversation.customerAccountId,
+        receiverId: receiverId,
         content: content,
         timestamp: new Date().toISOString(),
-        conversationId: selectedConversation.conversationId,
+        conversationId: convId,
       };
 
       setMessages((prev) => [...prev, tempMessage]);
@@ -404,7 +471,7 @@ const StaffChatWidget = ({ user }) => {
       // Clear input
       setInputMessage('');
 
-      console.log('🔵 ===== KẾT THÚC GỬI TIN NHẮN =====\n');
+      console.log('🔵 ===== KẾT THÚC GỬI TIN NHẮN (STAFF) =====\n');
 
     } catch (err) {
       console.error('❌ Lỗi gửi tin nhắn:', err);
