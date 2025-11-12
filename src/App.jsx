@@ -54,7 +54,6 @@ import PartInventoryPage from "./modules/staff/pages/PartInventoryPage";
 import AdminDashboard from "./modules/admin/pages/DashboardPage";
 import UserManagementPage from "./modules/admin/pages/UserManagementPage";
 import RevenueManagementPage from "./modules/admin/pages/RevenueManagementPage";
-import ServiceManagementPage from "./modules/admin/pages/ServiceManagementPage";
 import PartsManagementPage from "./modules/admin/pages/PartsManagementPage";
 import CenterManagementPage from "./modules/admin/pages/CenterManagementPage";
 
@@ -148,11 +147,7 @@ function AppContent() {
             </ProtectedRoute>
           } />
           
-          <Route path="/admin/services" element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
-              <ServiceManagementPage />
-            </ProtectedRoute>
-          } />
+          {/* /admin/services removed - Service management page not required */}
           
           <Route path="/admin/parts" element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
