@@ -70,7 +70,6 @@
   color: #3c4043;
   font-size: 0.95rem;
   border-right: 1px solid #f0f0f0;
-  text-align: center;
   vertical-align: middle;
 }
 
@@ -78,11 +77,32 @@
   border-right: none;
 }
 
-.parts-table tbody td:nth-child(1) {
+.parts-table tbody td.quantity-cell,
+.parts-table tbody td:nth-child(3) {
+  font-family: 'Courier New', monospace;
   font-weight: 600;
-  color: #5f6368;
+  color: #1976d2;
+  text-align: center;
 }
 
+/* Action cell: center buttons horizontally & vertically */
+.parts-table tbody td.action-cell {
+  display: table-cell; /* keep table layout */
+  vertical-align: middle;
+  text-align: center;
+}
+
+.action-buttons {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-buttons .btn-action {
+  padding: 6px 12px;
+  font-size: 14px;
+}
 .parts-table tbody td:nth-child(2) {
   font-weight: 500;
   color: #202124;

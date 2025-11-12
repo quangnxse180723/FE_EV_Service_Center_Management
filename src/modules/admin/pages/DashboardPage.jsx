@@ -9,7 +9,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
-  // Giả lập dữ liệu admin
+
   const adminInfo = {
     name: 'Admin',
     role: 'Administrator'
@@ -92,6 +92,8 @@ export default function DashboardPage() {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
+    } else if (menu === 'centers') {
+      navigate('/admin/centers');
     }
   };
 
@@ -127,6 +129,12 @@ export default function DashboardPage() {
           >
             Quản lý phụ tùng
           </button>
+          <button
+            className={`nav-item ${activeMenu === 'centers' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('centers')}
+          >
+            Quản lý trung tâm
+          </button>
         </nav>
       </aside>
 
@@ -139,32 +147,34 @@ export default function DashboardPage() {
         <div className="admin-content">
           <h1 className="page-title">Bảng điều khiển</h1>
 
-          {/* Stats Cards */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-label">Khách hàng</div>
-              <div className="stat-value">{stats.customers}</div>
+          <div className="dashboard-grid">
+            {/* Stats Cards (row 1) */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-label">Khách hàng</div>
+                <div className="stat-value">{stats.customers}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Nhân viên</div>
+                <div className="stat-value">{stats.employees}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Kỹ thuật viên</div>
+                <div className="stat-value">{stats.technicians}</div>
+              </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Nhân viên</div>
-              <div className="stat-value">{stats.employees}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Kỹ thuật viên</div>
-              <div className="stat-value">{stats.technicians}</div>
-            </div>
-          </div>
 
-          {/* Charts Placeholder */}
-          <div className="charts-grid">
-            <div className="chart-card">
-              <div className="chart-placeholder">Chart 1</div>
-            </div>
-            <div className="chart-card">
-              <div className="chart-placeholder">Chart 2</div>
-            </div>
-            <div className="chart-card">
-              <div className="chart-placeholder">Chart 3</div>
+            {/* Charts Placeholder (row 2) */}
+            <div className="charts-grid">
+              <div className="chart-card">
+                <div className="chart-placeholder">Chart 1</div>
+              </div>
+              <div className="chart-card">
+                <div className="chart-placeholder">Chart 2</div>
+              </div>
+              <div className="chart-card">
+                <div className="chart-placeholder">Chart 3</div>
+              </div>
             </div>
           </div>
         </div>

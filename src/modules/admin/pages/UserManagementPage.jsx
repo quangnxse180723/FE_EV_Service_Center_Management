@@ -64,6 +64,8 @@ export default function UserManagementPage() {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
+    } else if (menu === 'centers') {
+      navigate('/admin/centers');
     }
   };
 
@@ -298,6 +300,12 @@ export default function UserManagementPage() {
           >
             Quản lý phụ tùng
           </button>
+          <button
+            className={`nav-item ${activeMenu === 'centers' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('centers')}
+          >
+            Quản lý trung tâm
+          </button>
         </nav>
       </aside>
 
@@ -379,7 +387,7 @@ export default function UserManagementPage() {
                               )}
                               disabled={loading}
                             >
-                              {isActive ? '🔒 Khóa' : '🔓 Mở khóa'}
+                              {isActive ? 'Khóa' : 'Mở khóa'}
                             </button>
                           </td>
                         </tr>

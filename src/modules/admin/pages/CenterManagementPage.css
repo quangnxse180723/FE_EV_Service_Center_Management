@@ -1,0 +1,56 @@
+:root{
+  --voltfit-primary: #0b79ff; /* Màu chủ đạo Voltfit - điều chỉnh nếu có brand color khác */
+  --card-bg: #ffffff;
+  --muted: #6b7280;
+}
+
+/* Layout chính */
+.admin-dashboard.centers-page { display:flex; min-height:100vh; background:#f6f8fb; }
+
+/* Sidebar visual rules are defined centrally (DashboardPage.css). Avoid duplicating here to prevent conflicts. */
+
+.admin-main { flex:1; display:flex; flex-direction:column; }
+.admin-content { padding:28px; }
+
+.centers-title { text-align:center; color:var(--voltfit-primary); font-size:28px; margin-bottom:18px; font-weight:700; }
+
+.centers-layout { display:flex; gap:20px; align-items:flex-start; }
+/* 50/50 split as requested */
+.centers-left { flex: 0 0 50%; max-width: 50%; }
+.centers-right { flex: 0 0 50%; max-width: 50%; }
+
+.map-card { height:68vh; min-height:420px; background:var(--card-bg); border-radius:12px; box-shadow: 0 6px 18px rgba(14,30,37,0.06); overflow:hidden; border:1px solid #e6eefc; }
+
+.centers-card { background:var(--card-bg); border-radius:12px; padding:12px; box-shadow: 0 6px 18px rgba(14,30,37,0.06); display:flex; flex-direction:column; gap:12px; }
+.centers-card-header { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+.centers-search { flex:1; padding:10px 12px; border-radius:999px; border:1px solid #e6eefc; }
+.btn-search { background:var(--voltfit-primary); color:#fff; padding:8px 14px; border-radius:999px; border:none; cursor:pointer; }
+
+.centers-list { max-height:420px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px; }
+.center-row { display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid #f0f6ff; }
+.center-info { display:flex; flex-direction:column; gap:4px; }
+.center-name { font-weight:700; color:#0f172a; }
+.center-meta { color: var(--muted); font-size:13px; }
+.center-actions { display:flex; gap:8px; }
+.btn-edit, .btn-add, .btn-save, .btn-small { background:#ffd54a; border:none; color:#111; padding:6px 10px; border-radius:8px; cursor:pointer; }
+.btn-delete { background:#ff4d4f; color:#fff; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+.btn-add { margin-left:auto; background:var(--voltfit-primary); color:#fff; padding:10px 14px; border-radius:10px; }
+
+/* Modal */
+.modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.45); display:flex; align-items:center; justify-content:center; z-index:1200; }
+.modal { width:520px; background:#fff; padding:18px; border-radius:12px; box-shadow:0 12px 40px rgba(2,6,23,0.2); }
+.form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+.form-group input { padding:10px 12px; border-radius:8px; border:1px solid #e6eefc; }
+.form-row { display:flex; gap:8px; }
+
+/* Popup small */
+.popup-title { font-weight:700; }
+.popup-addr { color:var(--muted); font-size:13px; }
+.popup-dist { margin-top:6px; color:var(--muted); font-size:13px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .centers-layout { flex-direction:column; }
+  .centers-right { width:100%; }
+  .map-card { height:360px; }
+}

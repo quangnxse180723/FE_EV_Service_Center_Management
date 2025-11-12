@@ -56,6 +56,7 @@ import UserManagementPage from "./modules/admin/pages/UserManagementPage";
 import RevenueManagementPage from "./modules/admin/pages/RevenueManagementPage";
 import ServiceManagementPage from "./modules/admin/pages/ServiceManagementPage";
 import PartsManagementPage from "./modules/admin/pages/PartsManagementPage";
+import CenterManagementPage from "./modules/admin/pages/CenterManagementPage";
 
 // ===== Technician Layout & Pages =====
 import TechnicianLayout from "./modules/technician/layouts/TechnicianLayout";
@@ -156,6 +157,12 @@ function AppContent() {
           <Route path="/admin/parts" element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
               <PartsManagementPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/centers" element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <CenterManagementPage />
             </ProtectedRoute>
           } />
 

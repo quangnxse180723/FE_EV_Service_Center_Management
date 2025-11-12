@@ -28,6 +28,8 @@ const SystemSettingsPage = () => {
       navigate('/admin/revenue');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
+    } else if (menu === 'centers') {
+      navigate('/admin/centers');
     } else if (menu === 'vehicles') {
       navigate('/admin/vehicles');
     }
@@ -328,6 +330,12 @@ const SystemSettingsPage = () => {
             onClick={() => handleMenuClick('parts')}
           >
             Quản lý phụ tùng
+          </button>
+          <button
+            className={`nav-item ${activeMenu === 'centers' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('centers')}
+          >
+            Quản lý trung tâm
           </button>
           <button
             className={`nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
