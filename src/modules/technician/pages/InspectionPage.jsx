@@ -25,7 +25,7 @@ export default function InspectionPage() {
   }, [scheduleId]);
 
   const totals = useMemo(() => {
-    // partCost đã bao gồm +10% từ backend
+    // partCost là giá gốc (không +10% nữa)
     const part = items.reduce((s,i)=>{
       const partCost = +i.partCost || 0;
       return s + partCost;

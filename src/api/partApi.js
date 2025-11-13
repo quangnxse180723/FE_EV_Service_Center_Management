@@ -1,17 +1,17 @@
 import axiosClient from './axiosClient';
 
 const partApi = {
-  // Lấy tất cả parts
+  // Lấy tất cả parts (PUBLIC - không cần đăng nhập)
   getAllParts: () => {
     return axiosClient.get('/parts');
   },
 
   // Lấy part theo ID
   getPartById: (partId) => {
-    return axiosClient.get(`/parts/${partId}`);
+    return axiosClient.get(`/admin/parts/${partId}`);
   },
 
-  // Lấy danh sách packagechecklistitem (itemName và giá nhân công)
+  // Lấy danh sách packagechecklistitem (itemName và giá nhân công) (PUBLIC - không cần đăng nhập)
   getAllPackageChecklistItems: () => {
     return axiosClient.get('/package-checklist-items');
   },

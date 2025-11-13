@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import HeaderHome from '../../../components/layout/HeaderHome';
 import GoogleMapComponent from '../../../components/common/GoogleMapComponent';
+import MessageModal from '../../../components/common/MessageModal';
 import './BookingPage.css';
-import mapImage from '/src/assets/img/map.png';
-import lichImage from '/src/assets/img/lich.png';
 import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
 import vehicleApi from '../../../api/vehicleApi';
@@ -43,6 +42,15 @@ export default function BookingPage() {
   const [isCustomerInfoModalOpen, setIsCustomerInfoModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
+  // State cho MessageModal
+  const [messageModal, setMessageModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onConfirm: null
+  });
+
   // State cho các bước
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -67,6 +75,27 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Hàm hiển thị thông báo
+  const showMessage = (title, message, type = 'info', onConfirm = null) => {
+    setMessageModal({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm
+    });
+  };
+
+  const closeMessage = () => {
+    setMessageModal({
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'info',
+      onConfirm: null
+    });
+  };
+
   // Hàm tính số tháng đã trôi qua kể từ ngày bảo dưỡng cuối hoặc ngày mua xe
   const calculateMonthsSinceLastService = (lastServiceDate) => {
     if (!lastServiceDate) return 0;
@@ -77,36 +106,101 @@ export default function BookingPage() {
     return monthsDiff;
   };
 
-  // Hàm tính lần bảo dưỡng dựa trên km HOẶC thời gian (3 tháng)
-  // Cứ 1000km HOẶC 3 tháng thì bảo dưỡng 1 lần
+  // Hàm tính lần bảo dưỡng dựa trên km theo các mốc cụ thể
+  // Logic: các mốc 1000km, 5000km, 10000km, 15000km... đến 55000km và tiếp tục chu kỳ 5000km
   const calculateMaintenanceLevel = (km, lastServiceDate) => {
-    const kmPerMaintenance = 1000;
-    const monthsPerMaintenance = 3;
+    if (!km || km === 0) return null;
     
-    // Tính số lần bảo dưỡng dựa trên km
-    const levelByKm = km ? Math.floor(km / kmPerMaintenance) : 0;
+    const numKm = Number(km);
+    let maintenanceText = '';
+    let level = 0;
     
-    // Tính số lần bảo dưỡng dựa trên thời gian
+    // Định nghĩa các mốc bảo dưỡng
+    const maintenanceMilestones = [
+      { km: 1000, name: "Bảo dưỡng lần đầu", level: 1 },
+      { km: 5000, name: "Bảo dưỡng lần 2", level: 2 },
+      { km: 10000, name: "Bảo dưỡng lần 3", level: 3 },
+      { km: 15000, name: "Bảo dưỡng lần 4", level: 4 },
+      { km: 20000, name: "Bảo dưỡng lần 5", level: 5 },
+      { km: 25000, name: "Bảo dưỡng lần 6", level: 6 },
+      { km: 30000, name: "Bảo dưỡng lần 7", level: 7 },
+      { km: 35000, name: "Bảo dưỡng lần 8", level: 8 },
+      { km: 40000, name: "Bảo dưỡng lần 9", level: 9 },
+      { km: 45000, name: "Bảo dưỡng lần 10", level: 10 },
+      { km: 50000, name: "Bảo dưỡng lần 11", level: 11 },
+      { km: 55000, name: "Bảo dưỡng lần 12", level: 12 }
+    ];
+    
+    // Tìm mốc bảo dưỡng hiện tại
+    if (numKm < 1000) {
+      maintenanceText = "Chưa đến kỳ bảo dưỡng tiếp theo";
+      level = 0;
+    } else if (numKm >= 55000) {
+      // Nếu vượt qua 55000km, tính theo chu kỳ 5000km
+      const cyclesOver = Math.floor((numKm - 55000) / 5000);
+      level = 12 + cyclesOver;
+      maintenanceText = `Bảo dưỡng lần ${level}`;
+    } else {
+      // Tìm mốc gần nhất mà xe đã đạt được
+      for (let i = maintenanceMilestones.length - 1; i >= 0; i--) {
+        if (numKm >= maintenanceMilestones[i].km) {
+          level = maintenanceMilestones[i].level;
+          maintenanceText = maintenanceMilestones[i].name;
+          break;
+        }
+      }
+    }
+    
+    // Kiểm tra thời gian từ lần bảo dưỡng cuối (nếu có)
     const monthsPassed = calculateMonthsSinceLastService(lastServiceDate);
-    const levelByTime = Math.floor(monthsPassed / monthsPerMaintenance);
+    if (monthsPassed >= 6) {
+      // Nếu đã quá 6 tháng, nâng level lên ít nhất 1 cấp
+      level = Math.max(level + 1, 2);
+      maintenanceText = `Bảo dưỡng lần ${level}`;
+    }
     
-    // Lấy giá trị lớn hơn (đạt điều kiện nào trước thì tính theo đó)
-    const maintenanceLevel = Math.max(levelByKm, levelByTime);
-    
-    return maintenanceLevel > 0 ? maintenanceLevel : null;
+    return { level, text: maintenanceText };
   };
 
   // Hàm tính toán thông tin bảo dưỡng tiếp theo
   const calculateNextMaintenance = (km, lastServiceDate) => {
-    const kmPerMaintenance = 1000;
-    const monthsPerMaintenance = 3;
+    const numKm = Number(km) || 0;
     
-    // Tính km còn lại đến lần bảo dưỡng tiếp theo
-    const currentLevel = Math.floor(km / kmPerMaintenance);
-    const nextKmMilestone = (currentLevel + 1) * kmPerMaintenance;
-    const kmRemaining = nextKmMilestone - km;
+    // Các mốc bảo dưỡng theo km (theo logic VehicleForm)
+    const maintenanceMilestones = [
+      { km: 1000, name: "Bảo dưỡng lần đầu" },
+      { km: 5000, name: "Bảo dưỡng lần 2" },
+      { km: 10000, name: "Bảo dưỡng lần 3" },
+      { km: 15000, name: "Bảo dưỡng lần 4" },
+      { km: 20000, name: "Bảo dưỡng lần 5" },
+      { km: 25000, name: "Bảo dưỡng lần 6" },
+      { km: 30000, name: "Bảo dưỡng lần 7" },
+      { km: 35000, name: "Bảo dưỡng lần 8" },
+      { km: 40000, name: "Bảo dưỡng lần 9" },
+      { km: 45000, name: "Bảo dưỡng lần 10" },
+      { km: 50000, name: "Bảo dưỡng lần 11" },
+      { km: 55000, name: "Bảo dưỡng dịch vụ" }
+    ];
     
-    // Tính thời gian còn lại đến lần bảo dưỡng tiếp theo
+    // Tìm mốc bảo dưỡng tiếp theo
+    let nextMilestone = maintenanceMilestones.find(m => m.km > numKm);
+    
+    if (!nextMilestone) {
+      // Nếu đã vượt qua tất cả mốc, tính theo chu kỳ 5000km
+      const baseKm = 55000;
+      const cycleKm = 5000;
+      const cyclesOver = Math.floor((numKm - baseKm) / cycleKm);
+      const nextKm = baseKm + (cyclesOver + 1) * cycleKm;
+      nextMilestone = {
+        km: nextKm,
+        name: `Bảo dưỡng dịch vụ (${nextKm.toLocaleString()} km)`
+      };
+    }
+    
+    const kmRemaining = nextMilestone.km - numKm;
+    
+    // Tính thời gian còn lại đến lần bảo dưỡng tiếp theo (6 tháng)
+    const monthsPerMaintenance = 6;
     let monthsRemaining = null;
     let nextMaintenanceDate = null;
     
@@ -124,7 +218,8 @@ export default function BookingPage() {
     
     return {
       kmRemaining,
-      nextKmMilestone,
+      nextKmMilestone: nextMilestone.km,
+      nextMilestoneName: nextMilestone.name,
       monthsRemaining,
       nextMaintenanceDate
     };
@@ -141,6 +236,20 @@ export default function BookingPage() {
   // Fetch data từ API khi component mount
   useEffect(() => {
     const fetchInitialData = async () => {
+      // Kiểm tra đăng nhập trước khi fetch data
+      if (!isLoggedIn) {
+        showMessage(
+          'Yêu cầu đăng nhập',
+          'Vui lòng đăng nhập để sử dụng chức năng đặt lịch!',
+          'warning',
+          () => {
+            closeMessage();
+            navigate('/login');
+          }
+        );
+        return;
+      }
+
       setLoading(true);
       setError(null);
       
@@ -156,18 +265,31 @@ export default function BookingPage() {
         const [vehiclesRes, centersRes, servicesRes, customerRes] = await Promise.all([
           vehicleApi.getCustomerVehicles(customerId).catch(err => {
             console.error('Error fetching customer vehicles:', err);
+            // Kiểm tra lỗi 403
+            if (err.response?.status === 403) {
+              throw new Error('UNAUTHORIZED');
+            }
             throw err;
           }),
           centerApi.getAllCenters().catch(err => {
             console.error('Error fetching centers:', err);
+            if (err.response?.status === 403) {
+              throw new Error('UNAUTHORIZED');
+            }
             return [];
           }),
           serviceApi.getAllServices().catch(err => {
             console.error('Error fetching services:', err);
+            if (err.response?.status === 403) {
+              throw new Error('UNAUTHORIZED');
+            }
             return [];
           }),
           customerApi.getCustomerById(customerId).catch(err => {
             console.error('Error fetching customer data:', err);
+            if (err.response?.status === 403) {
+              throw new Error('UNAUTHORIZED');
+            }
             return null;
           })
         ]);
@@ -194,6 +316,21 @@ export default function BookingPage() {
         });
       } catch (err) {
         console.error('❌ Error fetching initial data:', err);
+        
+        // Xử lý lỗi 403 - Chưa đăng nhập hoặc hết phiên
+        if (err.message === 'UNAUTHORIZED') {
+          showMessage(
+            'Yêu cầu đăng nhập',
+            'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!',
+            'warning',
+            () => {
+              closeMessage();
+              navigate('/login');
+            }
+          );
+          return;
+        }
+        
         setError(err.message || 'Không thể tải dữ liệu. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
@@ -242,34 +379,31 @@ export default function BookingPage() {
     const inputKm = vehicleKm[vehicleId];
     const km = inputKm !== undefined && inputKm !== '' ? parseFloat(inputKm) : (vehicle.currentMileage || 0);
     
-    const maintenanceLevel = calculateMaintenanceLevel(km, vehicle.lastServiceDate);
+    const maintenanceInfo = calculateMaintenanceLevel(km, vehicle.lastServiceDate);
+    const maintenanceLevel = maintenanceInfo?.level || null;
+    const maintenanceText = maintenanceInfo?.text || 'Chưa đến kỳ bảo dưỡng';
     
     // Tính thông tin chi tiết
     const monthsSinceLastService = calculateMonthsSinceLastService(vehicle.lastServiceDate);
-    const kmPerMaintenance = 1000;
-    const monthsPerMaintenance = 3;
     
-    // Kiểm tra xem có chạy quá km không (quá 200km so với kỳ bảo dưỡng)
-    const kmOverdue = maintenanceLevel ? (km - (maintenanceLevel * kmPerMaintenance)) : 0;
-    const isKmOverdue = kmOverdue > 200;
-    
-    // Kiểm tra xem có quá hạn theo thời gian không (quá 1 tháng so với kỳ bảo dưỡng)
-    const monthsOverdue = maintenanceLevel ? (monthsSinceLastService - (maintenanceLevel * monthsPerMaintenance)) : 0;
-    const isTimeOverdue = monthsOverdue > 1;
-    
-    // Xe quá hạn nếu quá km HOẶC quá thời gian
-    const isOverdue = isKmOverdue || isTimeOverdue;
-    
-    // Xác định lý do bảo dưỡng
+    // Xác định mức độ cấp bách dựa trên level và thời gian
+    let isOverdue = false;
     let maintenanceReason = '';
+    
     if (maintenanceLevel) {
-      const levelByKm = Math.floor(km / kmPerMaintenance);
-      const levelByTime = Math.floor(monthsSinceLastService / monthsPerMaintenance);
+      // Level 3 = Cần bảo dưỡng gấp (trên 40000km hoặc lâu không bảo dưỡng)
+      // Level 2 = Nên bảo dưỡng sớm (5000-40000km)
+      // Level 1 = Bảo dưỡng bình thường (dưới 5000km)
       
-      if (levelByKm >= levelByTime) {
-        maintenanceReason = `(Đã chạy ${km.toLocaleString()} km)`;
-      } else {
+      if (maintenanceLevel === 6 || monthsSinceLastService > 12) {
+        isOverdue = true;
+        maintenanceReason = maintenanceLevel === 6 
+          ? `(Đã chạy ${km.toLocaleString()} km - Cần bảo dưỡng gấp)`
+          : `(Đã ${monthsSinceLastService} tháng kể từ lần cuối - Quá hạn)`;
+      } else if (monthsSinceLastService >= 6) {
         maintenanceReason = `(Đã ${monthsSinceLastService} tháng kể từ lần cuối)`;
+      } else {
+        maintenanceReason = `(Đã chạy ${km.toLocaleString()} km)`;
       }
     }
     
@@ -279,13 +413,9 @@ export default function BookingPage() {
       inputKm: km,
       maintenanceLevel: maintenanceLevel,
       maintenanceReason: maintenanceReason,
-      maintenanceText: maintenanceLevel ? `Bảo dưỡng lần ${maintenanceLevel}` : 'Chưa đến kỳ bảo dưỡng',
+      maintenanceText: maintenanceText,
       monthsSinceLastService: monthsSinceLastService,
-      isOverdue: isOverdue,
-      kmOverdue: kmOverdue,
-      monthsOverdue: monthsOverdue,
-      isKmOverdue: isKmOverdue,
-      isTimeOverdue: isTimeOverdue
+      isOverdue: isOverdue
     };
     
     setPendingVehicle(vehicleWithMaintenance);
@@ -305,8 +435,8 @@ export default function BookingPage() {
         // ===== MOCK DATA TẠM THỜI (XÓA KHI BACKEND SẴN SÀNG) =====
         const mockPackage = {
           packageId: maintenanceLevel, // VD: 1, 2, 3...
-          packageName: `Gói bảo dưỡng ${maintenanceLevel * 1000}km`,
-          description: `Bảo dưỡng định kỳ lần ${maintenanceLevel}`,
+          packageName: maintenanceText,
+          description: `${maintenanceText} - ${maintenanceReason}`,
           price: 500000 + (maintenanceLevel - 1) * 200000,
           estimatedDuration: 60 + (maintenanceLevel - 1) * 30,
           reason: maintenanceReason
@@ -363,6 +493,13 @@ export default function BookingPage() {
 
   const handleCenterSelect = (center) => {
     setSelectedCenter(center);
+    console.log('🗺️ Đã chọn trung tâm:', {
+      name: center.name || center.centerName,
+      address: center.address,
+      latitude: center.latitude,
+      longitude: center.longitude,
+      coordinates: `${center.latitude}, ${center.longitude}`
+    });
   };
 
   // Fetch time slots khi thay đổi ngày hoặc trung tâm
@@ -669,13 +806,6 @@ export default function BookingPage() {
           
           {/* Progress Bar */}
           <div className="progress-wrapper">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${((currentStep - 1) / 3) * 100}%` }} />
-              <div className={`progress-step ${currentStep >= 1 ? 'active' : ''}`}>1</div>
-              <div className={`progress-step ${currentStep >= 2 ? 'active' : ''}`}>2</div>
-              <div className={`progress-step ${currentStep >= 3 ? 'active' : ''}`}>3</div>
-              <div className={`progress-step ${currentStep >= 4 ? 'active' : ''}`}>4</div>
-            </div>
             <div className="progress-label">Bước {currentStep}/4: {
               currentStep === 1 ? 'Chọn xe' :
               currentStep === 2 ? 'Chọn trung tâm dịch vụ' :
@@ -689,13 +819,6 @@ export default function BookingPage() {
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '3rem' }}>
                   <p>Đang tải danh sách xe...</p>
-                </div>
-              ) : error ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: '#f44336' }}>
-                  <p>{error}</p>
-                  <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1.5rem' }}>
-                    Thử lại
-                  </button>
                 </div>
               ) : userVehicles.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem' }}>
@@ -713,7 +836,9 @@ export default function BookingPage() {
                     const displayKm = inputKm !== undefined && inputKm !== '' ? inputKm : vehicle.currentMileage || '';
                     const kmValue = parseFloat(displayKm) || 0;
                     
-                    const maintenanceLevel = calculateMaintenanceLevel(kmValue, vehicle.lastServiceDate);
+                    const maintenanceInfo = calculateMaintenanceLevel(kmValue, vehicle.lastServiceDate);
+                    const maintenanceLevel = maintenanceInfo?.level || null;
+                    const maintenanceText = maintenanceInfo?.text || 'Chưa đến kỳ bảo dưỡng';
                     const monthsSinceLastService = calculateMonthsSinceLastService(vehicle.lastServiceDate);
                     const nextMaintenance = calculateNextMaintenance(kmValue, vehicle.lastServiceDate);
                     
@@ -725,10 +850,10 @@ export default function BookingPage() {
                         <div className="vehicle-header">Xe máy điện</div>
                         <div className="vehicle-image">
                           <img 
-                            src={vehicle.imageUrl || 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle'} 
+                            src={vehicle.imageUrl || '/src/assets/images/homepage.png'} 
                             alt={vehicle.model || 'Xe điện'}
                             onError={(e) => { 
-                              e.target.src = 'https://via.placeholder.com/300x200/4CAF50/ffffff?text=EV+Vehicle';
+                              e.target.src = '/src/assets/images/homepage.png';
                             }}
                           />
                         </div>
@@ -815,11 +940,11 @@ export default function BookingPage() {
                   <h3>Xe đã chọn:</h3>
                   <div className="vehicle-summary">
                     <img 
-                      src={selectedVehicle.imageUrl || 'https://via.placeholder.com/100x75/4CAF50/ffffff?text=EV'} 
+                      src={selectedVehicle.imageUrl || '/src/assets/images/homepage.png'} 
                       alt={selectedVehicle.model} 
                       className="vehicle-thumb" 
                       onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/100x75/4CAF50/ffffff?text=EV';
+                        e.target.src = '/src/assets/images/homepage.png';
                       }}
                     />
                     <div className="vehicle-details">
@@ -884,6 +1009,11 @@ export default function BookingPage() {
                               </div>
                               {isKmSooner && nextMaintenance.kmRemaining > 0 ? (
                                 <div style={{ color: '#666' }}>
+                                  {nextMaintenance.nextMilestoneName && (
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                                      {nextMaintenance.nextMilestoneName}
+                                    </div>
+                                  )}
                                   Còn {nextMaintenance.kmRemaining.toLocaleString()} km
                                   <div style={{ fontSize: '10px', marginTop: '2px', opacity: 0.8 }}>
                                     (Khi đạt {nextMaintenance.nextKmMilestone.toLocaleString()} km)
@@ -891,10 +1021,14 @@ export default function BookingPage() {
                                 </div>
                               ) : nextMaintenance.nextMaintenanceDate ? (
                                 <div style={{ color: '#666' }}>
-                                  {nextMaintenance.nextMaintenanceDate.toLocaleDateString('vi-VN')}
-                                  <div style={{ fontSize: '10px', marginTop: '2px', opacity: 0.8 }}>
-                                    (Còn {nextMaintenance.monthsRemaining} tháng)
-                                  </div>
+                                  {nextMaintenance.monthsRemaining > 0 && (
+                                    <>
+                                      {nextMaintenance.nextMaintenanceDate.toLocaleDateString('vi-VN')}
+                                      <div style={{ fontSize: '10px', marginTop: '2px', opacity: 0.8 }}>
+                                        (Còn {nextMaintenance.monthsRemaining} tháng)
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               ) : null}
                             </div>
@@ -953,25 +1087,60 @@ export default function BookingPage() {
                         })
                         .map((center, index) => {
                           const centerId = center.centerId || center.id || index;
+                          const lat = parseFloat(center.latitude || center.lat);
+                          const lng = parseFloat(center.longitude || center.lng || center.lon);
+                          const hasCoordinates = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+                          
+                          // So sánh chính xác để xác định trung tâm được chọn
+                          const isSelected = selectedCenter && (
+                            (selectedCenter.centerId && selectedCenter.centerId === center.centerId) ||
+                            (selectedCenter.id && selectedCenter.id === center.id) ||
+                            (selectedCenter.name === center.name && selectedCenter.address === center.address)
+                          );
+                          
                           return (
                             <div 
                               key={centerId}
-                              className={`center-item ${(selectedCenter?.centerId === center.centerId || selectedCenter?.id === center.id) ? 'selected' : ''}`}
+                              className={`center-item ${isSelected ? 'selected' : ''}`}
                             >
                               <div className="center-info">
                                 <div className="center-name">
                                   {center.name || center.centerName || 'Trung tâm dịch vụ'}
                                 </div>
                                 <div className="center-distance">
-                                  {center.address || center.location || 'Địa chỉ chưa cập nhật'}
+                                  📍 {center.address || center.location || 'Địa chỉ chưa cập nhật'}
                                 </div>
+                                {hasCoordinates ? (
+                                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                                    📌 {lat.toFixed(6)}, {lng.toFixed(6)}
+                                  </div>
+                                ) : (
+                                  <div style={{ fontSize: '11px', color: '#ff9800', marginTop: '4px' }}>
+                                    ⚠️ Chưa có tọa độ bản đồ
+                                  </div>
+                                )}
                               </div>
-                              <button 
-                                className="btn-select-center"
-                                onClick={() => handleCenterSelect(center)}
-                              >
-                                Chọn
-                              </button>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <button 
+                                  className="btn-select-center"
+                                  onClick={() => handleCenterSelect(center)}
+                                  disabled={!hasCoordinates}
+                                  style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: !hasCoordinates ? '#ccc' : (isSelected ? '#4CAF50' : '#2196F3'),
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: hasCoordinates ? 'pointer' : 'not-allowed',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    transition: 'all 0.3s',
+                                    opacity: !hasCoordinates ? 0.6 : 1
+                                  }}
+                                >
+                                  {!hasCoordinates ? '❌ Không khả dụng' : (isSelected ? '✓ Đã chọn' : 'Chọn')}
+                                </button>
+                              </div>
                             </div>
                           );
                         })
@@ -1676,6 +1845,16 @@ export default function BookingPage() {
           </div>
         </div>
       )}
+
+      {/* Message Modal */}
+      <MessageModal
+        isOpen={messageModal.isOpen}
+        onClose={closeMessage}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        onConfirm={messageModal.onConfirm}
+      />
     </div>
   );
 }

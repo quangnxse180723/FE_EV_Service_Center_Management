@@ -17,9 +17,9 @@ export default function ChecklistEditor({ items=[], onChange }) {
           }
         }
         
-        // Khi nhập partPrice (đã +10%), chuyển về partCost (giá gốc)
+        // Khi nhập partPrice, lưu trực tiếp (không chia 1.1 nữa)
         if(key === "partPrice") {
-          updated.partCost = value / 1.1; // Lưu giá gốc (trước khi +10%)
+          updated.partCost = value; // Lưu giá gốc
         }
         
         return updated;
@@ -60,8 +60,8 @@ export default function ChecklistEditor({ items=[], onChange }) {
         </thead>
         <tbody>
           {items.map((it,idx)=>{
-            // Tính giá vật tư hiển thị = partCost + 10%
-            const partPrice = (it.partCost || 0) * 1.1;
+            // Hiển thị giá vật tư gốc (không nhân 1.1 nữa)
+            const partPrice = it.partCost || 0;
             
             return (
               <tr key={it.id}>

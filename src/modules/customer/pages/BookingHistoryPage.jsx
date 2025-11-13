@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 import HeaderHome from '../../../components/layout/HeaderHome';
 import MaintenanceReportModal from '../components/MaintenanceReportModal';
+import MessageModal from '../../../components/common/MessageModal';
 import './BookingHistoryPage.css';
 import defaultAvatar from '/src/assets/img/user-avatar.jpg';
 import scheduleApi from '../../../api/scheduleApi';
@@ -10,6 +12,7 @@ import customerApi from '../../../api/customerApi';
 
 export default function BookingHistoryPage() {
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   
   // Lấy customerId từ localStorage
   const customerId = localStorage.getItem('customerId');
@@ -39,11 +42,43 @@ export default function BookingHistoryPage() {
   const [selectedScheduleId, setSelectedScheduleId] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  // ✅ State cho Message Modal
+  const [messageModal, setMessageModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onConfirm: null
+  });
+
+  // Helper functions cho Message Modal
+  const showMessage = (title, message, type = 'info', onConfirm = null) => {
+    setMessageModal({ isOpen: true, title, message, type, onConfirm });
+  };
+
+  const closeMessage = () => {
+    setMessageModal({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
+  };
+
   // Fetch booking history khi component mount
   useEffect(() => {
+    // Kiểm tra đăng nhập trước khi fetch data
+    if (!isLoggedIn) {
+      showMessage(
+        'Yêu cầu đăng nhập',
+        'Vui lòng đăng nhập để xem lịch sử đặt lịch!',
+        'warning',
+        () => {
+          closeMessage();
+          navigate('/login');
+        }
+      );
+      return;
+    }
+    
     fetchBookingHistory();
     fetchCustomerInfo();
-  }, []);
+  }, [isLoggedIn]);
 
   // Fetch customer info từ API
   const fetchCustomerInfo = async () => {
@@ -65,6 +100,21 @@ export default function BookingHistoryPage() {
       });
     } catch (error) {
       console.error('❌ Error fetching customer info:', error);
+      
+      // Xử lý 403 Forbidden
+      if (error.response?.status === 403 || error.message?.includes('403')) {
+        showMessage(
+          'Yêu cầu đăng nhập',
+          'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!',
+          'warning',
+          () => {
+            closeMessage();
+            navigate('/login');
+          }
+        );
+        return;
+      }
+      
       // Fallback về localStorage nếu API lỗi
       const userStr = localStorage.getItem('user');
       if (userStr) {
@@ -199,6 +249,20 @@ export default function BookingHistoryPage() {
           console.log('✅ Cached centers:', centersCache);
         } catch (centerErr) {
           console.warn('⚠️ Could not fetch centers cache:', centerErr);
+          
+          // Xử lý 403 Forbidden cho centers
+          if (centerErr.response?.status === 403 || centerErr.message?.includes('403')) {
+            showMessage(
+              'Yêu cầu đăng nhập',
+              'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!',
+              'warning',
+              () => {
+                closeMessage();
+                navigate('/login');
+              }
+            );
+            return;
+          }
         }
       }
       
@@ -207,6 +271,21 @@ export default function BookingHistoryPage() {
         response = await scheduleApi.getByCustomer(customerId);
       } catch (apiError) {
         console.error('❌ All API endpoints failed:', apiError);
+        
+        // Xử lý 403 Forbidden
+        if (apiError.response?.status === 403 || apiError.message?.includes('403')) {
+          showMessage(
+            'Yêu cầu đăng nhập',
+            'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!',
+            'warning',
+            () => {
+              closeMessage();
+              navigate('/login');
+            }
+          );
+          return;
+        }
+        
         console.warn('⚠️ BACKEND ISSUE: Endpoint /api/customer/schedules/{id} không tồn tại');
         console.warn('⚠️ Backend cần implement một trong các endpoint:');
         console.warn('   1. GET /api/schedules/customer/{customerId}');
@@ -705,6 +784,16 @@ export default function BookingHistoryPage() {
           }}
         />
       )}
+
+      {/* ✅ Message Modal */}
+      <MessageModal
+        isOpen={messageModal.isOpen}
+        onClose={closeMessage}
+        title={messageModal.title}
+        message={messageModal.message}
+        type={messageModal.type}
+        onConfirm={messageModal.onConfirm}
+      />
     </div>
   );
 }

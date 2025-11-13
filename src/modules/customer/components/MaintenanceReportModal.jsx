@@ -36,7 +36,7 @@ export default function MaintenanceReportModal({ scheduleId, onClose }) {
           items: items.map(item => ({
             itemId: item.itemId,
             partName: item.name,
-            partCost: item.partCost || 0, // Giá đã bao gồm +10% từ backend
+            partCost: item.partCost || 0, // Giá gốc (không +10% nữa)
             laborCost: item.laborCost || 0,
             actionStatus: item.status // "Thay thế", "Kiểm tra", "Bôi trơn"
           }))
@@ -140,7 +140,7 @@ export default function MaintenanceReportModal({ scheduleId, onClose }) {
               <tbody>
                 {report.items && report.items.length > 0 ? (
                   report.items.map((item, index) => {
-                    // ✅ Giá vật tư (partCost đã bao gồm +10% từ backend)
+                    // ✅ Giá vật tư gốc (không +10% nữa)
                     const partPrice = item.partCost ? item.partCost : 0;
                     return (
                       <tr key={index}>

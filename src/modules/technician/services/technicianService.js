@@ -195,7 +195,7 @@ export async function getOrCreateChecklist(scheduleId) {
       status: item.actionStatus || 'Kiểm tra', // actionStatus là "Thay thế", "Bôi trơn", ...
       
       // Lấy chi phí thật từ backend
-      // partCost đã bao gồm +10% từ backend
+      // partCost là giá gốc (không +10% nữa)
       partCost: item.partCost || 0,
       laborCost: item.laborCost || 0,
       

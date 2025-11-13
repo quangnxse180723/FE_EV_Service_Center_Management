@@ -143,8 +143,8 @@ export default function ServiceTicketDetailPage() {
             <tbody>
               {ticket.items && ticket.items.length > 0 ? (
                 ticket.items.map((item, index) => {
-                  // Tính giá vật tư = partCost + 10%
-                  const partPrice = item.partCost ? item.partCost * 1.1 : 0;
+                  // Hiển thị giá vật tư gốc (không nhân 1.1 nữa)
+                  const partPrice = item.partCost || 0;
                   
                   return (
                     <tr key={item.stt || index}>

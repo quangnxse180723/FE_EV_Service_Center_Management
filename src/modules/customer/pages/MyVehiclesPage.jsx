@@ -30,28 +30,93 @@ export default function MyVehiclesPage() {
   };
 
   const calculateMaintenanceLevel = (km, lastServiceDate) => {
-    const kmPerMaintenance = 1000;
-    const monthsPerMaintenance = 3;
+    if (!km || km === 0) return null;
     
-    const levelByKm = km ? Math.floor(km / kmPerMaintenance) : 0;
+    const numKm = Number(km);
+    let level = 0;
+    
+    // Định nghĩa các mốc bảo dưỡng (giống BookingPage)
+    const maintenanceMilestones = [
+      { km: 1000, level: 1 },
+      { km: 5000, level: 2 },
+      { km: 10000, level: 3 },
+      { km: 15000, level: 4 },
+      { km: 20000, level: 5 },
+      { km: 25000, level: 6 },
+      { km: 30000, level: 7 },
+      { km: 35000, level: 8 },
+      { km: 40000, level: 9 },
+      { km: 45000, level: 10 },
+      { km: 50000, level: 11 },
+      { km: 55000, level: 12 }
+    ];
+    
+    // Tìm mốc bảo dưỡng hiện tại
+    if (numKm < 1000) {
+      level = 0;
+    } else if (numKm >= 55000) {
+      // Nếu vượt qua 55000km, tính theo chu kỳ 5000km
+      const cyclesOver = Math.floor((numKm - 55000) / 5000);
+      level = 12 + cyclesOver;
+    } else {
+      // Tìm mốc gần nhất mà xe đã đạt được
+      for (let i = maintenanceMilestones.length - 1; i >= 0; i--) {
+        if (numKm >= maintenanceMilestones[i].km) {
+          level = maintenanceMilestones[i].level;
+          break;
+        }
+      }
+    }
+    
+    // Kiểm tra thời gian từ lần bảo dưỡng cuối (nếu có)
     const monthsPassed = calculateMonthsSinceLastService(lastServiceDate);
-    const levelByTime = Math.floor(monthsPassed / monthsPerMaintenance);
+    if (monthsPassed >= 6) {
+      // Nếu đã quá 6 tháng, nâng level lên ít nhất 1 cấp
+      level = Math.max(level + 1, 2);
+    }
     
-    const maintenanceLevel = Math.max(levelByKm, levelByTime);
-    return maintenanceLevel > 0 ? maintenanceLevel : null;
+    return level > 0 ? level : null;
   };
 
   // Hàm tính toán thông tin bảo dưỡng tiếp theo
   const calculateNextMaintenance = (km, lastServiceDate) => {
-    const kmPerMaintenance = 1000;
-    const monthsPerMaintenance = 3;
+    const numKm = Number(km) || 0;
     
-    // Tính km còn lại đến lần bảo dưỡng tiếp theo
-    const currentLevel = Math.floor(km / kmPerMaintenance);
-    const nextKmMilestone = (currentLevel + 1) * kmPerMaintenance;
-    const kmRemaining = nextKmMilestone - km;
+    // Các mốc bảo dưỡng theo km (giống BookingPage)
+    const maintenanceMilestones = [
+      { km: 1000, name: "Bảo dưỡng lần đầu" },
+      { km: 5000, name: "Bảo dưỡng lần 2" },
+      { km: 10000, name: "Bảo dưỡng lần 3" },
+      { km: 15000, name: "Bảo dưỡng lần 4" },
+      { km: 20000, name: "Bảo dưỡng lần 5" },
+      { km: 25000, name: "Bảo dưỡng lần 6" },
+      { km: 30000, name: "Bảo dưỡng lần 7" },
+      { km: 35000, name: "Bảo dưỡng lần 8" },
+      { km: 40000, name: "Bảo dưỡng lần 9" },
+      { km: 45000, name: "Bảo dưỡng lần 10" },
+      { km: 50000, name: "Bảo dưỡng lần 11" },
+      { km: 55000, name: "Bảo dưỡng lần 12" }
+    ];
     
-    // Tính thời gian còn lại đến lần bảo dưỡng tiếp theo
+    // Tìm mốc bảo dưỡng tiếp theo
+    let nextMilestone = maintenanceMilestones.find(m => m.km > numKm);
+    
+    if (!nextMilestone) {
+      // Nếu đã vượt qua tất cả mốc, tính theo chu kỳ 5000km
+      const baseKm = 55000;
+      const cycleKm = 5000;
+      const cyclesOver = Math.floor((numKm - baseKm) / cycleKm);
+      const nextKm = baseKm + (cyclesOver + 1) * cycleKm;
+      nextMilestone = {
+        km: nextKm,
+        name: `Bảo dưỡng lần ${12 + cyclesOver + 1}`
+      };
+    }
+    
+    const kmRemaining = nextMilestone.km - numKm;
+    
+    // Tính thời gian còn lại đến lần bảo dưỡng tiếp theo (6 tháng)
+    const monthsPerMaintenance = 6;
     let monthsRemaining = null;
     let nextMaintenanceDate = null;
     
@@ -69,7 +134,8 @@ export default function MyVehiclesPage() {
     
     return {
       kmRemaining,
-      nextKmMilestone,
+      nextKmMilestone: nextMilestone.km,
+      nextMilestoneName: nextMilestone.name,
       monthsRemaining,
       nextMaintenanceDate
     };
@@ -733,8 +799,8 @@ export default function MyVehiclesPage() {
                   const maintenanceLevel = calculateMaintenanceLevel(selectedVehicle.currentMileage, selectedVehicle.lastServiceDate);
                   if (!maintenanceLevel) return null;
 
-                  const kmPerMaintenance = 1000;
-                  const monthsPerMaintenance = 3;
+                  const kmPerMaintenance = 5000;
+                  const monthsPerMaintenance = 6;
                   const kmOverdue = maintenanceLevel ? (selectedVehicle.currentMileage - (maintenanceLevel * kmPerMaintenance)) : 0;
                   const isKmOverdue = kmOverdue > 200;
                   

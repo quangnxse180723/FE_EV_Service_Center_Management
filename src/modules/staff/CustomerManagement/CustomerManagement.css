@@ -316,8 +316,7 @@
   background: white;
   padding: 2rem;
   border-radius: 16px;
-  width: 90%;
-  max-width: 500px;
+  width: 100%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   animation: modalSlideIn 0.3s ease-out;
 }

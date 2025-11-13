@@ -13,9 +13,31 @@ const BookingForm = () => {
     }
     const numKm = Number(value);
     if (numKm < 1000) {
+      setMaintenance("Chưa đến kỳ bảo dưỡng tiếp theo");
+    } else if (numKm >= 1000 && numKm < 5000) {
       setMaintenance("Bảo dưỡng lần đầu");
-    } else if (numKm >= 5000) {
+    } else if (numKm >= 5000 && numKm < 10000) {
       setMaintenance("Bảo dưỡng lần 2");
+    } else if (numKm >= 10000 && numKm < 15000) {
+      setMaintenance("Bảo dưỡng lần 3");
+    } else if (numKm >= 15000 && numKm < 20000) {
+      setMaintenance("Bảo dưỡng lần 4");
+    } else if (numKm >= 20000 && numKm < 25000) {
+      setMaintenance("Bảo dưỡng lần 5");
+    } else if (numKm >= 25000 && numKm < 30000) {
+      setMaintenance("Bảo dưỡng lần 6");
+    } else if (numKm >= 30000 && numKm < 35000) {
+      setMaintenance("Bảo dưỡng lần 7");
+    } else if (numKm >= 35000 && numKm < 40000) {
+      setMaintenance("Bảo dưỡng lần 8");
+    } else if (numKm >= 40000 && numKm < 45000) {
+      setMaintenance("Bảo dưỡng lần 9");
+    } else if (numKm >= 45000 && numKm < 50000) {
+      setMaintenance("Bảo dưỡng lần 10");
+    } else if (numKm >= 50000 && numKm < 55000) {
+      setMaintenance("Bảo dưỡng lần 11");
+    } else if (numKm >= 55000) {
+      setMaintenance("Bảo dưỡng dịch vụ");
     } else {
       setMaintenance("Chưa đến kỳ bảo dưỡng tiếp theo");
     }
