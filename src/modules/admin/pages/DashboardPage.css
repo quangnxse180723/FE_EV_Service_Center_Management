@@ -226,11 +226,19 @@
 }
 
 /* Stats Grid */
-.stats-grid {
+.dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
+  /* create two rows: first for stats, second for charts */
+  grid-auto-rows: minmax(120px, auto);
   margin-bottom: 2.5rem;
+}
+
+/* Make inner grids participate in parent grid so columns align exactly */
+.stats-grid,
+.charts-grid {
+  display: contents; /* allow stat-card and chart-card to be direct grid items of .dashboard-grid */
 }
 
 .stat-card {
@@ -303,11 +311,7 @@
 }
 
 /* Charts Grid */
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
+/* charts-grid styles intentionally handled by .dashboard-grid */
 
 .chart-card {
   background: white;
@@ -338,8 +342,7 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .stats-grid,
-  .charts-grid {
+  .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -362,8 +365,7 @@
     height: 35px;
   }
 
-  .stats-grid,
-  .charts-grid {
+  .dashboard-grid {
     grid-template-columns: 1fr;
   }
 

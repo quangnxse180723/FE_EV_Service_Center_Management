@@ -29,6 +29,21 @@ const centerApi = {
   getMembersByCenter: (centerId) => {
     return axiosClient.get(`/center/${centerId}/members`);
   },
+  // Tạo mới trung tâm
+  createCenter: (payload) => {
+    // payload: ServiceCenterRequest expected by backend
+    return axiosClient.post('/centers', payload);
+  },
+
+  // Cập nhật trung tâm
+  updateCenter: (centerId, payload) => {
+    return axiosClient.put(`/centers/${centerId}`, payload);
+  },
+
+  // Xóa trung tâm
+  deleteCenter: (centerId) => {
+    return axiosClient.delete(`/centers/${centerId}`);
+  }
 };
 
 export default centerApi;

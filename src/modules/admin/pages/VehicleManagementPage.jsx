@@ -312,6 +312,12 @@ export default function VehicleManagementPage() {
             Quản lý phụ tùng
           </button>
           <button
+            className={`nav-item ${activeMenu === 'centers' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('centers')}
+          >
+            Quản lý trung tâm
+          </button>
+          <button
             className={`nav-item ${activeMenu === 'vehicles' ? 'active' : ''}`}
             onClick={() => handleMenuClick('vehicles')}
           >

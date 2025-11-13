@@ -268,9 +268,9 @@ export const deleteStaff = async (id) => {
 // ==================== PHỤ TÙNG (PARTS) ====================
 
 /**
- * 📞 GET /api/admin/parts
- * 📖 Lấy danh sách tất cả phụ tùng
- * 🔙 Trả về: Array<Part>
+ *  GET /api/admin/parts
+ * Lấy danh sách tất cả phụ tùng
+ * Trả về: Array<Part>
  */
 export const getAllParts = async () => {
 	try {
@@ -282,10 +282,10 @@ export const getAllParts = async () => {
 };
 
 /**
- * 📞 POST /api/admin/parts
- * ➕ Tạo phụ tùng mới
- * 📥 Tham số: part (object) - Thông tin phụ tùng mới (tên, giá, số lượng...)
- * 🔙 Trả về: Part (đối tượng phụ tùng vừa tạo)
+ * POST /api/admin/parts
+ * Tạo phụ tùng mới
+ * Tham số: part (object) - Thông tin phụ tùng mới (tên, giá, số lượng...)
+ * Trả về: Part (đối tượng phụ tùng vừa tạo)
  */
 export const createPart = async (part) => {
 	try {

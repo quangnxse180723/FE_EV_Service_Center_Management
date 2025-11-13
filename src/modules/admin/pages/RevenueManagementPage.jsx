@@ -108,13 +108,13 @@ export default function RevenueManagementPage() {
       navigate('/admin/users');
     } else if (menu === 'parts') {
       navigate('/admin/parts');
+    } else if (menu === 'centers') {
+      navigate('/admin/centers');
     }
   };
 
   return (
-    <>
-      <AdminHeader />
-      <div className="admin-dashboard">
+    <div className="admin-dashboard">
         {/* Sidebar */}
         <aside className="admin-sidebar">
         <div className="sidebar-logo">
@@ -145,11 +145,20 @@ export default function RevenueManagementPage() {
           >
             Quản lý phụ tùng
           </button>
+          <button
+            className={`nav-item ${activeMenu === 'centers' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('centers')}
+          >
+            Quản lý trung tâm
+          </button>
         </nav>
       </aside>
 
       {/* Main Content */}
       <div className="admin-main">
+        {/* Header */}
+        <AdminHeader />
+
         {/* Content */}
         <div className="admin-content">
           <h1 className="page-title">Quản lý doanh thu</h1>
@@ -195,7 +204,6 @@ export default function RevenueManagementPage() {
           </div>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

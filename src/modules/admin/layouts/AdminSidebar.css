@@ -1,0 +1,157 @@
+.admin-dashboard,
+.admin-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Shared admin sidebar */
+.admin-sidebar {
+  position: sticky;
+  top: 20px; /* keeps a little gap from top header */
+  align-self: flex-start;
+  width: 100%;
+  max-width: 240px; /* reasonable max width */
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15,23,42,0.04);
+  margin: 16px; /* space from page edges */
+  z-index: 60; /* sit above main content */
+  flex-shrink: 0;
+}
+
+/* Ensure the sidebar doesn't stretch when main content grows */
+.admin-main {
+  flex: 1 1 auto;
+  min-width: 0; /* allow proper truncation inside */
+}
+
+/* Logo area */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(15,23,42,0.04);
+  margin-bottom: 12px;
+}
+
+.sidebar-logo .logo {
+  width: 140px;
+  display: block;
+}
+
+/* Navigation list */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  border: none;
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+}
+
+.nav-item:hover {
+  background: linear-gradient(180deg, rgba(99,102,241,0.04), rgba(99,102,241,0.02));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(2,6,23,0.04);
+}
+
+/* Small icon-like square on the left for each nav item when no explicit .icon is provided */
+.nav-item::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 3px;
+  background: rgba(79,70,229,0.12);
+  flex-shrink: 0;
+}
+
+/* Icon placeholder inside nav item */
+.nav-item .icon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(99,102,241,0.08);
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+
+/* Active state: colored left bar and stronger bg */
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(79,70,229,0.06), rgba(99,102,241,0.03));
+  box-shadow: 0 8px 18px rgba(79,70,229,0.06);
+  position: relative;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg,#7c3aed,#4f46e5);
+}
+
+/* item separators */
+.sidebar-nav .divider {
+  height: 1px;
+  background: rgba(15,23,42,0.04);
+  margin: 8px 0;
+  border-radius: 2px;
+}
+
+/* responsive: collapse spacing on narrow screens */
+@media (max-width: 900px) {
+  .admin-sidebar {
+    position: relative;
+    top: 0;
+    margin: 8px 12px 12px 12px;
+    max-width: 220px;
+    border-radius: 10px;
+  }
+}
+
+/* Very small screens: convert to top horizontal bar (optional) */
+@media (max-width: 520px) {
+  .admin-dashboard,
+  .admin-page {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: auto;
+    max-width: none;
+    margin: 8px;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+    gap: 8px;
+  }
+  .sidebar-nav { flex-direction: row; gap: 8px; }
+  .nav-item { white-space: nowrap; padding: 8px 10px; }
+  .nav-item::before { display: none; }
+}

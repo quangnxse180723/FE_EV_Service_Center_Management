@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PartsManagementPage.css';
 import logoImage from '../../../assets/img/log_voltfit.png';
-import { getAllParts, createPart, updatePart, deletePart } from '../../../api/adminApi.js';
+import partApi from '../../../api/partApi';
 import AdminHeader from '../layouts/AdminHeader';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function PartsManagementPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeMenu, setActiveMenu] = useState('parts');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,8 +17,9 @@ export default function PartsManagementPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPart, setEditingPart] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', price: '' });
-  const [addForm, setAddForm] = useState({ name: '', price: '' });
+  // use `unitPrice` on the frontend to match backend DTO (with fallback to `price`)
+  const [editForm, setEditForm] = useState({ name: '', unitPrice: '', quantity: '', minStock: '' });
+  const [addForm, setAddForm] = useState({ name: '', unitPrice: '', quantity: '', minStock: '' });
 
   // Giả lập dữ liệu admin
   const adminInfo = {
@@ -33,36 +36,16 @@ export default function PartsManagementPage() {
       setLoading(true);
       setError(null);
       try {
-        // 📞 GET /api/admin/parts - Lấy danh sách phụ tùng từ backend
-        const data = await getAllParts();
+  // 📞 GET /parts - Lấy danh sách phụ tùng từ backend
+  const data = await partApi.getAllParts();
         console.log('✅ Loaded parts:', data);
         // 💾 Lưu vào state
-        setParts(Array.isArray(data) ? data : []);
+  setParts(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('❌ Error loading parts:', err);
         setError('Không thể tải danh sách phụ tùng');
-        // Fallback về dữ liệu mẫu nếu API lỗi
-        setParts([
-          { partId: 1, name: 'Phanh tay', price: 200000 },
-          { partId: 2, name: 'Đèn / còi / hiển thị đồng hồ', price: 150000 },
-          { partId: 3, name: 'Vỏ bọc, tay gas', price: 200000 },
-          { partId: 4, name: 'Chân chống cạnh/ chân chống đứng', price: 150000 },
-          { partId: 5, name: 'Cơ cấu khóa yên xe', price: 200000 },
-          { partId: 6, name: 'Ắc quy Li-on', price: 1000000 },
-          { partId: 7, name: 'Dầu phanh', price: 150000 },
-          { partId: 8, name: 'Phanh trước', price: 200000 },
-          { partId: 9, name: 'Ống dầu phanh trước', price: 150000 },
-          { partId: 10, name: 'Vành xe trước', price: 300000 },
-          { partId: 11, name: 'Lốp xe trước', price: 200000 },
-          { partId: 12, name: 'Cổ phốt', price: 250000 },
-          { partId: 13, name: 'Giảm xóc trước', price: 400000 },
-          { partId: 14, name: 'Phanh sau', price: 200000 },
-          { partId: 15, name: 'Ống dầu phanh sau', price: 150000 },
-          { partId: 16, name: 'Vành xe sau', price: 300000 },
-          { partId: 17, name: 'Lốp xe sau', price: 200000 },
-          { partId: 18, name: 'Giảm xóc sau', price: 400000 },
-          { partId: 19, name: 'Động cơ', price: 3000000 }
-        ]);
+        // Removed hardcoded fallback data - leave parts empty when API fails
+        setParts([]);
       } finally {
         setLoading(false);
       }
@@ -83,6 +66,8 @@ export default function PartsManagementPage() {
       navigate('/admin/users');
     } else if (menu === 'revenue') {
       navigate('/admin/revenue');
+    } else if (menu === 'centers') {
+      navigate('/admin/centers');
     }
   };
 
@@ -91,30 +76,45 @@ export default function PartsManagementPage() {
     const part = parts.find(p => (p.partId || p.id) === id);
     if (part) {
       setEditingPart(part);
-      setEditForm({
-        name: part.name || '',
-        price: part.price || ''
-      });
+        setEditForm({
+          name: part.name || '',
+          // accept backend returning `unitPrice` or `price`
+          unitPrice: (part.unitPrice ?? part.price) != null ? String(part.unitPrice ?? part.price) : '',
+          quantity: (part.quantityInStock ?? part.quantity) != null ? String(part.quantityInStock ?? part.quantity) : '',
+          minStock: part.minStock != null ? String(part.minStock) : ''
+        });
       setShowEditModal(true);
     }
   };
 
   // 💾 Lưu chỉnh sửa
   const handleSaveEdit = async () => {
-    if (!editForm.name || !editForm.price) {
+    // validate using unitPrice (frontend field)
+    if (!editForm.name || editForm.unitPrice === '' || editForm.quantity === '') {
       alert('Vui lòng điền đầy đủ thông tin!');
       return;
     }
 
     try {
       const id = editingPart.partId || editingPart.id;
+      // ensure centerId is present (DB requires non-null center_id)
+      // Option C: default centerId = 1 when missing
+      const centerId = user?.centerId ?? user?.center?.centerId ?? 1;
+      if (!user?.centerId && !(user?.center?.centerId)) {
+        console.warn('PartsManagementPage: no user.centerId found, using default centerId=1');
+      }
+
       const updatedData = {
         name: editForm.name,
-        price: parseFloat(editForm.price)
+        // send `unitPrice` as FE field (backend DTO mapper should accept this)
+        unitPrice: parseFloat(editForm.unitPrice),
+        quantityInStock: parseInt(editForm.quantity || '0', 10),
+        minStock: parseInt(editForm.minStock || '0', 10),
+        centerId: parseInt(centerId, 10)
       };
 
-      // 📞 PUT /api/admin/parts/{id} - Cập nhật phụ tùng
-      await updatePart(id, updatedData);
+      // 📞 PUT /parts/{id} - Cập nhật phụ tùng
+      await partApi.updatePart(id, updatedData);
       
       // 💾 Cập nhật state
       setParts(parts.map(part => 
@@ -123,9 +123,9 @@ export default function PartsManagementPage() {
           : part
       ));
 
-      setShowEditModal(false);
-      setEditingPart(null);
-      setEditForm({ name: '', price: '' });
+  setShowEditModal(false);
+  setEditingPart(null);
+  setEditForm({ name: '', unitPrice: '', quantity: '', minStock: '' });
       alert('Đã cập nhật phụ tùng thành công!');
     } catch (err) {
       console.error('❌ Error updating part:', err);
@@ -137,15 +137,15 @@ export default function PartsManagementPage() {
   const handleCancelEdit = () => {
     setShowEditModal(false);
     setEditingPart(null);
-    setEditForm({ name: '', price: '' });
+    setEditForm({ name: '', unitPrice: '', quantity: '', minStock: '' });
   };
 
   // 🗑️ API DELETE: Xóa phụ tùng
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa phụ tùng này?')) {
       try {
-        // 📞 DELETE /api/admin/parts/{id} - Xóa phụ tùng
-        await deletePart(id);
+  // 📞 DELETE /parts/{id} - Xóa phụ tùng
+  await partApi.deletePart(id);
         // 💾 Cập nhật state: Loại bỏ phụ tùng vừa xóa
         setParts(parts.filter(part => (part.partId || part.id) !== id));
         alert('Đã xóa phụ tùng!');
@@ -158,32 +158,44 @@ export default function PartsManagementPage() {
 
   // ➕ Thêm phụ tùng
   const handleAdd = () => {
-    setAddForm({ name: '', price: '' });
+    setAddForm({ name: '', unitPrice: '', quantity: '', minStock: '' });
     setShowAddModal(true);
   };
 
   // 💾 Lưu phụ tùng mới
   const handleSaveAdd = async () => {
-    if (!addForm.name || !addForm.price) {
+    if (!addForm.name || addForm.unitPrice === '' || addForm.quantity === '') {
       alert('Vui lòng điền đầy đủ thông tin!');
       return;
     }
 
     try {
+      // Option C: default centerId = 1 when missing
+      const centerId = user?.centerId ?? user?.center?.centerId ?? 1;
+      if (!user?.centerId && !(user?.center?.centerId)) {
+        console.warn('PartsManagementPage: no user.centerId found, using default centerId=1');
+      }
+
       const newData = {
         name: addForm.name,
-        price: parseFloat(addForm.price),
-        serviceCenter: { centerId: 1 } // Thêm serviceCenter với ID mặc định
+        // send `unitPrice` per backend DTO
+        unitPrice: parseFloat(addForm.unitPrice),
+        quantityInStock: parseInt(addForm.quantity || '0', 10),
+        minStock: parseInt(addForm.minStock || '0', 10),
+        centerId: parseInt(centerId, 10)
       };
 
-      // 📞 POST /api/admin/parts - Tạo phụ tùng mới
-      const createdPart = await createPart(newData);
+      // 📞 POST /parts - Tạo phụ tùng mới
+      const createdPart = await partApi.createPart(newData);
       
       // 💾 Thêm vào danh sách
-      setParts([...parts, createdPart]);
+  // when backend responds, it may return `price` or `unitPrice` — normalize by preferring `unitPrice`
+  const normalized = { ...createdPart };
+  if (normalized.price != null && normalized.unitPrice == null) normalized.unitPrice = normalized.price;
+  setParts([...parts, normalized]);
 
-      setShowAddModal(false);
-      setAddForm({ name: '', price: '' });
+  setShowAddModal(false);
+  setAddForm({ name: '', unitPrice: '', quantity: '', minStock: '' });
       alert('Đã thêm phụ tùng thành công!');
     } catch (err) {
       console.error('❌ Error creating part:', err);
@@ -194,7 +206,7 @@ export default function PartsManagementPage() {
   // ❌ Hủy thêm phụ tùng
   const handleCancelAdd = () => {
     setShowAddModal(false);
-    setAddForm({ name: '', price: '' });
+    setAddForm({ name: '', unitPrice: '', quantity: '', minStock: '' });
   };
 
   return (
@@ -229,6 +241,12 @@ export default function PartsManagementPage() {
           >
             Quản lý phụ tùng
           </button>
+          <button
+            className={`nav-item ${activeMenu === 'centers' ? 'active' : ''}`}
+            onClick={() => handleMenuClick('centers')}
+          >
+            Quản lý trung tâm
+          </button>
         </nav>
       </aside>
 
@@ -253,6 +271,7 @@ export default function PartsManagementPage() {
                   <tr>
                     <th>STT</th>
                     <th>Tên linh kiện</th>
+                    <th>Số lượng phụ tùng</th>
                     <th>Giá linh kiện</th>
                     <th>Hành động</th>
                   </tr>
@@ -260,7 +279,7 @@ export default function PartsManagementPage() {
                 <tbody>
                   {parts.length === 0 ? (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
                         Không có phụ tùng nào
                       </td>
                     </tr>
@@ -269,22 +288,23 @@ export default function PartsManagementPage() {
                       <tr key={part.partId || part.id || index}>
                         <td className="text-center">{index + 1}</td>
                         <td>{part.name}</td>
-                        <td className="text-right">{part.price?.toLocaleString('vi-VN')} VND</td>
-                        <td className="text-center">
-                          <button 
-                            className="btn-action btn-edit-inline" 
-                            onClick={() => handleEdit(part.partId || part.id)}
-                            style={{ marginRight: '8px', padding: '4px 12px', fontSize: '14px' }}
-                          >
-                            Sửa
-                          </button>
-                          <button 
-                            className="btn-action btn-delete-inline" 
-                            onClick={() => handleDelete(part.partId || part.id)}
-                            style={{ padding: '4px 12px', fontSize: '14px' }}
-                          >
-                            Xóa
-                          </button>
+                        <td className="quantity-cell">{part.quantityInStock ?? part.quantity ?? 0}</td>
+                        <td className="text-right">{(part.unitPrice ?? part.price)?.toLocaleString?.('vi-VN')} VND</td>
+                        <td className="action-cell">
+                          <div className="action-buttons">
+                            <button 
+                              className="btn-action btn-edit-inline" 
+                              onClick={() => handleEdit(part.partId || part.id)}
+                            >
+                              Sửa
+                            </button>
+                            <button 
+                              className="btn-action btn-delete-inline" 
+                              onClick={() => handleDelete(part.partId || part.id)}
+                            >
+                              Xóa
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -321,9 +341,29 @@ export default function PartsManagementPage() {
               <label>Giá (VND):</label>
               <input
                 type="number"
-                value={editForm.price}
-                onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                value={editForm.unitPrice}
+                onChange={(e) => setEditForm({ ...editForm, unitPrice: e.target.value })}
                 placeholder="Nhập giá"
+              />
+            </div>
+            <div className="form-group">
+              <label>Số lượng phụ tùng:</label>
+              <input
+                type="number"
+                min="0"
+                value={editForm.quantity}
+                onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+                placeholder="Nhập số lượng"
+              />
+            </div>
+            <div className="form-group">
+              <label>Mức tối thiểu (minStock):</label>
+              <input
+                type="number"
+                min="0"
+                value={editForm.minStock}
+                onChange={(e) => setEditForm({ ...editForm, minStock: e.target.value })}
+                placeholder="Nhập mức tối thiểu"
               />
             </div>
             <div className="modal-actions">
@@ -352,9 +392,29 @@ export default function PartsManagementPage() {
               <label>Giá (VND):</label>
               <input
                 type="number"
-                value={addForm.price}
-                onChange={(e) => setAddForm({ ...addForm, price: e.target.value })}
+                value={addForm.unitPrice}
+                onChange={(e) => setAddForm({ ...addForm, unitPrice: e.target.value })}
                 placeholder="Nhập giá"
+              />
+            </div>
+            <div className="form-group">
+              <label>Số lượng phụ tùng:</label>
+              <input
+                type="number"
+                min="0"
+                value={addForm.quantity}
+                onChange={(e) => setAddForm({ ...addForm, quantity: e.target.value })}
+                placeholder="Nhập số lượng"
+              />
+            </div>
+            <div className="form-group">
+              <label>Mức tối thiểu (minStock):</label>
+              <input
+                type="number"
+                min="0"
+                value={addForm.minStock}
+                onChange={(e) => setAddForm({ ...addForm, minStock: e.target.value })}
+                placeholder="Nhập mức tối thiểu"
               />
             </div>
             <div className="modal-actions">
