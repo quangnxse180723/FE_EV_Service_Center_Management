@@ -64,7 +64,7 @@ const partApi = {
     // Ensure compatibility: also include nested `serviceCenter` object when possible
     // Some backend controllers expect a nested object like { serviceCenter: { id: <num> } }
     if ((payload.centerId !== undefined && payload.centerId !== null) && !payload.serviceCenter) {
-      payload.serviceCenter = { id: payload.centerId };
+      payload.serviceCenter = { centerId: payload.centerId };
     }
 
     // Debug: log outgoing payload so we can confirm what is sent to backend
@@ -98,7 +98,7 @@ const partApi = {
 
     // Ensure compatibility: also include nested `serviceCenter` object when possible
     if ((payload.centerId !== undefined && payload.centerId !== null) && !payload.serviceCenter) {
-      payload.serviceCenter = { id: payload.centerId };
+      payload.serviceCenter = { centerId: payload.centerId };
     }
 
     // Debug: log outgoing payload so we can confirm what is sent to backend

@@ -44,28 +44,8 @@ export default function PartsManagementPage() {
       } catch (err) {
         console.error('❌ Error loading parts:', err);
         setError('Không thể tải danh sách phụ tùng');
-        // Fallback về dữ liệu mẫu nếu API lỗi
-        setParts([
-          { partId: 1, name: 'Phanh tay', price: 200000, quantityInStock: 10, minStock: 2 },
-          { partId: 2, name: 'Đèn / còi / hiển thị đồng hồ', price: 150000, quantityInStock: 5, minStock: 1 },
-          { partId: 3, name: 'Vỏ bọc, tay gas', price: 200000, quantityInStock: 7, minStock: 2 },
-          { partId: 4, name: 'Chân chống cạnh/ chân chống đứng', price: 150000, quantityInStock: 8, minStock: 2 },
-          { partId: 5, name: 'Cơ cấu khóa yên xe', price: 200000, quantityInStock: 6, minStock: 1 },
-          { partId: 6, name: 'Ắc quy Li-on', price: 1000000, quantityInStock: 2, minStock: 1 },
-          { partId: 7, name: 'Dầu phanh', price: 150000, quantityInStock: 20, minStock: 5 },
-          { partId: 8, name: 'Phanh trước', price: 200000, quantityInStock: 12, minStock: 3 },
-          { partId: 9, name: 'Ống dầu phanh trước', price: 150000, quantityInStock: 15, minStock: 3 },
-          { partId: 10, name: 'Vành xe trước', price: 300000, quantityInStock: 4, minStock: 1 },
-          { partId: 11, name: 'Lốp xe trước', price: 200000, quantityInStock: 9, minStock: 2 },
-          { partId: 12, name: 'Cổ phốt', price: 250000, quantityInStock: 3, minStock: 1 },
-          { partId: 13, name: 'Giảm xóc trước', price: 400000, quantityInStock: 2, minStock: 1 },
-          { partId: 14, name: 'Phanh sau', price: 200000, quantityInStock: 11, minStock: 2 },
-          { partId: 15, name: 'Ống dầu phanh sau', price: 150000, quantityInStock: 14, minStock: 3 },
-          { partId: 16, name: 'Vành xe sau', price: 300000, quantityInStock: 4, minStock: 1 },
-          { partId: 17, name: 'Lốp xe sau', price: 200000, quantityInStock: 9, minStock: 2 },
-          { partId: 18, name: 'Giảm xóc sau', price: 400000, quantityInStock: 1, minStock: 1 },
-          { partId: 19, name: 'Động cơ', price: 3000000, quantityInStock: 1, minStock: 0 }
-        ]);
+        // Removed hardcoded fallback data - leave parts empty when API fails
+        setParts([]);
       } finally {
         setLoading(false);
       }
